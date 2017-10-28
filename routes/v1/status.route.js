@@ -8,13 +8,12 @@ module.exports = function(log) {
   this.relay = require('../../controller/relay.controller')(log.child({controller: 'relay'}));
   this.temp = require('../../controller/temp.controller')(log.child({controller: 'temp'}));
   this.calendar = require('../../controller/calendar.controller')();
-  this.calendar.nextEvent();
 
   router.get('/', async (req, res) => {
     this.log.info('Got status request');
     res.json({
       heating: await this.relay.getRelay() === 1,
-      desiredTemp: 21,
+      desiredTemp: await this.calendar.getDesiredTemperature(),
       currentTemp: await this.temp.getCurrentTemp()
     });
   });
@@ -23,7 +22,7 @@ module.exports = function(log) {
     await this.relay.setRelay(1);
     res.json({
       heating: await this.relay.getRelay() === 1,
-      desiredTemp: 21,
+      desiredTemp: await this.calendar.getDesiredTemperature(),
       currentTemp: await this.temp.getCurrentTemp()
     });
   });
@@ -32,7 +31,7 @@ module.exports = function(log) {
     await this.relay.setRelay(0);
     res.json({
       heating: await this.relay.getRelay() === 1,
-      desiredTemp: 21,
+      desiredTemp: await this.calendar.getDesiredTemperature(),
       currentTemp: await this.temp.getCurrentTemp()
     });
   });

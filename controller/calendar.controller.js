@@ -13,7 +13,7 @@ const TOKEN_DIR = process.cwd() + '/auth/';
 let TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
 
 module.exports = function() {
-/**
+/*
  * Store token to disk be used in later program executions.
  *
  * @param {Object} token The token to store to disk.
@@ -30,7 +30,7 @@ module.exports = function() {
     console.log('Token stored to ' + TOKEN_PATH);
   };
 
-  /**
+  /*
  * Get and store new token after prompting for user authorization, and then
  * execute the given callback with the authorized OAuth2 client.
  *
@@ -62,7 +62,7 @@ module.exports = function() {
     });
   };
 
-  /**
+  /*
  * Create an OAuth2 client with the given credentials, and then execute the
  * given callback function.
  *
@@ -87,12 +87,12 @@ module.exports = function() {
     });
   };
 
-  /**
+  /*
  * Lists the next 10 events on the user's primary calendar.
  *
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-  const listEvents = async (auth) => {
+  const getCurrentEvent = async (auth, callback) => {
     let calendar = google.calendar('v3');
     calendar.events.list({
       auth: auth,
@@ -111,16 +111,20 @@ module.exports = function() {
         console.log('No upcoming events found.');
       } else {
         console.log('Upcoming event:');
-        for (let i = 0; i < events.length; i++) {
-          let event = events[i];
-          let start = event.start.dateTime || event.start.date;
-          let end = event.end.dateTime || event.end.date;
-          console.log('%s - %s', start, event.summary);
-          const utcStart = moment.utc(start);
-          const utcEnd = moment.utc(end);
 
-          console.log(moment().isBetween(utcStart, utcEnd));
-        }
+        // TODO only return event if in range
+        callback(events[0]);
+
+        // for (let i = 0; i < events.length; i++) {
+        //   let event = events[i];
+        //   let start = event.start.dateTime || event.start.date;
+        //   let end = event.end.dateTime || event.end.date;
+        //   console.log('%s - %s', start, event.summary);
+        //   const utcStart = moment.utc(start);
+        //   const utcEnd = moment.utc(end);
+        //
+        //   console.log(moment().isBetween(utcStart, utcEnd));
+        // }
       }
     });
   };
@@ -136,11 +140,39 @@ module.exports = function() {
         }
         // Authorize a client with the loaded credentials, then call the
         // Google Calendar API.
-        authorize(JSON.parse(content), listEvents);
+        authorize(JSON.parse(content), getCurrentEvent);
       });
   };
 
+  const getDesiredTemperature = ()=>{
+    return new Promise((resolve)=>{
+      console.log('getDesiredTemperature');
+      fs.readFile(process.cwd() + '/auth/client_secret.json',
+        function processClientSecrets(err, content) {
+          if (err) {
+            console.log('Error loading client secret file: ' + err);
+            return;
+          }
+          // Authorize a client with the loaded credentials, then call the
+          // Google Calendar API.
+          authorize(JSON.parse(content), (oauthClient)=>{
+            getCurrentEvent(oauthClient, event=>{
+              let start = event.start.dateTime || event.start.date;
+              let end = event.end.dateTime || event.end.date;
+              console.log('%s - %s', start, event.summary);
+              const utcStart = moment.utc(start);
+              const utcEnd = moment.utc(end);
+
+              console.log(moment().isBetween(utcStart, utcEnd));
+              resolve(parseFloat(event.summary));
+            });
+          });
+        });
+    });
+  };
+
   return {
-    nextEvent
+    nextEvent,
+    getDesiredTemperature
   };
 };
