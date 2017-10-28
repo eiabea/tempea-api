@@ -4,9 +4,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const bunyan = require('bunyan');
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
-const StatusRoute = require("./routes/v1/status.route");
+const StatusRoute = require('./routes/v1/status.route');
 
-(async function(){
+(async function() {
   const log = bunyan.createLogger({name: 'tempea'});
   log.info('Initializing routing module');
 
@@ -27,4 +27,4 @@ const StatusRoute = require("./routes/v1/status.route");
   app.listen(EXPRESS_PORT, ()=> {
     log.info(`tempea backend listening on port ${EXPRESS_PORT}`);
   });
-})();
+}());
