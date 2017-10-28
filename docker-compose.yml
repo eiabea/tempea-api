@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  tempea:
+    build: "."
+    ports:
+      - "3000:3000"
+    volumes:
+      - ".:/src"
+    environment:
+      # Logging
+      LOG_SRC: "true"
+      LOG_LEVEL_STDOUT: "trace"
+      LOG_LEVEL_GRAYLOG: "info"
+      LOG_GRAYLOG_ENABLED: "false"
+      # Modules
+      ROUTING_MODULE_HOST: "0.0.0.0"
+      ROUTING_MODULE_PORT: "3000"
