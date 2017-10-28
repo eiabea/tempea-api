@@ -21,6 +21,7 @@ const StatusRoute = require('./routes/v1/status.route');
 
   app.use(router);
 
+
   app.use('/v1/status', StatusRoute);
 
   log.info(`Starting tempea backend on port ${EXPRESS_PORT}`);
