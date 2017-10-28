@@ -3,6 +3,7 @@ version: "3"
 services:
   tempea:
     build: "."
+    privileged: "true"
     ports:
       - "3000:3000"
     volumes:
@@ -16,3 +17,5 @@ services:
       # Modules
       ROUTING_MODULE_HOST: "0.0.0.0"
       ROUTING_MODULE_PORT: "3000"
+
+      SENSOR_ID: "10-0008032d5234"
