@@ -5,7 +5,6 @@
   "main": "app.js",
   "private": true,
   "scripts": {
-    "precommit": "npm run lint",
     "prepush": "npm run lint",
     "wait_for_app": "echo \"Waiting ${MAX_STARTUP_TIME}s for app at localhost:${EXPRESS_PORT}\"; count=0; until curl -k -s localhost:${EXPRESS_PORT} > /dev/null; do if [ ${count} -ge ${MAX_STARTUP_TIME} ]; then printf '\nError: Unable to reach application'; exit 255; fi; printf '.'; sleep 1; count=$((count + 1)); done; printf '\nConnection established'",
     "test": "npm run wait_for_app; npm run test_unit; npm run test_integration",
