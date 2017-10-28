@@ -5,6 +5,8 @@
   "main": "app.js",
   "private": true,
   "scripts": {
+    "precommit": "npm run lint",
+    "prepush": "npm run lint",
     "wait_for_app": "echo \"Waiting ${MAX_STARTUP_TIME}s for app at localhost:${EXPRESS_PORT}\"; count=0; until curl -k -s localhost:${EXPRESS_PORT} > /dev/null; do if [ ${count} -ge ${MAX_STARTUP_TIME} ]; then printf '\nError: Unable to reach application'; exit 255; fi; printf '.'; sleep 1; count=$((count + 1)); done; printf '\nConnection established'",
     "test": "npm run wait_for_app; npm run test_unit; npm run test_integration",
     "test_unit": "${NODE_PATH:-node_modules}/.bin/_mocha test --timeout 2000 ./test/unit/**/*.test.js",
@@ -37,6 +39,7 @@
     "eslint": "^4.10.0",
     "eslint-plugin-chai": "0.0.1",
     "eslint-plugin-mocha": "^4.11.0",
+    "husky": "^0.14.3",
     "mocha": "^4.0.1",
     "node-mocks-http": "^1.6.6",
     "nodemon": "^1.12.1",
