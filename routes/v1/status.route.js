@@ -7,6 +7,8 @@ module.exports = function(log) {
   // relay child logger overrides temp logger
   this.relay = require('../../controller/relay.controller')(log.child({controller: 'relay'}));
   this.temp = require('../../controller/temp.controller')(log.child({controller: 'temp'}));
+  this.calendar = require('../../controller/calendar.controller')();
+  this.calendar.nextEvent();
 
   router.get('/', async (req, res) => {
     this.log.info('Got status request');

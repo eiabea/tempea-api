@@ -31,8 +31,11 @@
     "cors": "^2.8.4",
     "ds18b20": "^0.1.0",
     "express": "^4.16.2",
+    "google-auth-library": "^0.11.0",
+    "googleapis": "^22.2.0",
     "helmet": "^3.9.0",
     "lodash": "^4.17.4",
+    "moment": "^2.19.1",
     "onoff": "^1.1.8"
   },
   "devDependencies": {
