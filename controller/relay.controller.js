@@ -1,8 +1,8 @@
 const Gpio = require('onoff').Gpio;
 const relay = new Gpio(17, 'out');
 
-module.exports = function(log) {
-  this.log = log;
+module.exports = (log) => {
+  this.log = log.child({controller: 'relay'});
 
   const getRelay = async () => {
     this.log.trace({func: 'getRelay'}, 'Reading relay gpio');

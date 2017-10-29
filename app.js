@@ -5,7 +5,12 @@ const helmet = require('helmet');
 const bunyan = require('bunyan');
 const log = bunyan.createLogger({name: 'tempea', level: 10});
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
-const StatusRoute = require('./routes/v1/status.route')(log.child({route: 'status'}));
+const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
+const StatusRoute = require('./routes/v1/status.route')(log);
+const Schedule = require('./controller/schedule.controller')(log);
+const Temp = require('./controller/temp.controller')(log);
+const Relay = require('./controller/relay.controller')(log);
+const Calendar = require('./controller/calendar.controller')(log);
 
 (async function() {
   log.info('Initializing routing module');
@@ -26,5 +31,30 @@ const StatusRoute = require('./routes/v1/status.route')(log.child({route: 'statu
   log.info(`Starting tempea backend on port ${EXPRESS_PORT}`);
   app.listen(EXPRESS_PORT, ()=> {
     log.info(`tempea backend listening on port ${EXPRESS_PORT}`);
+  });
+
+  Schedule.startJob(async ()=>{
+    try {
+      const currentTemp = await Temp.getCurrentTemp();
+      const desiredTemp = await Calendar.getDesiredTemperature();
+
+      if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
+        log.info({
+          currentTemp,
+          desiredTemp,
+          overshoot: OVERSHOOT_TEMP},
+        'Room temperature too low, ensure heating');
+        await Relay.setRelay(1);
+      } else {
+        log.info({
+          currentTemp,
+          desiredTemp,
+          overshoot: OVERSHOOT_TEMP},
+        'Room temperature high enough, disabling heating');
+        await Relay.setRelay(0);
+      }
+    } catch (e) {
+      this.log.error({e}, 'Error running job', e);
+    }
   });
 }());

@@ -222,7 +222,7 @@
     //
     // These rules have to do with variable declarations.
     //
-    "no-catch-shadow": 2,
+    "no-catch-shadow": 0,
     // disallow the catch clause parameter name being the same as a variable in the outer scope (off by default in the node environment)
     "no-delete-var": 2,
     // disallow deletion of variables

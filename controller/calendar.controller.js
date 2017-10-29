@@ -1,24 +1,27 @@
-let fs = require('fs');
-let readline = require('readline');
-let google = require('googleapis');
-let googleAuth = require('google-auth-library');
+const fs = require('fs');
+const readline = require('readline');
+const google = require('googleapis');
+const googleAuth = require('google-auth-library');
 const moment = require('moment');
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/calendar-nodejs-quickstart.json
-let SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 // let TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
 //   process.env.USERPROFILE) + '/.credentials/';
 const TOKEN_DIR = process.cwd() + '/auth/';
-let TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
+const TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
+const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
+const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
 
-module.exports = function() {
-/*
+module.exports = (log)=> {
+  this.log = log.child({controller: 'calendar'});
+  /*
  * Store token to disk be used in later program executions.
  *
  * @param {Object} token The token to store to disk.
  */
-  const storeToken = function(token) {
+  const storeToken = (token) => {
     try {
       fs.mkdirSync(TOKEN_DIR);
     } catch (err) {
@@ -27,7 +30,7 @@ module.exports = function() {
       }
     }
     fs.writeFile(TOKEN_PATH, JSON.stringify(token));
-    console.log('Token stored to ' + TOKEN_PATH);
+    this.log.trace('Token stored to ' + TOKEN_PATH);
   };
 
   /*
@@ -38,21 +41,21 @@ module.exports = function() {
  * @param {getEventsCallback} callback The callback to call with the authorized
  *     client.
  */
-  const getNewToken = function(oauth2Client, callback) {
+  const getNewToken = (oauth2Client, callback) => {
     let authUrl = oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: SCOPES
     });
-    console.log('Authorize this app by visiting this url: ', authUrl);
+    this.log.info('Authorize this app by visiting this url: ', authUrl);
     let rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout
     });
-    rl.question('Enter the code from that page here: ', function(code) {
+    rl.question('Enter the code from that page here: ', (code)=> {
       rl.close();
-      oauth2Client.getToken(code, function(err, token) {
+      oauth2Client.getToken(code, (err, token)=> {
         if (err) {
-          console.log('Error while trying to retrieve access token', err);
+          this.log.error({err}, 'Error while trying to retrieve access token', err);
           return;
         }
         oauth2Client.credentials = token;
@@ -69,7 +72,7 @@ module.exports = function() {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-  const authorize = function(credentials, callback) {
+  const authorize = (credentials, callback)=> {
     let clientSecret = credentials.installed.client_secret;
     let clientId = credentials.installed.client_id;
     let redirectUrl = credentials.installed.redirect_uris[0];
@@ -77,7 +80,7 @@ module.exports = function() {
     let oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
     // Check if we have previously stored a token.
-    fs.readFile(TOKEN_PATH, function(err, token) {
+    fs.readFile(TOKEN_PATH, (err, token)=> {
       if (err) {
         getNewToken(oauth2Client, callback);
       } else {
@@ -92,7 +95,7 @@ module.exports = function() {
  *
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-  const getCurrentEvent = async (auth, callback) => {
+  const getCurrentEvent = (auth, callback) => {
     let calendar = google.calendar('v3');
     calendar.events.list({
       auth: auth,
@@ -101,78 +104,71 @@ module.exports = function() {
       maxResults: 1,
       singleEvents: true,
       orderBy: 'startTime'
-    }, function(err, response) {
+    }, (err, response) => {
       if (err) {
-        console.log('The API returned an error: ' + err);
+        this.log.error({err}, 'The API returned an error: ' + err);
         return;
       }
       let events = response.items;
       if (events.length === 0) {
-        console.log('No upcoming events found.');
+        this.log.info('No upcoming events found.');
+        callback(null);
       } else {
-        console.log('Upcoming event:');
+        const event = events[0];
+        this.log.info({event}, 'Upcoming event');
 
-        // TODO only return event if in range
-        callback(events[0]);
+        let start = event.start.dateTime || event.start.date;
+        let end = event.end.dateTime || event.end.date;
+        const utcStart = moment.utc(start);
+        const utcEnd = moment.utc(end);
 
-        // for (let i = 0; i < events.length; i++) {
-        //   let event = events[i];
-        //   let start = event.start.dateTime || event.start.date;
-        //   let end = event.end.dateTime || event.end.date;
-        //   console.log('%s - %s', start, event.summary);
-        //   const utcStart = moment.utc(start);
-        //   const utcEnd = moment.utc(end);
-        //
-        //   console.log(moment().isBetween(utcStart, utcEnd));
-        // }
+        if (moment().isBetween(utcStart, utcEnd)) {
+          this.log.info({event}, 'Event is in range');
+          callback(event);
+        } else {
+          this.log.info({event}, 'Event is not in range');
+          callback(null);
+        }
       }
     });
   };
 
-  const nextEvent = ()=>{
-    console.log('Listing events');
-    // Load client secrets from a local file.
-    fs.readFile(process.cwd() + '/auth/client_secret.json',
-      function processClientSecrets(err, content) {
+  const getDesiredTemperature = ()=>{
+    return new Promise((resolve, reject)=>{
+      this.log.trace('getDesiredTemperature');
+      fs.readFile(process.cwd() + '/auth/client_secret.json', (err, content) => {
         if (err) {
-          console.log('Error loading client secret file: ' + err);
-          return;
+          this.log.error({err}, 'Error loading client secret file: ' + err);
+          return reject(err);
         }
         // Authorize a client with the loaded credentials, then call the
         // Google Calendar API.
-        authorize(JSON.parse(content), getCurrentEvent);
-      });
-  };
+        return authorize(JSON.parse(content), (oauthClient)=>{
+          return getCurrentEvent(oauthClient, event=>{
+            if (!event) {
+              return resolve(MIN_TEMP);
+            }
 
-  const getDesiredTemperature = ()=>{
-    return new Promise((resolve)=>{
-      console.log('getDesiredTemperature');
-      fs.readFile(process.cwd() + '/auth/client_secret.json',
-        function processClientSecrets(err, content) {
-          if (err) {
-            console.log('Error loading client secret file: ' + err);
-            return;
-          }
-          // Authorize a client with the loaded credentials, then call the
-          // Google Calendar API.
-          authorize(JSON.parse(content), (oauthClient)=>{
-            getCurrentEvent(oauthClient, event=>{
-              let start = event.start.dateTime || event.start.date;
-              let end = event.end.dateTime || event.end.date;
-              console.log('%s - %s', start, event.summary);
-              const utcStart = moment.utc(start);
-              const utcEnd = moment.utc(end);
+            let desiredTemp;
+            try {
+              desiredTemp = parseFloat(event.summary);
+            } catch (e) {
+              this.log.error({e}, 'Unable to parse, fallback to MIN_TEMP');
+              desiredTemp = MIN_TEMP;
+            }
 
-              console.log(moment().isBetween(utcStart, utcEnd));
-              resolve(parseFloat(event.summary));
-            });
+            if (desiredTemp > MAX_TEMP) {
+              desiredTemp = MAX_TEMP;
+            }
+
+            return resolve(desiredTemp);
           });
         });
+      });
     });
   };
 
   return {
-    nextEvent,
     getDesiredTemperature
   };
 };

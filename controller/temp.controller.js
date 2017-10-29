@@ -1,8 +1,8 @@
 const ds18b20 = require('ds18b20');
 const SENSOR_ID = process.env.SENSOR_ID || '10-0008032d5234';
 
-module.exports = function(log) {
-  this.log = log;
+module.exports = (log) => {
+  this.log = log.child({controller: 'temp'});
 
   const getCurrentTemp = async () => {
     this.log.trace({func: 'getCurrentTemp'}, 'Getting current temperature');
@@ -20,6 +20,6 @@ module.exports = function(log) {
   };
 
   return {
-    getCurrentTemp: getCurrentTemp
+    getCurrentTemp
   };
 };

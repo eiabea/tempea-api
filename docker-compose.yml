@@ -19,3 +19,9 @@ services:
       ROUTING_MODULE_PORT: "3000"
 
       SENSOR_ID: "10-0008032d5234"
+      # Celius (float)
+      MAX_TEMP: "27"
+      MIN_TEMP: "15"
+      OVERSHOOT_TEMP: "0"
+      # Minutes
+      FETCHING_INTERVAL: "10"
