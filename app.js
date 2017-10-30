@@ -33,28 +33,73 @@ const Calendar = require('./controller/calendar.controller')(log);
     log.info(`tempea backend listening on port ${EXPRESS_PORT}`);
   });
 
-  Schedule.startJob(async ()=>{
-    try {
-      const currentTemp = await Temp.getCurrentTemp();
-      const desiredTemp = await Calendar.getDesiredTemperature();
+  this.heating = false;
 
-      if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
-        log.info({
-          currentTemp,
-          desiredTemp,
-          overshoot: OVERSHOOT_TEMP},
-        'Room temperature too low, ensure heating');
-        await Relay.setRelay(1);
-      } else {
-        log.info({
-          currentTemp,
-          desiredTemp,
-          overshoot: OVERSHOOT_TEMP},
-        'Room temperature high enough, disabling heating');
-        await Relay.setRelay(0);
-      }
-    } catch (e) {
-      this.log.error({e}, 'Error running job', e);
+  Schedule.startJob(async ()=>{
+    const currentTemp = await Temp.getCurrentTemp();
+    const desiredTemp = await Calendar.getDesiredTemperature();
+
+    // currentTemp < desiredTemp + OVERSHOOT_TEMP --> aufheizen
+    // desiredTemp < currentTemp < desiredTemp + OVERSHOOT_TEMP --> nicht aufheizen
+
+    console.log(desiredTemp < currentTemp &&
+      currentTemp < (desiredTemp + OVERSHOOT_TEMP) &&
+      !this.heating)
+
+    if (desiredTemp < currentTemp &&
+      currentTemp < (desiredTemp + OVERSHOOT_TEMP) &&
+      !this.heating) {
+      // Passt
+      log.info({
+        currentTemp,
+        desiredTemp,
+        overshoot: OVERSHOOT_TEMP},
+      'Room temperature in range, disable heating');
+      await Relay.setRelay(0);
+    } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
+      // Heizen
+      log.info({
+        currentTemp,
+        desiredTemp,
+        overshoot: OVERSHOOT_TEMP
+      },
+      'Room temperature too low, ensure heating');
+      await Relay.setRelay(1);
+      this.heating = true;
+    } else {
+      // Fallback
+      log.info({
+        currentTemp,
+        desiredTemp,
+        overshoot: OVERSHOOT_TEMP},
+      'Room temperature high enough, disabling heating');
+      await Relay.setRelay(0);
+      this.heating = false;
     }
+
+
+    // if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
+    //   log.info({
+    //       currentTemp,
+    //       desiredTemp,
+    //       overshoot: OVERSHOOT_TEMP
+    //     },
+    //     'Room temperature too low, ensure heating');
+    //   await Relay.setRelay(1);
+    // } else if(desiredTemp < currentTemp < desiredTemp + OVERSHOOT_TEMP){
+    //   log.info({
+    //       currentTemp,
+    //       desiredTemp,
+    //       overshoot: OVERSHOOT_TEMP},
+    //     'Room temperature high enough, disabling heating');
+    //   await Relay.setRelay(0);
+    // } else {
+    //   log.info({
+    //     currentTemp,
+    //     desiredTemp,
+    //     overshoot: OVERSHOOT_TEMP},
+    //   'Weird temperature, disabling heating');
+    //   await Relay.setRelay(0);
+    // }
   });
 }());

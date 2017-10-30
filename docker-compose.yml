@@ -20,8 +20,8 @@ services:
 
       SENSOR_ID: "10-0008032d5234"
       # Celius (float)
-      MAX_TEMP: "27"
+      MAX_TEMP: "25"
       MIN_TEMP: "15"
-      OVERSHOOT_TEMP: "0"
+      OVERSHOOT_TEMP: "0.5"
       # Minutes
-      FETCHING_INTERVAL: "10"
+      FETCHING_INTERVAL: "1"
