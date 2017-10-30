@@ -3,8 +3,6 @@ const router = express.Router();
 
 module.exports = function(log) {
   this.log = log.child({route: 'status'});
-  // TODO find out a better way to log
-  // relay child logger overrides temp logger
   this.relay = require('../../controller/relay.controller')(log);
   this.temp = require('../../controller/temp.controller')(log);
   this.calendar = require('../../controller/calendar.controller')(log);

@@ -1,9 +1,22 @@
 version: "3"
 
+volumes:
+  influx:
+    driver: "local"
+
 services:
+  influx:
+    image: "arm32v7/influxdb"
+    ports:
+      - "8086:8086"
+    volumes:
+      - "influx:/var/lib/influxdb"
+
   tempea:
     build: "."
     privileged: "true"
+    depends_on:
+      - "influx"
     ports:
       - "3000:3000"
     volumes:
@@ -17,6 +30,10 @@ services:
       # Modules
       ROUTING_MODULE_HOST: "0.0.0.0"
       ROUTING_MODULE_PORT: "3000"
+      # Database
+      INFLUX_HOST: "influx"
+      INFLUX_PORT: "8086"
+      INFLUX_DB: "temp"
 
       SENSOR_ID: "10-0008032d5234"
       # Celius (float)

@@ -11,6 +11,7 @@ const Schedule = require('./controller/schedule.controller')(log);
 const Temp = require('./controller/temp.controller')(log);
 const Relay = require('./controller/relay.controller')(log);
 const Calendar = require('./controller/calendar.controller')(log);
+const Database = require('./controller/database.controller')(log);
 
 (async function() {
   log.info('Initializing routing module');
@@ -36,70 +37,57 @@ const Calendar = require('./controller/calendar.controller')(log);
   this.heating = false;
 
   Schedule.startJob(async ()=>{
-    const currentTemp = await Temp.getCurrentTemp();
-    const desiredTemp = await Calendar.getDesiredTemperature();
+    try {
+      const currentTemp = await Temp.getCurrentTemp();
+      const desiredTemp = await Calendar.getDesiredTemperature();
 
-    // currentTemp < desiredTemp + OVERSHOOT_TEMP --> aufheizen
-    // desiredTemp < currentTemp < desiredTemp + OVERSHOOT_TEMP --> nicht aufheizen
+      if (desiredTemp < currentTemp &&
+        currentTemp < desiredTemp + OVERSHOOT_TEMP &&
+        !this.heating) {
+        log.info({
+          currentTemp,
+          desiredTemp,
+          overshoot: OVERSHOOT_TEMP},
+        'Room temperature in range, disable heating');
+        try {
+          await Relay.setRelay(0);
+        } catch (err) {
+          log.error({err}, 'Error setting relay', err);
+        }
+      } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
+        log.info({
+          currentTemp,
+          desiredTemp,
+          overshoot: OVERSHOOT_TEMP
+        },
+        'Room temperature too low, ensure heating');
+        try {
+          await Relay.setRelay(1);
+          this.heating = true;
+        } catch (err) {
+          log.error({err}, 'Error setting relay', err);
+        }
+      } else {
+        log.info({
+          currentTemp,
+          desiredTemp,
+          overshoot: OVERSHOOT_TEMP},
+        'Room temperature high enough, disabling heating');
+        try {
+          await Relay.setRelay(0);
+          this.heating = false;
+        } catch (err) {
+          log.error({err}, 'Error setting relay', err);
+        }
+      }
 
-    console.log(desiredTemp < currentTemp &&
-      currentTemp < desiredTemp + OVERSHOOT_TEMP &&
-      !this.heating);
-
-    if (desiredTemp < currentTemp &&
-      currentTemp < desiredTemp + OVERSHOOT_TEMP &&
-      !this.heating) {
-      // Passt
-      log.info({
-        currentTemp,
-        desiredTemp,
-        overshoot: OVERSHOOT_TEMP},
-      'Room temperature in range, disable heating');
-      await Relay.setRelay(0);
-    } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
-      // Heizen
-      log.info({
-        currentTemp,
-        desiredTemp,
-        overshoot: OVERSHOOT_TEMP
-      },
-      'Room temperature too low, ensure heating');
-      await Relay.setRelay(1);
-      this.heating = true;
-    } else {
-      // Fallback
-      log.info({
-        currentTemp,
-        desiredTemp,
-        overshoot: OVERSHOOT_TEMP},
-      'Room temperature high enough, disabling heating');
-      await Relay.setRelay(0);
-      this.heating = false;
+      try {
+        await Database.writeMeasurement(currentTemp, desiredTemp, this.heating);
+      } catch (err) {
+        log.error({err}, 'Error writing measurement', err);
+      }
+    } catch (err) {
+      log.error({err}, 'Error getting temperatures', err);
     }
-
-
-    // if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
-    //   log.info({
-    //       currentTemp,
-    //       desiredTemp,
-    //       overshoot: OVERSHOOT_TEMP
-    //     },
-    //     'Room temperature too low, ensure heating');
-    //   await Relay.setRelay(1);
-    // } else if(desiredTemp < currentTemp < desiredTemp + OVERSHOOT_TEMP){
-    //   log.info({
-    //       currentTemp,
-    //       desiredTemp,
-    //       overshoot: OVERSHOOT_TEMP},
-    //     'Room temperature high enough, disabling heating');
-    //   await Relay.setRelay(0);
-    // } else {
-    //   log.info({
-    //     currentTemp,
-    //     desiredTemp,
-    //     overshoot: OVERSHOOT_TEMP},
-    //   'Weird temperature, disabling heating');
-    //   await Relay.setRelay(0);
-    // }
   });
 }());

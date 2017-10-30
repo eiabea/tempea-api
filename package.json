@@ -35,6 +35,7 @@
     "google-auth-library": "^0.11.0",
     "googleapis": "^22.2.0",
     "helmet": "^3.9.0",
+    "influxdb-nodejs": "^2.7.4",
     "lodash": "^4.17.4",
     "moment": "^2.19.1",
     "onoff": "^1.1.8"

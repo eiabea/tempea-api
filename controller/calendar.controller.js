@@ -43,6 +43,7 @@ module.exports = (log)=> {
  */
   const getNewToken = (oauth2Client, callback) => {
     let authUrl = oauth2Client.generateAuthUrl({
+      // eslint-disable-next-line camelcase
       access_type: 'offline',
       scope: SCOPES
     });
@@ -76,6 +77,7 @@ module.exports = (log)=> {
     let clientSecret = credentials.installed.client_secret;
     let clientId = credentials.installed.client_id;
     let redirectUrl = credentials.installed.redirect_uris[0];
+    // eslint-disable-next-line new-cap
     let auth = new googleAuth();
     let oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
