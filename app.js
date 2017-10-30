@@ -43,11 +43,11 @@ const Calendar = require('./controller/calendar.controller')(log);
     // desiredTemp < currentTemp < desiredTemp + OVERSHOOT_TEMP --> nicht aufheizen
 
     console.log(desiredTemp < currentTemp &&
-      currentTemp < (desiredTemp + OVERSHOOT_TEMP) &&
-      !this.heating)
+      currentTemp < desiredTemp + OVERSHOOT_TEMP &&
+      !this.heating);
 
     if (desiredTemp < currentTemp &&
-      currentTemp < (desiredTemp + OVERSHOOT_TEMP) &&
+      currentTemp < desiredTemp + OVERSHOOT_TEMP &&
       !this.heating) {
       // Passt
       log.info({
