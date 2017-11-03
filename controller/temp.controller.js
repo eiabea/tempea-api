@@ -3,6 +3,7 @@ const SENSOR_ID = process.env.SENSOR_ID || '10-0008032d5234';
 
 module.exports = (log) => {
   this.log = log.child({controller: 'temp'});
+  this.prevValue = 20.0;
 
   const getCurrentTemp = async () => {
     this.log.trace({func: 'getCurrentTemp'}, 'Getting current temperature');
@@ -13,8 +14,19 @@ module.exports = (log) => {
           return reject(err);
         }
 
-        this.log.trace({func: 'getCurrentTemp', value}, 'Successfully got current temperature');
-        return resolve(value);
+        let returnValue = value;
+
+        // ignore the reset value of the sensor
+        if (value === 85.0) {
+          returnValue = this.prevValue;
+        }
+
+        this.log.trace({
+          func: 'getCurrentTemp',
+          value: returnValue
+        }, 'Successfully got current temperature');
+        this.prevValue = returnValue;
+        return resolve(returnValue);
       });
     });
   };
