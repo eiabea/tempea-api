@@ -3,6 +3,8 @@ version: "3"
 volumes:
   influx:
     driver: "local"
+  redis:
+    driver: "local"
 
 services:
   influx:
@@ -12,11 +14,18 @@ services:
     volumes:
       - "influx:/var/lib/influxdb"
 
+  redis:
+    image: "arm32v7/redis"
+    command: "redis-server --appendonly yes"
+    volumes:
+      - "redis:/data"
+
   tempea:
     build: "."
     privileged: "true"
     depends_on:
       - "influx"
+      - "redis"
     ports:
       - "3000:3000"
     volumes:
@@ -34,6 +43,9 @@ services:
       INFLUX_HOST: "influx"
       INFLUX_PORT: "8086"
       INFLUX_DB: "temp"
+
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
 
       SENSOR_ID: "10-0008032d5234"
       # Celius (float)
