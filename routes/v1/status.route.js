@@ -6,6 +6,7 @@ module.exports = function(log) {
   this.relay = require('../../controller/relay.controller')(log);
   this.temp = require('../../controller/temp.controller')(log);
   this.calendar = require('../../controller/calendar.controller')(log);
+  this.auth = require('../../controller/auth.controller')(log);
 
   router.get('/', async (req, res) => {
     this.log.info('Got status request');
@@ -31,6 +32,13 @@ module.exports = function(log) {
       heating: await this.relay.getRelay() === 1,
       desiredTemp: await this.calendar.getDesiredTemperature(),
       currentTemp: await this.temp.getCurrentTemp()
+    });
+  });
+
+  router.get('/protect', this.auth.authenticate(), this.auth.authorize(), async (req, res) => {
+    this.log.info('Got protect request');
+    res.json({
+      success: true
     });
   });
 

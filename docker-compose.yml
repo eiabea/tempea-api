@@ -34,8 +34,6 @@ services:
       # Logging
       LOG_SRC: "true"
       LOG_LEVEL_STDOUT: "trace"
-      LOG_LEVEL_GRAYLOG: "info"
-      LOG_GRAYLOG_ENABLED: "false"
       # Modules
       ROUTING_MODULE_HOST: "0.0.0.0"
       ROUTING_MODULE_PORT: "3000"
@@ -46,6 +44,10 @@ services:
 
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
+
+      # JWT
+      JWT_SECRET: "changeMe"
+      JWT_EXPIRES_IN: "1h"
 
       SENSOR_ID: "10-0008032d5234"
       # Celius (float)
