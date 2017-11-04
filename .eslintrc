@@ -436,7 +436,7 @@
     //
     "max-depth": [
       2,
-      3
+      4
     ],
     // specify the maximum depth that blocks can be nested (off by default)
     "max-len": [

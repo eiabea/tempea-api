@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-module.exports = function(log) {
+module.exports = (log) => {
   this.log = log.child({route: 'auth'});
   this.auth = require('../../controller/auth.controller')(log);
 

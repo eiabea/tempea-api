@@ -117,7 +117,6 @@ module.exports = (log)=> {
         callback(null);
       } else {
         const event = events[0];
-        this.log.info({event}, 'Upcoming event');
 
         let start = event.start.dateTime || event.start.date;
         let end = event.end.dateTime || event.end.date;

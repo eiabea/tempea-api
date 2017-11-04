@@ -31,7 +31,7 @@ module.exports = (log)=>{
     // eslint-disable-next-line new-cap
     this.acl = new NodeACL(new NodeACL.redisBackend(this.redisClient, ACL_PREFIX));
     this.log.trace({func: 'initAcl'}, 'Allowing default routes');
-    this.acl.allow('flatmate', '/v1/status/protect', 'get');
+    this.acl.allow('flatmate', '/v1/status/mode', 'post');
     // adding admin user on position 0 to flatmate role
     this.acl.addUserRoles(users[0].guid, 'flatmate');
   };

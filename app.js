@@ -12,8 +12,11 @@ const Temp = require('./controller/temp.controller')(log);
 const Relay = require('./controller/relay.controller')(log);
 const Calendar = require('./controller/calendar.controller')(log);
 const Database = require('./controller/database.controller')(log);
+const State = require('./state');
 
 (async function() {
+  this.heating = false;
+
   log.info('Initializing routing module');
 
   const app = express();
@@ -36,45 +39,52 @@ const Database = require('./controller/database.controller')(log);
     log.info(`tempea backend listening on port ${EXPRESS_PORT}`);
   });
 
-  this.heating = false;
-
   Schedule.startJob(async ()=>{
     try {
       const currentTemp = await Temp.getCurrentTemp();
       const desiredTemp = await Calendar.getDesiredTemperature();
-
-      if (desiredTemp < currentTemp &&
+      if (State.mode === 'automatic') {
+        if (desiredTemp < currentTemp &&
         currentTemp < desiredTemp + OVERSHOOT_TEMP &&
         !this.heating) {
-        log.info({
-          currentTemp,
-          desiredTemp,
-          overshoot: OVERSHOOT_TEMP},
-        'Room temperature in range, disable heating');
-        try {
-          await Relay.setRelay(0);
-        } catch (err) {
-          log.error({err}, 'Error setting relay', err);
-        }
-      } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
-        log.info({
-          currentTemp,
-          desiredTemp,
-          overshoot: OVERSHOOT_TEMP
-        },
-        'Room temperature too low, ensure heating');
-        try {
-          await Relay.setRelay(1);
-          this.heating = true;
-        } catch (err) {
-          log.error({err}, 'Error setting relay', err);
+          log.info({
+            currentTemp,
+            desiredTemp,
+            overshoot: OVERSHOOT_TEMP},
+          'Room temperature in range, disable heating');
+          try {
+            await Relay.setRelay(0);
+          } catch (err) {
+            log.error({err}, 'Error setting relay', err);
+          }
+        } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
+          log.info({
+            currentTemp,
+            desiredTemp,
+            overshoot: OVERSHOOT_TEMP
+          },
+          'Room temperature too low, ensure heating');
+          try {
+            await Relay.setRelay(1);
+            this.heating = true;
+          } catch (err) {
+            log.error({err}, 'Error setting relay', err);
+          }
+        } else {
+          log.info({
+            currentTemp,
+            desiredTemp,
+            overshoot: OVERSHOOT_TEMP},
+          'Room temperature high enough, disabling heating');
+          try {
+            await Relay.setRelay(0);
+            this.heating = false;
+          } catch (err) {
+            log.error({err}, 'Error setting relay', err);
+          }
         }
       } else {
-        log.info({
-          currentTemp,
-          desiredTemp,
-          overshoot: OVERSHOOT_TEMP},
-        'Room temperature high enough, disabling heating');
+        log.info('Tempea disabled, disable heating');
         try {
           await Relay.setRelay(0);
           this.heating = false;

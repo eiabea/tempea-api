@@ -23,7 +23,7 @@ module.exports = (log)=>{
       .field({
         cur: currentTemp,
         des: desiredTemp,
-        heat: heating ? 100 : 0
+        heat: heating ? 100 : 0,
       });
   };
 
