@@ -1,6 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const State = require('../../state');
+const RateLimit = require('express-rate-limit');
+const rateLimiterStatus = new RateLimit({
+  keyGenerator: (req) => {
+    return req.header('x-real-ip') || req.connection.remoteAddress;
+  },
+  windowMs: 5 * 60 * 1000,
+  delayAfter: 100,
+  delayMs: 50,
+  max: 100
+});
 
 module.exports = (log) => {
   this.log = log.child({route: 'status'});
@@ -18,7 +28,7 @@ module.exports = (log) => {
     };
   };
 
-  router.get('/', async (req, res) => {
+  router.get('/', rateLimiterStatus, async (req, res) => {
     this.log.info('Got status request');
     res.json({
       success: true,
@@ -36,13 +46,17 @@ module.exports = (log) => {
       State.mode = mode;
       res.json({
         success: true,
-        data: await getStatusObject()
+        data: {
+          msg: 'Successfully set mode to ' + mode
+        }
       });
       break;
     default:
       res.json({
         success: false,
-        data: await getStatusObject()
+        error: {
+          msg: 'Unknown mode'
+        }
       });
       break;
     }
