@@ -113,6 +113,13 @@ const State = require('./state');
       }
     } catch (err) {
       log.error({err}, 'Error getting temperatures', err);
+      log.info('Disable heating');
+      try {
+        await Relay.setRelay(0);
+        this.heating = false;
+      } catch (disableErr) {
+        log.error({disableErr}, 'Error setting relay', disableErr);
+      }
     }
   });
 }());
