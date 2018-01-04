@@ -18,13 +18,26 @@ module.exports = (log) => {
   this.temp = require('../../controller/temp.controller')(log);
   this.calendar = require('../../controller/calendar.controller')(log);
   this.auth = require('../../controller/auth.controller')(log);
+  this.slave = require('../../controller/slave.controller')(log);
 
   const getStatusObject = async ()=>{
+    let slaveData = {};
+
+    try {
+      slaveData = await this.slave.getData();
+    } catch (err) {
+      this.log.error({err}, 'Error getting slave data', err);
+    }
+
     return {
       mode: State.mode,
       heating: await this.relay.getRelay() === 1,
       desiredTemp: await this.calendar.getDesiredTemperature(),
-      currentTemp: await this.temp.getCurrentTemp()
+      currentTemp: await this.temp.getCurrentTemp(),
+      slave: {
+        currentTemp: slaveData.data.temp,
+        currentHum: slaveData.data.hum
+      }
     };
   };
 

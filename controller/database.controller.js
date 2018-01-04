@@ -8,7 +8,9 @@ const client = new Influx(INFLUX_URI);
 const fieldSchema = {
   cur: 'f',
   des: 'f',
-  heat: 'i'
+  heat: 'i',
+  slaveCur: 'f',
+  slaveHum: 'f'
 };
 
 client.schema('temperature', fieldSchema, {
@@ -18,12 +20,23 @@ client.schema('temperature', fieldSchema, {
 module.exports = (log)=>{
   this.log = log.child({controller: 'database'});
 
-  const writeMeasurement = (currentTemp, desiredTemp, heating)=>{
+  const writeMeasurement = (currentTemp, desiredTemp, heating, slave)=>{
+    if (!slave) {
+      return client.write('temperature')
+        .field({
+          cur: currentTemp,
+          des: desiredTemp,
+          heat: heating ? 100 : 0
+        });
+    }
+
     return client.write('temperature')
       .field({
         cur: currentTemp,
         des: desiredTemp,
-        heat: heating ? 100 : 0
+        heat: heating ? 100 : 0,
+        slaveCur: slave.temp,
+        slaveHum: slave.hum
       });
   };
 

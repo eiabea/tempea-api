@@ -12,6 +12,7 @@ const Temp = require('./controller/temp.controller')(log);
 const Relay = require('./controller/relay.controller')(log);
 const Calendar = require('./controller/calendar.controller')(log);
 const Database = require('./controller/database.controller')(log);
+const Slave = require('./controller/slave.controller')(log);
 const State = require('./state');
 
 (async function() {
@@ -94,7 +95,19 @@ const State = require('./state');
       }
 
       try {
-        await Database.writeMeasurement(currentTemp, desiredTemp, this.heating);
+        let slaveData;
+
+        try {
+          const rawSlaveData = await Slave.getData();
+          slaveData = {
+            temp: rawSlaveData.data.temp,
+            hum: rawSlaveData.data.hum
+          };
+        } catch (err) {
+          log.error({err}, 'Error getting slave data', err);
+        }
+
+        await Database.writeMeasurement(currentTemp, desiredTemp, this.heating, slaveData);
       } catch (err) {
         log.error({err}, 'Error writing measurement', err);
       }

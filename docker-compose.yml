@@ -50,6 +50,9 @@ services:
       JWT_EXPIRES_IN: "1h"
 
       SENSOR_ID: "10-0008032d5234"
+      SLAVE_HOST: "192.168.0.7"
+      SLAVE_PORT: "3000"
+      SLAVE_ENDPOINT: "/v1/status"
       # Celius (float)
       MAX_TEMP: "25"
       MIN_TEMP: "15"
