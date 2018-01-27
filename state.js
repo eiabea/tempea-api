@@ -1,3 +1,3 @@
 module.exports = {
-  mode: 'automatic'
+  mode: 'automatic',
 };

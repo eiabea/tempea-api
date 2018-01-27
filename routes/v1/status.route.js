@@ -1,77 +1,70 @@
 const express = require('express');
+
 const router = express.Router();
 const State = require('../../state');
 const RateLimit = require('express-rate-limit');
+
 const rateLimiterStatus = new RateLimit({
-  keyGenerator: (req) => {
-    return req.header('x-real-ip') || req.connection.remoteAddress;
-  },
+  keyGenerator: (req) => req.header('x-real-ip') || req.connection.remoteAddress,
   windowMs: 5 * 60 * 1000,
   delayAfter: 100,
   delayMs: 50,
-  max: 100
+  max: 100,
 });
 
-module.exports = (log) => {
-  this.log = log.child({route: 'status'});
-  this.relay = require('../../controller/relay.controller')(log);
-  this.temp = require('../../controller/temp.controller')(log);
-  this.calendar = require('../../controller/calendar.controller')(log);
-  this.auth = require('../../controller/auth.controller')(log);
-  this.slave = require('../../controller/slave.controller')(log);
-
-  const getStatusObject = async ()=>{
+module.exports = (log, controller) => {
+  const getStatusObject = async () => {
     let slaveData = {};
 
     try {
-      slaveData = await this.slave.getData();
+      slaveData = await controller.slave.getData();
     } catch (err) {
-      this.log.error({err}, 'Error getting slave data', err);
+      log.error({ err }, 'Error getting slave data', err);
     }
 
     return {
       mode: State.mode,
-      heating: await this.relay.getRelay() === 1,
-      desiredTemp: await this.calendar.getDesiredTemperature(),
-      currentTemp: await this.temp.getCurrentTemp(),
+      heating: await controller.relay.getRelay() === 1,
+      desiredTemp: await controller.calendar.getDesiredTemperature(),
+      currentTemp: await controller.temp.getCurrentTemp(),
       slave: {
         currentTemp: slaveData.data.temp,
-        currentHum: slaveData.data.hum
-      }
+        currentHum: slaveData.data.hum,
+      },
     };
   };
 
   router.get('/', rateLimiterStatus, async (req, res) => {
-    this.log.info('Got status request');
+    log.info('Got status request');
     res.json({
       success: true,
-      data: await getStatusObject()
+      data: await getStatusObject(),
     });
   });
 
-  router.post('/mode', this.auth.authenticate(), this.auth.authorize(), async (req, res) => {
-    const {mode} = req.body;
-    this.log.info({mode}, 'Got mode request');
+  router.post('/mode', controller.auth.authenticate(), controller.auth.authorize, async (req, res) => {
+    const { mode } = req.body;
+    log.info({ mode }, 'Got mode request');
 
     switch (mode) {
-    case 'automatic':
-    case 'disable':
-      State.mode = mode;
-      res.json({
-        success: true,
-        data: {
-          msg: 'Successfully set mode to ' + mode
-        }
-      });
-      break;
-    default:
-      res.json({
-        success: false,
-        error: {
-          msg: 'Unknown mode'
-        }
-      });
-      break;
+      case 'automatic':
+      case 'disable':
+        State.mode = mode;
+        res.json({
+          success: true,
+          data: {
+            msg: `Successfully set mode to ${mode}`,
+          },
+        });
+        break;
+      default:
+        res.json({
+          success: false,
+          error: {
+            msg: 'Unknown mode',
+          },
+        });
+        break;
     }
   });
 

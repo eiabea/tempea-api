@@ -1,25 +1,26 @@
-const CronJob = require('cron').CronJob;
+const { CronJob } = require('cron');
+
 const FETCHING_INTERVAL = parseInt(process.env.FETCHING_INTERVAL, 10) || 5;
 const TIME_ZONE = process.env.TIME_ZONE || 'Europe/Vienna';
+const cronPattern = `* */${FETCHING_INTERVAL} * * *`;
 
-module.exports = (log)=>{
-  this.log = log.child({controller: 'schedule'});
+module.exports = (log) => {
+  let job;
 
-  this.cronPattern = '* */' + FETCHING_INTERVAL + ' * * *';
-
-  const isJobRunning = ()=>{
-    if (!this.job) {
+  const isJobRunning = () => {
+    if (!job) {
       return false;
     }
-    return this.job.running;
+    return job.running;
   };
 
-  const startJob = (callback)=>{
-    this.job = new CronJob(this.cronPattern, callback, null, true, TIME_ZONE);
+  const startJob = (callback) => {
+    log.info('Starting cron job');
+    job = new CronJob(cronPattern, callback, null, true, TIME_ZONE);
   };
 
   return {
     startJob,
-    isJobRunning
+    isJobRunning,
   };
 };

@@ -1,5 +1,5 @@
-FROM node:8.8.0-slim
-MAINTAINER eiabea <developer@eiabea.com>
+FROM node:9.4.0-slim
+LABEL eiabea <developer@eiabea.com>
 
 WORKDIR /src
 COPY . /src

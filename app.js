@@ -3,94 +3,126 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const bunyan = require('bunyan');
-const log = bunyan.createLogger({name: 'tempea', level: 10});
-const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
-const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
-const Auth = require('./controller/auth.controller')(log);
-const Schedule = require('./controller/schedule.controller')(log);
-const Temp = require('./controller/temp.controller')(log);
-const Relay = require('./controller/relay.controller')(log);
-const Calendar = require('./controller/calendar.controller')(log);
-const Database = require('./controller/database.controller')(log);
-const Slave = require('./controller/slave.controller')(log);
+
+// Controller
+const Auth = require('./controller/auth.controller');
+const Schedule = require('./controller/schedule.controller');
+const Temp = require('./controller/temp.controller');
+const Relay = require('./controller/relay.controller');
+const Calendar = require('./controller/calendar.controller');
+const Database = require('./controller/database.controller');
+const Slave = require('./controller/slave.controller');
 const State = require('./state');
 
-(async function() {
-  this.heating = false;
+// Routes
+const AuthRoute = require('./routes/v1/auth.route');
+const StatusRoute = require('./routes/v1/status.route');
 
-  log.info('Initializing routing module');
+const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
+const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
 
-  const app = express();
+(async function tempea() {
+  const log = bunyan.createLogger({ name: 'tempea', level: 10 });
 
-  app.use(bodyParser.json({limit: '50mb'}));
-  app.use(bodyParser.urlencoded({extended: false}));
-  app.use(cors());
-  app.use(helmet());
-  app.use(Auth.init());
+  let heating = false;
+  const controller = {};
 
-  const router = express.Router({mergeParams: true});
+  const initControllers = () => {
+    controller.auth = Auth(log.child({ controller: 'auth' }));
+    controller.calendar = Calendar(log.child({ controller: 'calendar' }));
+    controller.database = Database(log.child({ controller: 'database' }));
+    controller.relay = Relay(log.child({ controller: 'relay' }));
+    controller.schedule = Schedule(log.child({ controller: 'schedule' }));
+    controller.slave = Slave(log.child({ controller: 'slave' }));
+    controller.temp = Temp(log.child({ controller: 'temp' }));
+  };
 
-  app.use(router);
+  const initExpress = () => {
+    log.info('Initializing routing module');
 
-  app.use('/v1/auth', require('./routes/v1/auth.route')(log));
-  app.use('/v1/status', require('./routes/v1/status.route')(log));
+    const app = express();
 
-  log.info(`Starting tempea backend on port ${EXPRESS_PORT}`);
-  app.listen(EXPRESS_PORT, ()=> {
-    log.info(`tempea backend listening on port ${EXPRESS_PORT}`);
-  });
+    app.use(bodyParser.json({ limit: '50mb' }));
+    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(cors());
+    app.use(helmet());
+    app.use(controller.auth.getAclMiddleware());
 
-  Schedule.startJob(async ()=>{
+    const router = express.Router({ mergeParams: true });
+
+    app.use(router);
+
+    app.use('/v1/auth', AuthRoute(log.child({ route: 'auth' }), controller));
+    app.use('/v1/status', StatusRoute(log.child({ route: 'status' }), controller));
+
+    log.info(`Starting tempea backend on port ${EXPRESS_PORT}`);
+    app.listen(EXPRESS_PORT, () => {
+      log.info(`tempea backend listening on port ${EXPRESS_PORT}`);
+    });
+  };
+
+  initControllers();
+  initExpress();
+
+  controller.schedule.startJob(async () => {
     try {
-      const currentTemp = await Temp.getCurrentTemp();
-      const desiredTemp = await Calendar.getDesiredTemperature();
+      const currentTemp = await controller.temp.getCurrentTemp();
+      const desiredTemp = await controller.calendar.getDesiredTemperature();
       if (State.mode === 'automatic') {
         if (desiredTemp < currentTemp &&
         currentTemp < desiredTemp + OVERSHOOT_TEMP &&
-        !this.heating) {
-          log.info({
-            currentTemp,
-            desiredTemp,
-            overshoot: OVERSHOOT_TEMP},
-          'Room temperature in range, disable heating');
+        !heating) {
+          log.info(
+            {
+              currentTemp,
+              desiredTemp,
+              overshoot: OVERSHOOT_TEMP,
+            },
+            'Room temperature in range, disable heating',
+          );
           try {
-            await Relay.setRelay(0);
+            await controller.relay.setRelay(0);
           } catch (err) {
-            log.error({err}, 'Error setting relay', err);
+            log.error({ err }, 'Error setting relay', err);
           }
         } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
-          log.info({
-            currentTemp,
-            desiredTemp,
-            overshoot: OVERSHOOT_TEMP
-          },
-          'Room temperature too low, ensure heating');
+          log.info(
+            {
+              currentTemp,
+              desiredTemp,
+              overshoot: OVERSHOOT_TEMP,
+            },
+            'Room temperature too low, ensure heating',
+          );
           try {
-            await Relay.setRelay(1);
-            this.heating = true;
+            await controller.relay.setRelay(1);
+            heating = true;
           } catch (err) {
-            log.error({err}, 'Error setting relay', err);
+            log.error({ err }, 'Error setting relay', err);
           }
         } else {
-          log.info({
-            currentTemp,
-            desiredTemp,
-            overshoot: OVERSHOOT_TEMP},
-          'Room temperature high enough, disabling heating');
+          log.info(
+            {
+              currentTemp,
+              desiredTemp,
+              overshoot: OVERSHOOT_TEMP,
+            },
+            'Room temperature high enough, disabling heating',
+          );
           try {
-            await Relay.setRelay(0);
-            this.heating = false;
+            await controller.relay.setRelay(0);
+            heating = false;
           } catch (err) {
-            log.error({err}, 'Error setting relay', err);
+            log.error({ err }, 'Error setting relay', err);
           }
         }
       } else {
         log.info('Tempea disabled, disable heating');
         try {
-          await Relay.setRelay(0);
-          this.heating = false;
+          await controller.relay.setRelay(0);
+          heating = false;
         } catch (err) {
-          log.error({err}, 'Error setting relay', err);
+          log.error({ err }, 'Error setting relay', err);
         }
       }
 
@@ -98,27 +130,28 @@ const State = require('./state');
         let slaveData;
 
         try {
-          const rawSlaveData = await Slave.getData();
+          const rawSlaveData = await controller.slave.getData();
           slaveData = {
             temp: rawSlaveData.data.temp,
-            hum: rawSlaveData.data.hum
+            hum: rawSlaveData.data.hum,
           };
         } catch (err) {
-          log.error({err}, 'Error getting slave data', err);
+          log.error({ err }, 'Error getting slave data', err);
         }
 
-        await Database.writeMeasurement(currentTemp, desiredTemp, this.heating, slaveData);
+        await controller.database
+          .writeMeasurement(currentTemp, desiredTemp, heating, slaveData);
       } catch (err) {
-        log.error({err}, 'Error writing measurement', err);
+        log.error({ err }, 'Error writing measurement', err);
       }
     } catch (err) {
-      log.error({err}, 'Error getting temperatures', err);
+      log.error({ err }, 'Error getting temperatures', err);
       log.info('Disable heating');
       try {
-        await Relay.setRelay(0);
-        this.heating = false;
+        await controller.relay.setRelay(0);
+        heating = false;
       } catch (disableErr) {
-        log.error({disableErr}, 'Error setting relay', disableErr);
+        log.error({ disableErr }, 'Error setting relay', disableErr);
       }
     }
   });

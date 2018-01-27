@@ -1,44 +1,40 @@
 const express = require('express');
+
 const router = express.Router();
 const RateLimit = require('express-rate-limit');
+
 const rateLimiterLogin = new RateLimit({
-  keyGenerator: (req) => {
-    return req.header('x-real-ip') || req.connection.remoteAddress;
-  },
+  keyGenerator: (req) => req.header('x-real-ip') || req.connection.remoteAddress,
   windowMs: 5 * 60 * 1000,
   delayAfter: 100,
   delayMs: 50,
-  max: 100
+  max: 100,
 });
 
-module.exports = (log) => {
-  this.log = log.child({route: 'auth'});
-  this.auth = require('../../controller/auth.controller')(log);
-
+module.exports = (log, controller) => {
   router.post('/login', rateLimiterLogin, async (req, res) => {
-    const {email, password} = req.body;
+    const { email, password } = req.body;
 
-    this.log.info({user: email}, 'Got login request');
+    this.log.info({ user: email }, 'Got login request');
 
     if (!email || !password) {
       return res.sendStatus(400);
     }
 
-    const user = await this.auth.checkUserPassword(email, password);
+    const user = await controller.auth.checkUserPassword(email, password);
 
     if (!user) {
       return res.sendStatus(401);
     }
 
-    let payload = {
-      guid: user.guid
+    const payload = {
+      guid: user.guid,
     };
 
     return res.json({
-      token: this.auth.signJWT(payload)
+      token: controller.auth.signJWT(payload),
     });
   });
-
 
   return router;
 };

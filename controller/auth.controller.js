@@ -4,11 +4,11 @@ const redis = require('redis');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const passportJWT = require('passport-jwt');
-const ExtractJwt = passportJWT.ExtractJwt;
-const Strategy = passportJWT.Strategy;
+
+const { ExtractJwt, Strategy } = passportJWT;
 const params = {
   secretOrKey: process.env.JWT_SECRET || 'voohieT9ahShoowo1raJidaeb3tionga',
-  jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('JWT')
+  jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('JWT'),
 };
 
 const ACL_PREFIX = process.env.ACL_PREFIX || 'acl_';
@@ -19,83 +19,75 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
 const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
 
-module.exports = (log)=>{
-  this.log = log.child({controller: 'auth'});
+module.exports = (log) => {
+  let redisClient;
+  let acl;
+  let aclMiddleware;
 
-  const initAcl = ()=>{
-    this.log.trace({func: 'initAcl'}, 'Initializing acl with redis backend');
-    this.redisClient = redis.createClient({
+  const initAcl = () => {
+    log.trace({ func: 'initAcl' }, 'Initializing acl with redis backend');
+    redisClient = redis.createClient({
       host: REDIS_HOST,
-      port: REDIS_PORT
+      port: REDIS_PORT,
     });
     // eslint-disable-next-line new-cap
-    this.acl = new NodeACL(new NodeACL.redisBackend(this.redisClient, ACL_PREFIX));
-    this.log.trace({func: 'initAcl'}, 'Allowing default routes');
-    this.acl.allow('flatmate', '/v1/status/mode', 'post');
+    acl = new NodeACL(new NodeACL.redisBackend(redisClient, ACL_PREFIX));
+    log.trace({ func: 'initAcl' }, 'Allowing default routes');
+    acl.allow('flatmate', '/v1/status/mode', 'post');
     // adding admin user on position 0 to flatmate role
-    this.acl.addUserRoles(users[0].guid, 'flatmate');
+    acl.addUserRoles(users[0].guid, 'flatmate');
   };
 
-  const initPassport = ()=>{
-    this.log.trace({func: 'initPassport'}, 'Initializing passport with mocked users');
+  const initPassport = () => {
+    log.trace({ func: 'initPassport' }, 'Initializing passport with mocked users');
     const strategy = new Strategy(params, (payload, done) => {
-      let user = users.find(elem=>{
-        return elem.guid === payload.guid;
-      });
+      const user = users.find(elem => elem.guid === payload.guid);
       if (user) {
         return done(null, {
-          guid: user.guid
+          guid: user.guid,
         });
       }
       return done(new Error('User not found'), null);
     });
 
     passport.use(strategy);
-    return passport.initialize();
+    aclMiddleware = passport.initialize();
   };
 
-  const init = ()=>{
-    initAcl();
-    return initPassport();
+  initAcl();
+  initPassport();
+
+  const getAclMiddleware = () => aclMiddleware;
+
+  const allow = (group, resource, method) => {
+    acl.allow(group, resource, method);
   };
 
-  const allow = (group, resource, method)=>{
-    this.acl.allow(group, resource, method);
-  };
-
-  const addUserRoles = (user, group)=>{
-    this.acl.addUserRoles(user, group);
+  const addUserRoles = (user, group) => {
+    acl.addUserRoles(user, group);
   };
 
   const authorize = (numPathComponents) => {
-    return this.acl.middleware(numPathComponents || 0, req=>{
-      return req.user.guid;
-    });
+    acl.middleware(numPathComponents || 0, req => req.user.guid);
   };
 
-  const authenticate = () => {
-    return passport.authenticate('jwt', {session: false});
+  const authenticate = () => passport.authenticate('jwt', { session: false });
+
+  const checkUserPassword = async (email, password) => {
+    users.find((u) => u.email === email && u.password === password);
   };
 
-  const checkUserPassword = async(email, password) => {
-    return users.find((u) => {
-      return u.email === email && u.password === password;
-    });
-  };
-
-  const signJWT = (payload)=>{
-    return jwt.sign(payload, params.secretOrKey, {
-      expiresIn: JWT_EXPIRES_IN
-    });
-  };
+  const signJWT = (payload) => jwt.sign(payload, params.secretOrKey, {
+    expiresIn: JWT_EXPIRES_IN,
+  });
 
   return {
-    init,
     allow,
     addUserRoles,
     authorize,
     authenticate,
     checkUserPassword,
-    signJWT
+    signJWT,
+    getAclMiddleware,
   };
 };

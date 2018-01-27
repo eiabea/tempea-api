@@ -9,13 +9,12 @@ const moment = require('moment');
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 // let TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
 //   process.env.USERPROFILE) + '/.credentials/';
-const TOKEN_DIR = process.cwd() + '/auth/';
-const TOKEN_PATH = TOKEN_DIR + 'calendar-nodejs-quickstart.json';
+const TOKEN_DIR = `${process.cwd()}/auth/`;
+const TOKEN_PATH = `${TOKEN_DIR}calendar-nodejs-quickstart.json`;
 const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
 const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
 
-module.exports = (log)=> {
-  this.log = log.child({controller: 'calendar'});
+module.exports = (log) => {
   /*
  * Store token to disk be used in later program executions.
  *
@@ -30,7 +29,7 @@ module.exports = (log)=> {
       }
     }
     fs.writeFile(TOKEN_PATH, JSON.stringify(token));
-    this.log.trace('Token stored to ' + TOKEN_PATH);
+    log.trace(`Token stored to ${TOKEN_PATH}`);
   };
 
   /*
@@ -42,23 +41,24 @@ module.exports = (log)=> {
  *     client.
  */
   const getNewToken = (oauth2Client, callback) => {
-    let authUrl = oauth2Client.generateAuthUrl({
+    const authUrl = oauth2Client.generateAuthUrl({
       // eslint-disable-next-line camelcase
       access_type: 'offline',
-      scope: SCOPES
+      scope: SCOPES,
     });
-    this.log.info('Authorize this app by visiting this url: ', authUrl);
-    let rl = readline.createInterface({
+    log.info('Authorize this app by visiting this url: ', authUrl);
+    const rl = readline.createInterface({
       input: process.stdin,
-      output: process.stdout
+      output: process.stdout,
     });
-    rl.question('Enter the code from that page here: ', (code)=> {
+    rl.question('Enter the code from that page here: ', (code) => {
       rl.close();
-      oauth2Client.getToken(code, (err, token)=> {
+      oauth2Client.getToken(code, (err, token) => {
         if (err) {
-          this.log.error({err}, 'Error while trying to retrieve access token', err);
+          log.error({ err }, 'Error while trying to retrieve access token', err);
           return;
         }
+        // eslint-disable-next-line no-param-reassign
         oauth2Client.credentials = token;
         storeToken(token);
         callback(oauth2Client);
@@ -73,16 +73,16 @@ module.exports = (log)=> {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-  const authorize = (credentials, callback)=> {
-    let clientSecret = credentials.installed.client_secret;
-    let clientId = credentials.installed.client_id;
-    let redirectUrl = credentials.installed.redirect_uris[0];
+  const authorize = (credentials, callback) => {
+    const clientSecret = credentials.installed.client_secret;
+    const clientId = credentials.installed.client_id;
+    const redirectUrl = credentials.installed.redirect_uris[0];
     // eslint-disable-next-line new-cap
-    let auth = new googleAuth();
-    let oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+    const auth = new googleAuth();
+    const oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
 
     // Check if we have previously stored a token.
-    fs.readFile(TOKEN_PATH, (err, token)=> {
+    fs.readFile(TOKEN_PATH, (err, token) => {
       if (err) {
         getNewToken(oauth2Client, callback);
       } else {
@@ -98,78 +98,74 @@ module.exports = (log)=> {
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
   const getCurrentEvent = (auth, callback) => {
-    let calendar = google.calendar('v3');
+    const calendar = google.calendar('v3');
     calendar.events.list({
-      auth: auth,
+      auth,
       calendarId: 'primary',
       timeMin: (new Date()).toISOString(),
       maxResults: 1,
       singleEvents: true,
-      orderBy: 'startTime'
+      orderBy: 'startTime',
     }, (err, response) => {
       if (err) {
-        this.log.error({err}, 'The API returned an error: ' + err);
+        log.error({ err }, `The API returned an error: ${err}`);
         return;
       }
-      let events = response.items;
+      const events = response.items;
       if (events.length === 0) {
-        this.log.info('No upcoming events found.');
+        log.info('No upcoming events found.');
         callback(null);
       } else {
         const event = events[0];
 
-        let start = event.start.dateTime || event.start.date;
-        let end = event.end.dateTime || event.end.date;
+        const start = event.start.dateTime || event.start.date;
+        const end = event.end.dateTime || event.end.date;
         const utcStart = moment.utc(start);
         const utcEnd = moment.utc(end);
 
         if (moment().isBetween(utcStart, utcEnd)) {
-          this.log.info({event}, 'Event is in range');
+          log.info({ event }, 'Event is in range');
           callback(event);
         } else {
-          this.log.info({event}, 'Event is not in range');
+          log.info({ event }, 'Event is not in range');
           callback(null);
         }
       }
     });
   };
 
-  const getDesiredTemperature = ()=>{
-    return new Promise((resolve, reject)=>{
-      this.log.trace('getDesiredTemperature');
-      fs.readFile(process.cwd() + '/auth/client_secret.json', (err, content) => {
-        if (err) {
-          this.log.error({err}, 'Error loading client secret file: ' + err);
-          return reject(err);
+  const getDesiredTemperature = () => new Promise((resolve, reject) => {
+    log.trace('getDesiredTemperature');
+    fs.readFile(`${process.cwd()}/auth/client_secret.json`, (err, content) => {
+      if (err) {
+        log.error({ err }, `Error loading client secret file: ${err}`);
+        return reject(err);
+      }
+      // Authorize a client with the loaded credentials, then call the
+      // Google Calendar API.
+      return authorize(JSON.parse(content), (oauthClient) => getCurrentEvent(oauthClient, event => {
+        if (!event) {
+          return resolve(MIN_TEMP);
         }
-        // Authorize a client with the loaded credentials, then call the
-        // Google Calendar API.
-        return authorize(JSON.parse(content), (oauthClient)=>{
-          return getCurrentEvent(oauthClient, event=>{
-            if (!event) {
-              return resolve(MIN_TEMP);
-            }
 
-            let desiredTemp;
-            try {
-              desiredTemp = parseFloat(event.summary);
-            } catch (e) {
-              this.log.error({e}, 'Unable to parse, fallback to MIN_TEMP');
-              desiredTemp = MIN_TEMP;
-            }
+        let desiredTemp;
+        try {
+          desiredTemp = parseFloat(event.summary);
+        } catch (e) {
+          log.error({ e }, 'Unable to parse, fallback to MIN_TEMP');
+          desiredTemp = MIN_TEMP;
+        }
 
-            if (desiredTemp > MAX_TEMP) {
-              desiredTemp = MAX_TEMP;
-            }
+        if (desiredTemp > MAX_TEMP) {
+          desiredTemp = MAX_TEMP;
+        }
 
-            return resolve(desiredTemp);
-          });
-        });
-      });
+        return resolve(desiredTemp);
+      }));
     });
-  };
+  });
 
   return {
-    getDesiredTemperature
+    getDesiredTemperature,
   };
 };

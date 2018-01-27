@@ -1,32 +1,33 @@
 const Influx = require('influxdb-nodejs');
-const INFLUX_URI = 'http://' + (process.env.INFLUX_HOST || 'influx') + ':' +
-  (process.env.INFLUX_PORT || '8086') + '/' +
-  (process.env.INFLUX_DB || 'temp');
 
-const client = new Influx(INFLUX_URI);
+const INFLUX_URI = `http://${process.env.INFLUX_HOST || 'influx'}:${
+  process.env.INFLUX_PORT || '8086'}/${
+  process.env.INFLUX_DB || 'temp'}`;
 
-const fieldSchema = {
-  cur: 'f',
-  des: 'f',
-  heat: 'i',
-  slaveCur: 'f',
-  slaveHum: 'f'
-};
+module.exports = (log) => {
+  log.info('Creating influx client');
+  const client = new Influx(INFLUX_URI);
 
-client.schema('temperature', fieldSchema, {
-  stripUnknown: true
-});
+  const fieldSchema = {
+    cur: 'f',
+    des: 'f',
+    heat: 'i',
+    slaveCur: 'f',
+    slaveHum: 'f',
+  };
 
-module.exports = (log)=>{
-  this.log = log.child({controller: 'database'});
+  client.schema('temperature', fieldSchema, {
+    stripUnknown: true,
+  });
 
-  const writeMeasurement = (currentTemp, desiredTemp, heating, slave)=>{
+  const writeMeasurement = (currentTemp, desiredTemp, heating, slave) => {
+    log.trace('Writing measurement');
     if (!slave) {
       return client.write('temperature')
         .field({
           cur: currentTemp,
           des: desiredTemp,
-          heat: heating ? 100 : 0
+          heat: heating ? 100 : 0,
         });
     }
 
@@ -36,11 +37,11 @@ module.exports = (log)=>{
         des: desiredTemp,
         heat: heating ? 100 : 0,
         slaveCur: slave.temp,
-        slaveHum: slave.hum
+        slaveHum: slave.hum,
       });
   };
 
   return {
-    writeMeasurement
+    writeMeasurement,
   };
 };
