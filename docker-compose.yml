@@ -31,25 +31,23 @@ services:
     volumes:
       - ".:/src"
     environment:
-      # Logging
-      LOG_SRC: "true"
-      LOG_LEVEL_STDOUT: "trace"
       # Modules
       ROUTING_MODULE_HOST: "0.0.0.0"
       ROUTING_MODULE_PORT: "3000"
       # Database
+      #  Influx
       INFLUX_HOST: "influx"
       INFLUX_PORT: "8086"
       INFLUX_DB: "temp"
-
+      #  Redis
       REDIS_HOST: "redis"
       REDIS_PORT: "6379"
-
       # JWT
       JWT_SECRET: "changeMe"
       JWT_EXPIRES_IN: "1h"
-
+      # Hardware
       SENSOR_ID: "10-0008032d5234"
+      # Slave
       SLAVE_HOST: "192.168.0.7"
       SLAVE_PORT: "3000"
       SLAVE_ENDPOINT: "/v1/status"

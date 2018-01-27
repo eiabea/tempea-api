@@ -55,9 +55,9 @@ const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
     app.use('/v1/auth', AuthRoute(log.child({ route: 'auth' }), controller));
     app.use('/v1/status', StatusRoute(log.child({ route: 'status' }), controller));
 
-    log.info(`Starting tempea backend on port ${EXPRESS_PORT}`);
+    log.info(`Starting Backend on port ${EXPRESS_PORT}`);
     app.listen(EXPRESS_PORT, () => {
-      log.info(`tempea backend listening on port ${EXPRESS_PORT}`);
+      log.info(`Backend listening on port ${EXPRESS_PORT}`);
     });
   };
 

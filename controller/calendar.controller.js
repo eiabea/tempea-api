@@ -124,10 +124,10 @@ module.exports = (log) => {
         const utcEnd = moment.utc(end);
 
         if (moment().isBetween(utcStart, utcEnd)) {
-          log.info({ event }, 'Event is in range');
+          log.trace({ event }, 'Event is in range');
           callback(event);
         } else {
-          log.info({ event }, 'Event is not in range');
+          log.trace({ event }, 'Event is not in range');
           callback(null);
         }
       }
