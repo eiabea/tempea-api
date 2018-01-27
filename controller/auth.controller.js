@@ -74,10 +74,10 @@ module.exports = (log) => {
   const authenticate = () => passport.authenticate('jwt', { session: false });
 
   const checkUserPassword = async (email, password) => {
-    users.find((u) => u.email === email && u.password === password);
+    users.find(u => u.email === email && u.password === password);
   };
 
-  const signJWT = (payload) => jwt.sign(payload, params.secretOrKey, {
+  const signJWT = payload => jwt.sign(payload, params.secretOrKey, {
     expiresIn: JWT_EXPIRES_IN,
   });
 

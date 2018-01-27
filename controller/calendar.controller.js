@@ -143,7 +143,7 @@ module.exports = (log) => {
       }
       // Authorize a client with the loaded credentials, then call the
       // Google Calendar API.
-      return authorize(JSON.parse(content), (oauthClient) => getCurrentEvent(oauthClient, event => {
+      return authorize(JSON.parse(content), oauthClient => getCurrentEvent(oauthClient, (event) => {
         if (!event) {
           return resolve(MIN_TEMP);
         }
