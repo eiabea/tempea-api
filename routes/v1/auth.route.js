@@ -15,7 +15,7 @@ module.exports = (log, controller) => {
   router.post('/login', rateLimiterLogin, async (req, res) => {
     const { email, password } = req.body;
 
-    this.log.info({ user: email }, 'Got login request');
+    log.info({ user: email }, 'Got login request');
 
     if (!email || !password) {
       return res.sendStatus(400);

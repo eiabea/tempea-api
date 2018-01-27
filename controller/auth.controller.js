@@ -67,14 +67,14 @@ module.exports = (log) => {
     acl.addUserRoles(user, group);
   };
 
-  const authorize = (numPathComponents) => {
+  const authorize = numPathComponents =>
     acl.middleware(numPathComponents || 0, req => req.user.guid);
-  };
 
   const authenticate = () => passport.authenticate('jwt', { session: false });
 
   const checkUserPassword = async (email, password) => {
-    users.find(u => u.email === email && u.password === password);
+    log.debug({ user: email }, 'Checking password');
+    return users.find(u => u.email === email && u.password === password);
   };
 
   const signJWT = payload => jwt.sign(payload, params.secretOrKey, {

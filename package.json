@@ -1,6 +1,6 @@
 {
   "name": "tempea",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Node.js application for controlling room temperature via raspberry pi",
   "main": "app.js",
   "private": true,
