@@ -14,7 +14,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "4.6.0"
+      "version": "4.6.3"
     },
     {
       "type": "panel",
@@ -61,7 +61,9 @@
       "height": 602,
       "panels": [
         {
-          "aliasColors": {},
+          "aliasColors": {
+            "desired_temp": "#6d1f62"
+          },
           "bars": false,
           "dashLength": 10,
           "dashes": false,
@@ -91,6 +93,14 @@
             {
               "alias": "temperature.heat",
               "yaxis": 2
+            },
+            {
+              "alias": "heating",
+              "yaxis": 2
+            },
+            {
+              "alias": "slave_hum",
+              "yaxis": 2
             }
           ],
           "spaceLength": 10,
@@ -99,6 +109,7 @@
           "steppedLine": false,
           "targets": [
             {
+              "alias": "master_temp",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -129,23 +140,33 @@
                     "params": [],
                     "type": "mean"
                   }
-                ],
+                ]
+              ],
+              "tags": []
+            },
+            {
+              "alias": "desired_temp",
+              "dsType": "influxdb",
+              "groupBy": [],
+              "measurement": "temperature",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "refId": "D",
+              "resultFormat": "time_series",
+              "select": [
                 [
                   {
                     "params": [
                       "des"
                     ],
                     "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
                   }
                 ]
               ],
               "tags": []
             },
             {
+              "alias": "heating",
               "dsType": "influxdb",
               "groupBy": [],
               "measurement": "temperature",
@@ -160,6 +181,76 @@
                       "heat"
                     ],
                     "type": "field"
+                  }
+                ]
+              ],
+              "tags": []
+            },
+            {
+              "alias": "slave_temp",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "5m"
+                  ],
+                  "type": "time"
+                }
+              ],
+              "measurement": "temperature",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "slaveCur"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            },
+            {
+              "alias": "slave_hum",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "5m"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "temperature",
+              "orderByTime": "ASC",
+              "policy": "default",
+              "refId": "E",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "slaveHum"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
                   }
                 ]
               ],
@@ -322,7 +413,7 @@
     "list": []
   },
   "time": {
-    "from": "now/M",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -352,5 +443,5 @@
   },
   "timezone": "",
   "title": "Tempea",
-  "version": 2
+  "version": 1
 }
