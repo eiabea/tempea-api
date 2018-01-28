@@ -61,89 +61,56 @@ const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
     });
   };
 
+  const shouldHeat = (currentTemp, desiredTemp) => {
+    if (desiredTemp < currentTemp &&
+      currentTemp < desiredTemp + OVERSHOOT_TEMP &&
+      !heating) {
+      log.info(
+        {
+          currentTemp,
+          desiredTemp,
+          overshoot: OVERSHOOT_TEMP,
+        },
+        'Room temperature in range, disable heating',
+      );
+
+      return false;
+    } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
+      log.info(
+        {
+          currentTemp,
+          desiredTemp,
+          overshoot: OVERSHOOT_TEMP,
+        },
+        'Room temperature too low, ensure heating',
+      );
+
+      return true;
+    }
+
+    log.info(
+      {
+        currentTemp,
+        desiredTemp,
+        overshoot: OVERSHOOT_TEMP,
+      },
+      'Room temperature high enough, disabling heating',
+    );
+
+    return false;
+  };
+
   initControllers();
   initExpress();
 
   controller.schedule.startJob(async () => {
+    let currentTemp;
+    let desiredTemp;
+    let slaveData;
+
     try {
-      const currentTemp = await controller.temp.getCurrentTemp();
-      const desiredTemp = await controller.calendar.getDesiredTemperature();
-      if (State.mode === 'automatic') {
-        if (desiredTemp < currentTemp &&
-        currentTemp < desiredTemp + OVERSHOOT_TEMP &&
-        !heating) {
-          log.info(
-            {
-              currentTemp,
-              desiredTemp,
-              overshoot: OVERSHOOT_TEMP,
-            },
-            'Room temperature in range, disable heating',
-          );
-          try {
-            await controller.relay.setRelay(0);
-          } catch (err) {
-            log.error({ err }, 'Error setting relay', err);
-          }
-        } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
-          log.info(
-            {
-              currentTemp,
-              desiredTemp,
-              overshoot: OVERSHOOT_TEMP,
-            },
-            'Room temperature too low, ensure heating',
-          );
-          try {
-            await controller.relay.setRelay(1);
-            heating = true;
-          } catch (err) {
-            log.error({ err }, 'Error setting relay', err);
-          }
-        } else {
-          log.info(
-            {
-              currentTemp,
-              desiredTemp,
-              overshoot: OVERSHOOT_TEMP,
-            },
-            'Room temperature high enough, disabling heating',
-          );
-          try {
-            await controller.relay.setRelay(0);
-            heating = false;
-          } catch (err) {
-            log.error({ err }, 'Error setting relay', err);
-          }
-        }
-      } else {
-        log.info('Tempea disabled, disable heating');
-        try {
-          await controller.relay.setRelay(0);
-          heating = false;
-        } catch (err) {
-          log.error({ err }, 'Error setting relay', err);
-        }
-      }
-
-      try {
-        let slaveData;
-
-        try {
-          const rawSlaveData = await controller.slave.getData();
-          slaveData = {
-            temp: rawSlaveData.data.temp,
-            hum: rawSlaveData.data.hum,
-          };
-        } catch (err) {
-          log.error({ err }, 'Error getting slave data', err);
-        }
-
-        await controller.database
-          .writeMeasurement(currentTemp, desiredTemp, heating, slaveData);
-      } catch (err) {
-        log.error({ err }, 'Error writing measurement', err);
-      }
+      currentTemp = await controller.temp.getCurrentTemp();
+      desiredTemp = await controller.calendar.getDesiredTemperature();
     } catch (err) {
       log.error({ err }, 'Error getting temperatures', err);
       log.info('Disable heating');
@@ -153,6 +120,43 @@ const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
       } catch (disableErr) {
         log.error({ disableErr }, 'Error setting relay', disableErr);
       }
+      return;
+    }
+
+    if (State.mode === 'automatic') {
+      const enableHeating = shouldHeat(currentTemp, desiredTemp);
+
+      try {
+        await controller.relay.setRelay(enableHeating ? 1 : 0);
+        heating = enableHeating;
+      } catch (err) {
+        log.error({ err }, 'Error setting relay', err);
+      }
+    } else {
+      log.info('Tempea disabled, disable heating');
+      try {
+        await controller.relay.setRelay(0);
+        heating = false;
+      } catch (err) {
+        log.error({ err }, 'Error setting relay', err);
+      }
+    }
+
+    try {
+      const rawSlaveData = await controller.slave.getData();
+      slaveData = {
+        temp: rawSlaveData.data.temp,
+        hum: rawSlaveData.data.hum,
+      };
+    } catch (err) {
+      log.error({ err }, 'Error getting slave data', err);
+    }
+
+    try {
+      await controller.database
+        .writeMeasurement(currentTemp, desiredTemp, heating, slaveData);
+    } catch (err) {
+      log.error({ err }, 'Error writing measurement', err);
     }
   });
 }());
