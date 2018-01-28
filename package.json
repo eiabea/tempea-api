@@ -10,7 +10,8 @@
     "start:dev": "${NODE_PATH:-node_modules}/.bin/nodemon app.js",
     "lint": "${NODE_PATH:-node_modules}/.bin/eslint --fix .",
     "test": "npm run test:unit",
-    "test:unit": "nyc --reporter lcov --reporter text ${NODE_PATH:-node_modules}/.bin/_mocha test ./test/**/*.test.js"
+    "test:unit": "nyc --reporter lcov ${NODE_PATH:-node_modules}/.bin/_mocha test ./test/**/*.test.js",
+    "coveralls": "cat ./coverage/lcov.info | ${NODE_PATH:-node_modules}/.bin/coveralls"
   },
   "repository": {
     "type": "git",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
+    "coveralls": "^3.0.0",
     "eslint": "^4.16.0",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-chai": "^0.0.1",
