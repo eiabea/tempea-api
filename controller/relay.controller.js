@@ -1,6 +1,8 @@
 const { Gpio } = require('onoff');
 
-const relay = new Gpio(17, 'out');
+const { CI } = process.env;
+
+const relay = CI ? require('../test/mock/relay') : new Gpio(17, 'out');
 
 module.exports = (log) => {
   const getRelay = async () => {
