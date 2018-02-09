@@ -6,12 +6,14 @@ const bunyan = require('bunyan');
 
 // Controller
 const Auth = require('./controller/auth.controller');
-const Schedule = require('./controller/schedule.controller');
-const Temp = require('./controller/temp.controller');
-const Relay = require('./controller/relay.controller');
 const Calendar = require('./controller/calendar.controller');
 const Database = require('./controller/database.controller');
+const Heat = require('./controller/heat.controller');
+const Relay = require('./controller/relay.controller');
+const Schedule = require('./controller/schedule.controller');
 const Slave = require('./controller/slave.controller');
+const Temp = require('./controller/temp.controller');
+
 const State = require('./state');
 
 // Routes
@@ -19,7 +21,6 @@ const AuthRoute = require('./routes/v1/auth.route');
 const StatusRoute = require('./routes/v1/status.route');
 
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
-const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
 
 (async function tempea() {
   const log = bunyan.createLogger({ name: 'tempea', level: 10 });
@@ -31,6 +32,7 @@ const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
     controller.auth = Auth(log.child({ controller: 'auth' }));
     controller.calendar = Calendar(log.child({ controller: 'calendar' }));
     controller.database = Database(log.child({ controller: 'database' }));
+    controller.heat = Heat(log.child({ controller: 'heat' }));
     controller.relay = Relay(log.child({ controller: 'relay' }));
     controller.schedule = Schedule(log.child({ controller: 'schedule' }));
     controller.slave = Slave(log.child({ controller: 'slave' }));
@@ -61,45 +63,6 @@ const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
     });
   };
 
-  const shouldHeat = (currentTemp, desiredTemp) => {
-    if (desiredTemp < currentTemp &&
-      currentTemp < desiredTemp + OVERSHOOT_TEMP &&
-      !heating) {
-      log.info(
-        {
-          currentTemp,
-          desiredTemp,
-          overshoot: OVERSHOOT_TEMP,
-        },
-        'Room temperature in range, disable heating',
-      );
-
-      return false;
-    } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
-      log.info(
-        {
-          currentTemp,
-          desiredTemp,
-          overshoot: OVERSHOOT_TEMP,
-        },
-        'Room temperature too low, ensure heating',
-      );
-
-      return true;
-    }
-
-    log.info(
-      {
-        currentTemp,
-        desiredTemp,
-        overshoot: OVERSHOOT_TEMP,
-      },
-      'Room temperature high enough, disabling heating',
-    );
-
-    return false;
-  };
-
   initControllers();
   initExpress();
 
@@ -124,7 +87,7 @@ const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
     }
 
     if (State.mode === 'automatic') {
-      const enableHeating = shouldHeat(currentTemp, desiredTemp);
+      const enableHeating = controller.heat.shouldHeat(currentTemp, desiredTemp, heating);
 
       try {
         await controller.relay.setRelay(enableHeating ? 1 : 0);

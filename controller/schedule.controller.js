@@ -14,6 +14,12 @@ module.exports = (log) => {
     return job.running;
   };
 
+  const stopJob = () => {
+    if (job) {
+      job.stop();
+    }
+  };
+
   const startJob = (callback) => {
     log.info('Starting cron job');
     job = new CronJob(cronPattern, callback, null, true, TIME_ZONE);
@@ -21,6 +27,7 @@ module.exports = (log) => {
 
   return {
     startJob,
+    stopJob,
     isJobRunning,
   };
 };
