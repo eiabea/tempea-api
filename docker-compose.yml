@@ -31,6 +31,9 @@ services:
     volumes:
       - ".:/src"
     environment:
+      # Google
+      GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"
+      GOOGLE_CALENDAR_ID: "developer@eiabea.com"
       # Modules
       ROUTING_MODULE_HOST: "0.0.0.0"
       ROUTING_MODULE_PORT: "3000"

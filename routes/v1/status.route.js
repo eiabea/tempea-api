@@ -42,31 +42,31 @@ module.exports = (log, controller) => {
     });
   });
 
-  router.post('/mode', controller.auth.authenticate(), controller.auth.authorize(), async (req, res) => {
-    const { mode } = req.body;
-    log.info({ mode }, 'Got mode request');
+  // router.post('/mode', controller.auth.authenticate(), controller.auth.authorize(), async (req, res) => {
+  //   const { mode } = req.body;
+  //   log.info({ mode }, 'Got mode request');
 
-    switch (mode) {
-      case 'automatic':
-      case 'disable':
-        State.mode = mode;
-        res.json({
-          success: true,
-          data: {
-            msg: `Successfully set mode to ${mode}`,
-          },
-        });
-        break;
-      default:
-        res.json({
-          success: false,
-          error: {
-            msg: 'Unknown mode',
-          },
-        });
-        break;
-    }
-  });
+  //   switch (mode) {
+  //     case 'automatic':
+  //     case 'disable':
+  //       State.mode = mode;
+  //       res.json({
+  //         success: true,
+  //         data: {
+  //           msg: `Successfully set mode to ${mode}`,
+  //         },
+  //       });
+  //       break;
+  //     default:
+  //       res.json({
+  //         success: false,
+  //         error: {
+  //           msg: 'Unknown mode',
+  //         },
+  //       });
+  //       break;
+  //   }
+  // });
 
   return router;
 };

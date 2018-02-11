@@ -28,10 +28,10 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
   let heating = false;
   const controller = {};
 
-  const initControllers = () => {
+  const initControllers = async () => {
     controller.auth = Auth(log.child({ controller: 'auth' }));
     controller.calendar = Calendar(log.child({ controller: 'calendar' }));
-    controller.database = Database(log.child({ controller: 'database' }));
+    controller.database = await Database(log.child({ controller: 'database' }));
     controller.heat = Heat(log.child({ controller: 'heat' }));
     controller.relay = Relay(log.child({ controller: 'relay' }));
     controller.schedule = Schedule(log.child({ controller: 'schedule' }));
@@ -39,7 +39,7 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
     controller.temp = Temp(log.child({ controller: 'temp' }));
   };
 
-  const initExpress = () => {
+  const initExpress = async () => {
     log.info('Initializing routing module');
 
     const app = express();
@@ -63,8 +63,8 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
     });
   };
 
-  initControllers();
-  initExpress();
+  await initControllers();
+  await initExpress();
 
   controller.schedule.startJob(async () => {
     let currentTemp;

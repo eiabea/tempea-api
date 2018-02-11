@@ -3,10 +3,17 @@ version: "3"
 services:
   influx:
     image: "influxdb"
+    ports:
+      - "8086"
 
   redis:
     image: "redis"
 
   tempea:
+    container_name: "tempea_testing"
+    command: "ping -i 10 localhost"
+    privileged: "false"
+    ports:
+      - "3000"
     environment:
       CI: "true"

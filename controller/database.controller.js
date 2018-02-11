@@ -1,24 +1,40 @@
 const Influx = require('influxdb-nodejs');
 
-const INFLUX_URI = `http://${process.env.INFLUX_HOST || 'influx'}:${
-  process.env.INFLUX_PORT || '8086'}/${
-  process.env.INFLUX_DB || 'temp'}`;
+const INFLUX_HOST = process.env.INFLUX_HOST || 'influx';
+const INFLUX_PORT = process.env.INFLUX_PORT || 8086;
+const INFLUX_DB = process.env.INFLUX_DB || 'temp';
 
-module.exports = (log) => {
+const INFLUX_URI = `http://${INFLUX_HOST}:${INFLUX_PORT}/${INFLUX_DB}`;
+
+module.exports = async (log) => {
   log.info('Creating influx client');
-  const client = new Influx(INFLUX_URI);
+  let client;
 
-  const fieldSchema = {
-    cur: 'f',
-    des: 'f',
-    heat: 'i',
-    slaveCur: 'f',
-    slaveHum: 'f',
+  const initClient = async () => {
+    client = new Influx(INFLUX_URI);
+    const fieldSchema = {
+      cur: 'f',
+      des: 'f',
+      heat: 'i',
+      slaveCur: 'f',
+      slaveHum: 'f',
+    };
+
+    client.schema('temperature', fieldSchema, {
+      stripUnknown: true,
+    });
   };
 
-  client.schema('temperature', fieldSchema, {
-    stripUnknown: true,
-  });
+  const initDB = async () => {
+    try {
+      await client.createDatabase();
+    } catch (err) {
+      log.warn({ err }, 'Error creating database', err);
+    }
+  };
+
+  await initClient();
+  await initDB();
 
   const writeMeasurement = (currentTemp, desiredTemp, heating, slave) => {
     log.trace('Writing measurement');

@@ -7,14 +7,15 @@ const moment = require('moment');
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/calendar-nodejs-quickstart.json
-const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const GOOGLE_AUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 // let TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
 //   process.env.USERPROFILE) + '/.credentials/';
+const { GOOGLE_CALENDAR_ID, GOOGLE_SERVICE_ACCOUNT_JSON } = process.env;
 const TOKEN_DIR = `${process.cwd()}/secrets`;
 // const TOKEN_PATH = `${TOKEN_DIR}/calendar-nodejs-quickstart.json`;
-const TOKEN_PATH = `${TOKEN_DIR}/tempea-service.json`;
-// const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
-// const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
+const TOKEN_PATH = `${TOKEN_DIR}/${GOOGLE_SERVICE_ACCOUNT_JSON}`;
+const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
+const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
 
 module.exports = (log) => {
   const getServiceJson = () => new Promise((resolve, reject) => {
@@ -30,13 +31,13 @@ module.exports = (log) => {
 
   const getGoogleAuthClient = async () => {
     try {
-      const tokenContent = await getServiceJson();
+      const serviceAccount = await getServiceJson();
 
       const jwtClient = new JWT(
-        tokenContent.client_email,
+        serviceAccount.client_email,
         null,
-        tokenContent.private_key,
-        SCOPES,
+        serviceAccount.private_key,
+        GOOGLE_AUTH_SCOPES,
       );
 
       await jwtClient.authorize();
@@ -149,7 +150,7 @@ module.exports = (log) => {
   const listEvents = async auth => new Promise((resolve, reject) => {
     calendar.events.list({
       auth,
-      calendarId: 'developer@eiabea.com',
+      calendarId: GOOGLE_CALENDAR_ID,
       timeMin: (new Date()).toISOString(),
       maxResults: 1,
       singleEvents: true,
@@ -216,53 +217,44 @@ module.exports = (log) => {
     return event;
   };
 
-  const getDesiredTemperature = () => new Promise((/* resolve, reject */) => {
+  const getDesiredTemperature = async () => {
     log.trace('getDesiredTemperature');
-    // fs.readFile(`${process.cwd()}/auth/client_secret.json`, async (err, content) => {
-    //   if (err) {
-    //     log.error({ err }, `Error loading client secret file: ${err}`);
-    //     return reject(err);
-    //   }
-    //   // Authorize a client with the loaded credentials, then call the
-    //   // Google Calendar API.
 
-    //   // const oauthClient = await getAuthenticatedClient(JSON.parse(content));
+    const auth = await getGoogleAuthClient();
+    const event = await getCurrentEvent(auth);
+    if (!event) {
+      return MIN_TEMP;
+    }
 
-    //   return getCurrentEvent(null, (event) => {
-    //     if (!event) {
-    //       return resolve(MIN_TEMP);
-    //     }
+    let desiredTemp;
+    try {
+      desiredTemp = parseFloat(event.summary);
+    } catch (e) {
+      log.error({ e }, 'Unable to parse, fallback to MIN_TEMP');
+      desiredTemp = MIN_TEMP;
+    }
 
-    //     let desiredTemp;
-    //     try {
-    //       desiredTemp = parseFloat(event.summary);
-    //     } catch (e) {
-    //       log.error({ e }, 'Unable to parse, fallback to MIN_TEMP');
-    //       desiredTemp = MIN_TEMP;
-    //     }
+    if (desiredTemp > MAX_TEMP) {
+      desiredTemp = MAX_TEMP;
+    }
 
-    //     if (desiredTemp > MAX_TEMP) {
-    //       desiredTemp = MAX_TEMP;
-    //     }
-
-    //     return resolve(desiredTemp);
-    //   });
+    return desiredTemp;
+  };
     // });
-  });
 
-  getGoogleAuthClient().then((jwtClient) => {
-    getCurrentEvent(jwtClient).then((event) => {
-      console.log(event);
-    });
+  // getGoogleAuthClient().then((jwtClient) => {
+  //   getCurrentEvent(jwtClient).then((event) => {
+  //     console.log(event);
+  //   });
 
 
-    // const url = `https://www.googleapis.com/calendar/v3/calendars/developer@eiabea.com/events/?timeMin=${(new Date()).toISOString()}&maxResults=1&singleEvents=true&orderBy=startTime`;
-    // jwtClient.request({ url })
-    //   .then((res) => {
-    //   });
+  //   // const url = `https://www.googleapis.com/calendar/v3/calendars/developer@eiabea.com/events/?timeMin=${(new Date()).toISOString()}&maxResults=1&singleEvents=true&orderBy=startTime`;
+  //   // jwtClient.request({ url })
+  //   //   .then((res) => {
+  //   //   });
 
-    // getDesiredTemperature();
-  });
+  //   // getDesiredTemperature();
+  // });
 
   return {
     getDesiredTemperature,

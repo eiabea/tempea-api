@@ -9,9 +9,7 @@
     "start": "node app.js",
     "start:dev": "${NODE_PATH:-node_modules}/.bin/nodemon app.js",
     "lint": "${NODE_PATH:-node_modules}/.bin/eslint --fix .",
-    "test": "nyc --reporter lcov --reporter text npm run test:unit; nyc --reporter lcov --reporter text npm run test:integration",
-    "test:unit": "${NODE_PATH:-node_modules}/.bin/_mocha test ./test/**/*.test.js",
-    "test:integration": "CI=true node app.js & NYC_PID=$!; sleep 10; ${NODE_PATH:-node_modules}/.bin/nyc ${NODE_PATH:-node_modules}/.bin/_mocha test ./test/integration/**/*.test.js; kill $NYC_PID; wait $NYC_PID; exit 0",
+    "test": "nyc --reporter lcov --reporter text ${NODE_PATH:-node_modules}/.bin/_mocha --exit test ./test/**/*.test.js",
     "coveralls": "cat ./coverage/lcov.info | ${NODE_PATH:-node_modules}/.bin/coveralls"
   },
   "repository": {
@@ -46,6 +44,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
+    "chai-http": "^3.0.0",
     "coveralls": "^3.0.0",
     "eslint": "^4.17.0",
     "eslint-config-airbnb-base": "^12.1.0",
@@ -55,6 +54,7 @@
     "husky": "^0.14.3",
     "mocha": "^5.0.0",
     "nock": "^9.1.6",
+    "node-mocks-http": "^1.6.6",
     "nodemon": "^1.14.12",
     "null-logger": "^1.0.0",
     "nyc": "^11.4.1"
