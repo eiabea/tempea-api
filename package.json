@@ -9,7 +9,7 @@
     "start": "node app.js",
     "start:dev": "${NODE_PATH:-node_modules}/.bin/nodemon app.js",
     "lint": "${NODE_PATH:-node_modules}/.bin/eslint --fix .",
-    "test": "nyc --reporter lcov --reporter text ${NODE_PATH:-node_modules}/.bin/_mocha --exit test ./test/**/*.test.js",
+    "test": "${NODE_PATH:-node_modules}/.bin/nyc --reporter lcov --reporter text ${NODE_PATH:-node_modules}/.bin/_mocha --exit test ./test/**/*.test.js",
     "coveralls": "cat ./coverage/lcov.info | ${NODE_PATH:-node_modules}/.bin/coveralls"
   },
   "repository": {

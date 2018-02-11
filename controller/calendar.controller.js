@@ -5,6 +5,8 @@ const calendar = require('googleapis').calendar('v3');
 // const { OAuth2Client } = require('google-auth-library');
 const moment = require('moment');
 
+const { CI } = process.env;
+
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/calendar-nodejs-quickstart.json
 const GOOGLE_AUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
@@ -219,6 +221,10 @@ module.exports = (log) => {
 
   const getDesiredTemperature = async () => {
     log.trace('getDesiredTemperature');
+
+    if (CI) {
+      return 21;
+    }
 
     const auth = await getGoogleAuthClient();
     const event = await getCurrentEvent(auth);
