@@ -42,7 +42,8 @@ module.exports = (log, controller) => {
     });
   });
 
-  // router.post('/mode', controller.auth.authenticate(), controller.auth.authorize(), async (req, res) => {
+  // router.post('/mode', controller.auth.authenticate(),
+  //  controller.auth.authorize(), async (req, res) => {
   //   const { mode } = req.body;
   //   log.info({ mode }, 'Got mode request');
 
