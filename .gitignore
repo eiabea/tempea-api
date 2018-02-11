@@ -153,3 +153,6 @@ crashlytics-build.properties
 !/stack/node/package-lock.json
 /stack/node/yarn.lock
 !/stack/node/yarn.lock
+
+# Google
+secrets
