@@ -155,4 +155,4 @@ crashlytics-build.properties
 !/stack/node/yarn.lock
 
 # Google
-secrets
+/secrets
