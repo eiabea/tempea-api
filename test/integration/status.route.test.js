@@ -1,6 +1,9 @@
 const chai = require('chai');
 
 const { assert, expect } = chai;
+const chaiHttp = require('chai-http');
+
+chai.use(chaiHttp);
 
 const express = require('express');
 const bodyParser = require('body-parser');
