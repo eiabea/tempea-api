@@ -1,6 +1,8 @@
 const request = require('request');
 
-const { SLAVE_HOST, SLAVE_PORT, SLAVE_ENDPOINT } = process.env;
+const {
+  SLAVE_HOST, SLAVE_PORT, SLAVE_ENDPOINT,
+} = process.env;
 
 module.exports = (log) => {
   const getData = async () => new Promise((resolve, reject) => {
