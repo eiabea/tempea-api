@@ -9,8 +9,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const log = require('null-logger');
 const nock = require('nock');
+const moment = require('moment');
+
+const GOOGLE_CALENDAR_ID = '1337';
 
 process.env.CI = 'true';
+process.env.TOKEN_DIR = 'test/secrets';
+process.env.GOOGLE_SERVICE_ACCOUNT_JSON = 'tempea-mocked.json';
+process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID;
 
 // Controller
 const Auth = require('../../controller/auth.controller');
@@ -49,6 +55,30 @@ describe('Status Route', () => {
     nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
       .get(SLAVE_ENDPOINT)
       .reply(200, mockedSlaveResponse);
+
+    nock('https://www.googleapis.com:443')
+      .post('/oauth2/v4/token')
+      .reply(200, {
+        access_token: '1/fFAGRNJru1FTz70BzhT3Zg',
+        expires_in: 3920,
+        token_type: 'Bearer',
+        refresh_token: '1/xEoDL4iW3cxlI7yDbSRFYNG01kVKM2C-259HOF2aQbI',
+      });
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp(`/calendar/v3/calendars/${GOOGLE_CALENDAR_ID}/events/*`))
+      .reply(200, {
+        items: [
+          {
+            summary: '18.4',
+            start: {
+              dateTime: moment().subtract(1, 'days').valueOf(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').valueOf(),
+            },
+          },
+        ],
+      });
 
     controller.auth = Auth(log);
     controller.calendar = Calendar(log);
