@@ -1,18 +1,5 @@
-sudo: required
-services:
-  - docker
-
-env:
-  COMPOSE_VERSION: 1.18.0
-
-before_install:
-  - curl -L https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
-
-script:
-  - docker-compose -f docker-compose.yml -f docker-compose-travis.yml build
-  - docker-compose -f docker-compose.yml -f docker-compose-travis.yml run tempea npm test
-
+language: node_js
+node_js:
+  - "node"
 after_success:
-  - docker-compose -f docker-compose.yml -f docker-compose-travis.yml run tempea npm run coveralls
+  - npm run coveralls 

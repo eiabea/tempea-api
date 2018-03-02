@@ -17,6 +17,8 @@ const REDIS_PORT = process.env.REDIS_PORT || '6379';
 const USERS_FILE = process.env.USERS_FILE || 'users.json';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
 
+const { CI } = process.env;
+
 const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
 
 module.exports = (log) => {
@@ -25,13 +27,19 @@ module.exports = (log) => {
   let aclMiddleware;
 
   const initAcl = () => {
-    log.trace({ func: 'initAcl' }, 'Initializing acl with redis backend');
-    redisClient = redis.createClient({
-      host: REDIS_HOST,
-      port: REDIS_PORT,
-    });
-    // eslint-disable-next-line new-cap
-    acl = new NodeACL(new NodeACL.redisBackend(redisClient, ACL_PREFIX));
+    if (CI) {
+      log.trace({ func: 'initAcl' }, 'Initializing acl with memory backend');
+      // eslint-disable-next-line new-cap
+      acl = new NodeACL(new NodeACL.memoryBackend());
+    } else {
+      log.trace({ func: 'initAcl' }, 'Initializing acl with redis backend');
+      redisClient = redis.createClient({
+        host: REDIS_HOST,
+        port: REDIS_PORT,
+      });
+      // eslint-disable-next-line new-cap
+      acl = new NodeACL(new NodeACL.redisBackend(redisClient, ACL_PREFIX));
+    }
     log.trace({ func: 'initAcl' }, 'Allowing default routes');
     acl.allow('flatmate', '/v1/status/mode', 'post');
     // adding admin user on position 0 to flatmate role
