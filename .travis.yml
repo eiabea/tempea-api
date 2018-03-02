@@ -15,4 +15,4 @@ script:
   - docker-compose -f docker-compose.yml -f docker-compose-travis.yml run tempea npm test
 
 after_success:
-  - npm run coveralls
+  - docker-compose -f docker-compose.yml -f docker-compose-travis.yml run tempea npm run coveralls
