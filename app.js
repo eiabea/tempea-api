@@ -19,6 +19,7 @@ const State = require('./state');
 // Routes
 const AuthRoute = require('./routes/v1/auth.route');
 const StatusRoute = require('./routes/v1/status.route');
+const ModeRoute = require('./routes/v1/mode.route');
 
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
 
@@ -56,6 +57,7 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
 
     app.use('/v1/auth', AuthRoute(log.child({ route: 'auth' }), controller));
     app.use('/v1/status', StatusRoute(log.child({ route: 'status' }), controller));
+    app.use('/v1/mode', ModeRoute(log.child({ route: 'mode' }), controller));
 
     log.info(`Starting Backend on port ${EXPRESS_PORT}`);
     app.listen(EXPRESS_PORT, () => {

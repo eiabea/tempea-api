@@ -10,6 +10,12 @@ process.env.FETCHING_INTERVAL = '40';
 const ScheduleController = require('../../controller/schedule.controller')(log);
 
 describe('Schedule Controller', () => {
+  it('should get initial state', async () => {
+    const isRunning = await ScheduleController.isJobRunning();
+
+    assert.isFalse(isRunning);
+  });
+
   it('should start a cronjob', async () => {
     await ScheduleController.startJob();
 

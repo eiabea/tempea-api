@@ -1,5 +1,5 @@
 const fs = require('fs');
-const NodeACL = require('acl');
+const { Acl, RedisStore, MemoryStore } = require('aclify');
 const redis = require('redis');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
@@ -30,7 +30,7 @@ module.exports = (log) => {
     if (CI) {
       log.trace({ func: 'initAcl' }, 'Initializing acl with memory backend');
       // eslint-disable-next-line new-cap
-      acl = new NodeACL(new NodeACL.memoryBackend());
+      acl = new Acl(new MemoryStore(), log);
     } else {
       log.trace({ func: 'initAcl' }, 'Initializing acl with redis backend');
       redisClient = redis.createClient({
@@ -38,7 +38,7 @@ module.exports = (log) => {
         port: REDIS_PORT,
       });
       // eslint-disable-next-line new-cap
-      acl = new NodeACL(new NodeACL.redisBackend(redisClient, ACL_PREFIX));
+      acl = new Acl(new RedisStore(redisClient, ACL_PREFIX), log);
     }
     log.trace({ func: 'initAcl' }, 'Allowing default routes');
     acl.allow('flatmate', '/v1/status/mode', 'post');
@@ -67,13 +67,7 @@ module.exports = (log) => {
 
   const getAclMiddleware = () => aclMiddleware;
 
-  const allow = (group, resource, method) => {
-    acl.allow(group, resource, method);
-  };
-
-  const addUserRoles = (user, group) => {
-    acl.addUserRoles(user, group);
-  };
+  const getAcl = () => acl;
 
   const authorize = numPathComponents =>
     acl.middleware(numPathComponents || 0, req => req.user.guid);
@@ -90,12 +84,11 @@ module.exports = (log) => {
   });
 
   return {
-    allow,
-    addUserRoles,
     authorize,
     authenticate,
     checkUserPassword,
     signJWT,
     getAclMiddleware,
+    getAcl,
   };
 };

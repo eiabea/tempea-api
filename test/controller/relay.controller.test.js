@@ -4,16 +4,9 @@ const { assert, expect } = require('chai');
 const log = require('null-logger');
 
 process.env.CI = 'true';
+process.env.MOCK_RELAY_FAIL = 'false';
 
 const RelayController = require('../../controller/relay.controller')(log);
-
-// Invalidate require cache to create instance with new environment variables
-delete require.cache[require.resolve('../mock/relay')];
-delete require.cache[require.resolve('../../controller/relay.controller')];
-process.env.MOCK_RELAY_FAIL = 'true';
-const FailingRelayController = require('../../controller/relay.controller')(log);
-
-process.env.MOCK_RELAY_FAIL = 'false';
 
 describe('Relay Controller', () => {
   it('should get initial state', async () => {
@@ -36,9 +29,29 @@ describe('Relay Controller', () => {
     expect(newState).to.equal(1);
   });
 
-  it('should fail to set relay', async () => {
+  it('should fail to set relay [read error]', async () => {
     try {
-      await FailingRelayController.setRelay(1);
+      delete require.cache[require.resolve('../mock/relay')];
+      delete require.cache[require.resolve('../../controller/relay.controller')];
+
+      process.env.MOCK_RELAY_READ_FAIL = 'true';
+      process.env.MOCK_RELAY_WRITE_FAIL = 'false';
+      // eslint-disable-next-line global-require
+      await require('../../controller/relay.controller')(log).setRelay(1);
+    } catch (err) {
+      assert.isDefined(err);
+    }
+  });
+
+  it('should fail to set relay [write error]', async () => {
+    try {
+      delete require.cache[require.resolve('../mock/relay')];
+      delete require.cache[require.resolve('../../controller/relay.controller')];
+
+      process.env.MOCK_RELAY_READ_FAIL = 'false';
+      process.env.MOCK_RELAY_WRITE_FAIL = 'true';
+      // eslint-disable-next-line global-require
+      await require('../../controller/relay.controller')(log).setRelay(1);
     } catch (err) {
       assert.isDefined(err);
     }
@@ -46,7 +59,12 @@ describe('Relay Controller', () => {
 
   it('should fail to get relay', async () => {
     try {
-      await FailingRelayController.getRelay();
+      delete require.cache[require.resolve('../mock/relay')];
+      delete require.cache[require.resolve('../../controller/relay.controller')];
+
+      process.env.MOCK_RELAY_READ_FAIL = 'true';
+      // eslint-disable-next-line global-require
+      await require('../../controller/relay.controller')(log).getRelay();
     } catch (err) {
       assert.isDefined(err);
     }

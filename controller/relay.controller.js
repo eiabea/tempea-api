@@ -23,31 +23,32 @@ module.exports = (log) => {
   const setRelay = async (state) => {
     log.trace({ func: 'setRelay', state }, 'Setting relay gpio');
     return new Promise(async (resolve, reject) => {
+      let currentState;
       try {
-        const currentState = await getRelay();
+        currentState = await getRelay();
         log.trace({ func: 'setRelay', currentState }, 'Got current gpio state');
-
-        if (currentState === state) {
-          log.trace(
-            { func: 'setRelay', state, currentState },
-            'Desired state and current state are the same',
-          );
-          return resolve();
-        }
-        log.trace({ func: 'setRelay', state }, 'Changing gpio state');
-
-        return relay.write(state, (err) => {
-          if (err) {
-            log.error({ func: 'getRelay', state, err }, 'Error setting relay gpio state');
-            throw err;
-          }
-
-          log.trace({ func: 'setRelay', state }, 'Successfully changed the state');
-          return resolve();
-        });
       } catch (err) {
         return reject(err);
       }
+
+      if (currentState === state) {
+        log.trace(
+          { func: 'setRelay', state, currentState },
+          'Desired state and current state are the same',
+        );
+        return resolve();
+      }
+      log.trace({ func: 'setRelay', state }, 'Changing gpio state');
+
+      return relay.write(state, (err) => {
+        if (err) {
+          log.error({ func: 'getRelay', state, err }, 'Error setting relay gpio state');
+          return reject(err);
+        }
+
+        log.trace({ func: 'setRelay', state }, 'Successfully changed the state');
+        return resolve();
+      });
     });
   };
 
