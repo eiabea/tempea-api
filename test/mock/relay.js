@@ -1,9 +1,9 @@
-const { MOCK_RELAY_FAIL } = process.env;
+const MOCK_RELAY_FAIL = process.env.MOCK_RELAY_FAIL === 'true';
 
 let state = 0;
 
 function read(callback) {
-  if (MOCK_RELAY_FAIL) {
+  if (MOCK_RELAY_FAIL === 'true') {
     return callback(new Error('Mocked read error'));
   }
   return callback(null, state);

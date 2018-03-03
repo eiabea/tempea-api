@@ -1,3 +1,5 @@
+require('../Helper').invalidateNodeCache();
+
 const { assert } = require('chai');
 const log = require('null-logger');
 

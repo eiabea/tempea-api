@@ -1,3 +1,5 @@
+require('../Helper').invalidateNodeCache();
+
 const chai = require('chai');
 
 const { assert, expect } = chai;
@@ -12,7 +14,13 @@ const nock = require('nock');
 const moment = require('moment');
 
 const GOOGLE_CALENDAR_ID = '1337';
+const SLAVE_HOST = 'mocked.tempea.com';
+const SLAVE_PORT = 80;
+const SLAVE_ENDPOINT = '/mocked';
 
+process.env.SLAVE_HOST = SLAVE_HOST;
+process.env.SLAVE_PORT = SLAVE_PORT;
+process.env.SLAVE_ENDPOINT = SLAVE_ENDPOINT;
 process.env.CI = 'true';
 process.env.TOKEN_DIR = 'test/secrets';
 process.env.GOOGLE_SERVICE_ACCOUNT_JSON = 'tempea-mocked.json';
@@ -22,21 +30,10 @@ process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID;
 const Auth = require('../../controller/auth.controller');
 const Calendar = require('../../controller/calendar.controller');
 const Relay = require('../../controller/relay.controller');
-
-const SLAVE_HOST = 'mocked.tempea.com';
-const SLAVE_PORT = 80;
-const SLAVE_ENDPOINT = '/mocked';
-
-// // Invalidate require cache to create instance with new environment variables
-delete require.cache[require.resolve('../../controller/slave.controller')];
-
-process.env.SLAVE_HOST = SLAVE_HOST;
-process.env.SLAVE_PORT = SLAVE_PORT;
-process.env.SLAVE_ENDPOINT = SLAVE_ENDPOINT;
-
-const Slave = require('../../controller/slave.controller');
 const Temp = require('../../controller/temp.controller');
+const Slave = require('../../controller/slave.controller');
 
+// Routes
 const StatusRoute = require('../../routes/v1/status.route');
 
 describe('Status Route', () => {

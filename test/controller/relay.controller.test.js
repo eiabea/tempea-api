@@ -1,3 +1,5 @@
+require('../Helper').invalidateNodeCache();
+
 const { assert, expect } = require('chai');
 const log = require('null-logger');
 
@@ -10,6 +12,8 @@ delete require.cache[require.resolve('../mock/relay')];
 delete require.cache[require.resolve('../../controller/relay.controller')];
 process.env.MOCK_RELAY_FAIL = 'true';
 const FailingRelayController = require('../../controller/relay.controller')(log);
+
+process.env.MOCK_RELAY_FAIL = 'false';
 
 describe('Relay Controller', () => {
   it('should get initial state', async () => {

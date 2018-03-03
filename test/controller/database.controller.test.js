@@ -1,3 +1,5 @@
+require('../Helper').invalidateNodeCache();
+
 const log = require('null-logger');
 const nock = require('nock');
 

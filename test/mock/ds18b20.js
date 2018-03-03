@@ -1,4 +1,5 @@
-const { MOCK_TEMP_FAIL, MOCK_TEMP_RESET } = process.env;
+const MOCK_TEMP_FAIL = process.env.MOCK_TEMP_FAIL === 'true';
+const MOCK_TEMP_RESET = process.env.MOCK_TEMP_RESET === 'true';
 
 function temperature(sensorID, callback) {
   if (MOCK_TEMP_FAIL) {

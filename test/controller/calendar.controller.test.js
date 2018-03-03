@@ -1,3 +1,5 @@
+require('../Helper').invalidateNodeCache();
+
 const { expect } = require('chai');
 const log = require('null-logger');
 const nock = require('nock');
@@ -21,45 +23,6 @@ process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_VALID;
 delete require.cache[require.resolve('../../controller/calendar.controller')];
 
 const CalendarController = require('../../controller/calendar.controller')(log);
-
-process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_NO_EVENTS;
-process.env.MIN_TEMP = MIN_TEMP;
-
-// Invalidate require cache to create instance with new environment variables
-delete require.cache[require.resolve('../../controller/calendar.controller')];
-
-const CalendarControllerNoEvents = require('../../controller/calendar.controller')(log);
-
-process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_NAN_SUMMERY;
-process.env.MIN_TEMP = MIN_TEMP;
-
-// Invalidate require cache to create instance with new environment variables
-delete require.cache[require.resolve('../../controller/calendar.controller')];
-
-const CalendarControllerNanSummery = require('../../controller/calendar.controller')(log);
-
-process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_OVER_MAX_TEMP;
-process.env.MAX_TEMP = MAX_TEMP;
-process.env.MIN_TEMP = MIN_TEMP;
-
-// Invalidate require cache to create instance with new environment variables
-delete require.cache[require.resolve('../../controller/calendar.controller')];
-
-const CalendarControllerOverMaxTemp = require('../../controller/calendar.controller')(log);
-
-process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_NOT_IN_RANGE;
-
-// Invalidate require cache to create instance with new environment variables
-delete require.cache[require.resolve('../../controller/calendar.controller')];
-
-const CalendarControllerNotInRange = require('../../controller/calendar.controller')(log);
-
-process.env.GOOGLE_SERVICE_ACCOUNT_JSON = 'invalid.json';
-
-// Invalidate require cache to create instance with new environment variables
-delete require.cache[require.resolve('../../controller/calendar.controller')];
-
-const CalendarControllerInvalidServiceJson = require('../../controller/calendar.controller')(log);
 
 describe('Calendar Controller', () => {
   before(() => {
@@ -146,32 +109,70 @@ describe('Calendar Controller', () => {
   });
 
   it('should return MIN_TEMP [no events]', async () => {
-    const desiredTemp = await CalendarControllerNoEvents.getDesiredTemperature();
+    process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_NO_EVENTS;
+    process.env.MIN_TEMP = MIN_TEMP;
+
+    // Invalidate require cache to create instance with new environment variables
+    delete require.cache[require.resolve('../../controller/calendar.controller')];
+
+    // eslint-disable-next-line global-require
+    const desiredTemp = await require('../../controller/calendar.controller')(log)
+      .getDesiredTemperature();
 
     expect(desiredTemp).to.equal(MIN_TEMP);
   });
 
   it('should return MIN_TEMP [event not in range]', async () => {
-    const desiredTemp = await CalendarControllerNotInRange.getDesiredTemperature();
+    process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_NOT_IN_RANGE;
+
+    // Invalidate require cache to create instance with new environment variables
+    delete require.cache[require.resolve('../../controller/calendar.controller')];
+
+    // eslint-disable-next-line global-require
+    const desiredTemp = await require('../../controller/calendar.controller')(log)
+      .getDesiredTemperature();
 
     expect(desiredTemp).to.equal(MIN_TEMP);
   });
 
   it('should return MIN_TEMP [wrong summery]', async () => {
-    const desiredTemp = await CalendarControllerNanSummery.getDesiredTemperature();
+    process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_NAN_SUMMERY;
+    process.env.MIN_TEMP = MIN_TEMP;
+
+    // Invalidate require cache to create instance with new environment variables
+    delete require.cache[require.resolve('../../controller/calendar.controller')];
+
+    // eslint-disable-next-line global-require
+    const desiredTemp = await require('../../controller/calendar.controller')(log)
+      .getDesiredTemperature();
 
     expect(desiredTemp).to.equal(MIN_TEMP);
   });
 
   it('should return MAX_TEMP [desired temp too high]', async () => {
-    const desiredTemp = await CalendarControllerOverMaxTemp.getDesiredTemperature();
+    process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_OVER_MAX_TEMP;
+    process.env.MAX_TEMP = MAX_TEMP;
+    process.env.MIN_TEMP = MIN_TEMP;
+
+    // Invalidate require cache to create instance with new environment variables
+    delete require.cache[require.resolve('../../controller/calendar.controller')];
+
+    // eslint-disable-next-line global-require
+    const desiredTemp = await require('../../controller/calendar.controller')(log)
+      .getDesiredTemperature();
 
     expect(desiredTemp).to.equal(MAX_TEMP);
   });
 
   it('should through [invalid service json]', async () => {
+    process.env.GOOGLE_SERVICE_ACCOUNT_JSON = 'invalid.json';
+
+    // Invalidate require cache to create instance with new environment variables
+    delete require.cache[require.resolve('../../controller/calendar.controller')];
+
     try {
-      await CalendarControllerInvalidServiceJson.getDesiredTemperature();
+      // eslint-disable-next-line global-require
+      await require('../../controller/calendar.controller')(log).getDesiredTemperature();
     } catch (err) {
       expect(err.code).to.equal('ENOENT');
     }
