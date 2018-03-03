@@ -93,7 +93,7 @@ describe('Status Route', () => {
     app.use('/v1/status', StatusRoute(log, controller));
   });
 
-  it('get status', async () => {
+  it('should get status', async () => {
     const response = await chai.request(app).get('/v1/status');
     const { body } = response;
     const { data } = body;

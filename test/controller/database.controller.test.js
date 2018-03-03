@@ -18,7 +18,7 @@ describe('Database Controller', () => {
       .reply(200);
   });
 
-  it('write measurement', async () => {
+  it('should write measurement', async () => {
     const currentTemp = 21;
     const desiredTemp = 21;
     const heating = false;
@@ -32,7 +32,7 @@ describe('Database Controller', () => {
     await instance.writeMeasurement(currentTemp, desiredTemp, heating, slaveData);
   });
 
-  it('write measurement without slave data', async () => {
+  it('should write measurement without slave data', async () => {
     const currentTemp = 21;
     const desiredTemp = 21;
     const heating = false;
