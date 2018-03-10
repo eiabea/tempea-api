@@ -1,7 +1,9 @@
 const fs = require('fs');
 const { assert } = require('chai');
 const { JWT } = require('google-auth-library');
-const calendar = require('googleapis').calendar('v3');
+const { google } = require('googleapis');
+
+const calendar = google.calendar('v3');
 // const googleAuth = require('google-auth-library');
 // const { OAuth2Client } = require('google-auth-library');
 const moment = require('moment');

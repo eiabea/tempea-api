@@ -30,7 +30,7 @@ module.exports = (log) => {
     if (CI) {
       log.trace({ func: 'initAcl' }, 'Initializing acl with memory backend');
       // eslint-disable-next-line new-cap
-      acl = new Acl(new MemoryStore(), log);
+      acl = new Acl(new MemoryStore());
     } else {
       log.trace({ func: 'initAcl' }, 'Initializing acl with redis backend');
       redisClient = redis.createClient({
@@ -38,7 +38,7 @@ module.exports = (log) => {
         port: REDIS_PORT,
       });
       // eslint-disable-next-line new-cap
-      acl = new Acl(new RedisStore(redisClient, ACL_PREFIX), log);
+      acl = new Acl(new RedisStore(redisClient, ACL_PREFIX));
     }
     log.trace({ func: 'initAcl' }, 'Allowing default routes');
     acl.allow('flatmate', '/v1/status/mode', 'post');
