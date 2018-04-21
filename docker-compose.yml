@@ -21,15 +21,13 @@ services:
       - "redis:/data"
 
   tempea:
-    build: "."
+    image: "eiabea/tempea-api"
     privileged: "true"
     depends_on:
       - "influx"
       - "redis"
     ports:
       - "3000:3000"
-    volumes:
-      - ".:/src"
     environment:
       # Google
       GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"
