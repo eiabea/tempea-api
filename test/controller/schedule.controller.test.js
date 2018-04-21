@@ -4,6 +4,7 @@ const { assert } = require('chai');
 const log = require('null-logger');
 
 process.env.CI = 'true';
+const FallbackFetchingIntervalScheduleController = require('../../controller/schedule.controller')(log);
 
 process.env.FETCHING_INTERVAL = '40';
 
@@ -20,6 +21,14 @@ describe('Schedule Controller', () => {
     await ScheduleController.startJob();
 
     const isRunning = await ScheduleController.isJobRunning();
+
+    assert.isTrue(isRunning);
+  });
+
+  it('should start a cronjob', async () => {
+    await FallbackFetchingIntervalScheduleController.startJob();
+
+    const isRunning = await FallbackFetchingIntervalScheduleController.isJobRunning();
 
     assert.isTrue(isRunning);
   });
