@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { Acl, RedisStore, MemoryStore } = require('aclify');
+const { Acl, RedisStore, MemoryStore } = require('@aclify/aclify');
 const redis = require('redis');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
