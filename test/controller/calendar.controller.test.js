@@ -62,10 +62,10 @@ describe('Calendar Controller', () => {
           {
             summary: 'wrongSummery',
             start: {
-              dateTime: moment().subtract(1, 'days').valueOf(),
+              dateTime: moment().subtract(1, 'days').toISOString(),
             },
             end: {
-              dateTime: moment().add(1, 'days').valueOf(),
+              dateTime: moment().add(1, 'days').toISOString(),
             },
           },
         ],
@@ -77,10 +77,10 @@ describe('Calendar Controller', () => {
           {
             summary: '49.2',
             start: {
-              dateTime: moment().subtract(1, 'days').valueOf(),
+              dateTime: moment().subtract(1, 'days').toISOString(),
             },
             end: {
-              dateTime: moment().add(1, 'days').valueOf(),
+              dateTime: moment().add(1, 'days').toISOString(),
             },
           },
         ],
@@ -92,10 +92,10 @@ describe('Calendar Controller', () => {
           {
             summary: '18.4',
             start: {
-              dateTime: moment().subtract(2, 'days').valueOf(),
+              dateTime: moment().subtract(2, 'days').toISOString(),
             },
             end: {
-              dateTime: moment().subtract(1, 'days').valueOf(),
+              dateTime: moment().subtract(1, 'days').toISOString(),
             },
           },
         ],
