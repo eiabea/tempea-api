@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { assert } = require('chai');
 const { JWT } = require('google-auth-library');
 const { google } = require('googleapis');
@@ -21,27 +20,12 @@ const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
 const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
 
 module.exports = (log) => {
-  const getServiceJson = () => new Promise((resolve, reject) => {
-    // Check if we have previously stored a token.
-    fs.readFile(TOKEN_PATH, async (err, token) => {
-      if (err) {
-        return reject(err);
-      }
-
-      return resolve(JSON.parse(token));
-    });
-  });
-
   const getGoogleAuthClient = async () => {
     try {
-      const serviceAccount = await getServiceJson();
-
-      const jwtClient = new JWT(
-        serviceAccount.client_email,
-        null,
-        serviceAccount.private_key,
-        GOOGLE_AUTH_SCOPES,
-      );
+      const jwtClient = new JWT({
+        keyFile: TOKEN_PATH,
+        scopes: GOOGLE_AUTH_SCOPES,
+      });
 
       await jwtClient.authorize();
 
