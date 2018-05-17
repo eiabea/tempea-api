@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_INFLUX",
-      "label": "influx",
+      "name": "DS_TEMPEA",
+      "label": "tempea",
       "description": "",
       "type": "datasource",
       "pluginId": "influxdb",
@@ -14,25 +14,25 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "4.6.3"
+      "version": "5.1.3"
     },
     {
       "type": "panel",
       "id": "graph",
       "name": "Graph",
-      "version": ""
+      "version": "5.0.0"
     },
     {
       "type": "datasource",
       "id": "influxdb",
       "name": "InfluxDB",
-      "version": "1.0.0"
+      "version": "5.0.0"
     },
     {
       "type": "panel",
       "id": "singlestat",
       "name": "Singlestat",
-      "version": ""
+      "version": "5.0.0"
     }
   ],
   "annotations": {
@@ -51,369 +51,657 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "hideControls": false,
   "id": null,
   "links": [],
-  "refresh": false,
-  "rows": [
+  "panels": [
     {
-      "collapse": false,
-      "height": 602,
-      "panels": [
+      "aliasColors": {
+        "desired_temp": "#6d1f62"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_TEMPEA}",
+      "fill": 1,
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "legend": {
+        "alignAsTable": false,
+        "avg": true,
+        "current": false,
+        "hideEmpty": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [
         {
-          "aliasColors": {
-            "desired_temp": "#6d1f62"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "${DS_INFLUX}",
-          "fill": 1,
-          "id": 1,
-          "legend": {
-            "alignAsTable": false,
-            "avg": true,
-            "current": false,
-            "hideEmpty": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": true
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "alias": "temperature.heat",
-              "yaxis": 2
-            },
-            {
-              "alias": "heating",
-              "yaxis": 2
-            },
-            {
-              "alias": "slave_hum",
-              "yaxis": 2
-            }
-          ],
-          "spaceLength": 10,
-          "span": 12,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "alias": "master_temp",
-              "dsType": "influxdb",
-              "groupBy": [
-                {
-                  "params": [
-                    "5m"
-                  ],
-                  "type": "time"
-                }
-              ],
-              "hide": false,
-              "limit": "",
-              "measurement": "temperature",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "query": "SELECT \"cur\", \"des\" FROM \"temperature\" WHERE $timeFilter",
-              "rawQuery": false,
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "cur"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            },
-            {
-              "alias": "desired_temp",
-              "dsType": "influxdb",
-              "groupBy": [],
-              "measurement": "temperature",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "D",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "des"
-                    ],
-                    "type": "field"
-                  }
-                ]
-              ],
-              "tags": []
-            },
-            {
-              "alias": "heating",
-              "dsType": "influxdb",
-              "groupBy": [],
-              "measurement": "temperature",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "B",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "heat"
-                    ],
-                    "type": "field"
-                  }
-                ]
-              ],
-              "tags": []
-            },
-            {
-              "alias": "slave_temp",
-              "dsType": "influxdb",
-              "groupBy": [
-                {
-                  "params": [
-                    "5m"
-                  ],
-                  "type": "time"
-                }
-              ],
-              "measurement": "temperature",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "C",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "slaveCur"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            },
-            {
-              "alias": "slave_hum",
-              "dsType": "influxdb",
-              "groupBy": [
-                {
-                  "params": [
-                    "5m"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "measurement": "temperature",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "E",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "slaveHum"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Temperature",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "decimals": 1,
-              "format": "celsius",
-              "label": "",
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "decimals": null,
-              "format": "percent",
-              "label": "",
-              "logBase": 1,
-              "max": "100",
-              "min": "0",
-              "show": true
-            }
-          ]
+          "alias": "temperature.heat",
+          "yaxis": 2
+        },
+        {
+          "alias": "heating",
+          "yaxis": 2
+        },
+        {
+          "alias": "slave_hum",
+          "yaxis": 2
         }
       ],
-      "repeat": null,
-      "repeatIteration": null,
-      "repeatRowId": null,
-      "showTitle": false,
-      "title": "Dashboard Row",
-      "titleSize": "h6"
-    },
-    {
-      "collapse": false,
-      "height": 250,
-      "panels": [
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
         {
-          "cacheTimeout": null,
-          "colorBackground": false,
-          "colorValue": false,
-          "colors": [
-            "#299c46",
-            "rgba(237, 129, 40, 0.89)",
-            "#d44a3a"
+          "alias": "master_temp",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
           ],
-          "datasource": "${DS_INFLUX}",
+          "hide": false,
+          "limit": "",
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT \"cur\", \"des\" FROM \"temperature\" WHERE $timeFilter",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "cur"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "desired_temp",
+          "dsType": "influxdb",
+          "groupBy": [],
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "D",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "des"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "heating",
+          "dsType": "influxdb",
+          "groupBy": [],
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "heat"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "slave_temp",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "slaveCur"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "alias": "slave_hum",
+          "dsType": "influxdb",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "E",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "slaveHum"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Tempea",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
           "decimals": 1,
           "format": "celsius",
-          "gauge": {
-            "maxValue": 100,
-            "minValue": 0,
-            "show": false,
-            "thresholdLabels": false,
-            "thresholdMarkers": true
-          },
-          "id": 2,
-          "interval": null,
-          "links": [],
-          "mappingType": 1,
-          "mappingTypes": [
-            {
-              "name": "value to text",
-              "value": 1
-            },
-            {
-              "name": "range to text",
-              "value": 2
-            }
-          ],
-          "maxDataPoints": 100,
-          "nullPointMode": "connected",
-          "nullText": null,
-          "postfix": "",
-          "postfixFontSize": "50%",
-          "prefix": "",
-          "prefixFontSize": "50%",
-          "rangeMaps": [
-            {
-              "from": "null",
-              "text": "N/A",
-              "to": "null"
-            }
-          ],
-          "span": 12,
-          "sparkline": {
-            "fillColor": "rgba(31, 118, 189, 0.18)",
-            "full": false,
-            "lineColor": "rgb(31, 120, 193)",
-            "show": false
-          },
-          "tableColumn": "",
-          "targets": [
-            {
-              "dsType": "influxdb",
-              "groupBy": [],
-              "measurement": "temperature",
-              "orderByTime": "ASC",
-              "policy": "default",
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "cur"
-                    ],
-                    "type": "field"
-                  }
-                ]
-              ],
-              "tags": []
-            }
-          ],
-          "thresholds": "",
-          "title": "Current Temperature",
-          "type": "singlestat",
-          "valueFontSize": "80%",
-          "valueMaps": [
-            {
-              "op": "=",
-              "text": "N/A",
-              "value": "null"
-            }
-          ],
-          "valueName": "current"
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "percent",
+          "label": "",
+          "logBase": 1,
+          "max": "100",
+          "min": "0",
+          "show": true
         }
       ],
-      "repeat": null,
-      "repeatIteration": null,
-      "repeatRowId": null,
-      "showTitle": false,
-      "title": "Dashboard Row",
-      "titleSize": "h6"
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "${DS_TEMPEA}",
+      "decimals": 1,
+      "format": "celsius",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 16
+      },
+      "id": 2,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "dsType": "influxdb",
+          "groupBy": [],
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "cur"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "title": "Current Inside",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "${DS_TEMPEA}",
+      "decimals": 1,
+      "format": "celsius",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 16
+      },
+      "id": 6,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "alias": "min_outside",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "slaveCur"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "min"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "title": "Min. Outside",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "min"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "${DS_TEMPEA}",
+      "decimals": 1,
+      "format": "celsius",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 12,
+        "y": 16
+      },
+      "id": 8,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "groupBy": [],
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "slaveCur"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "title": "Current Outside",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "${DS_TEMPEA}",
+      "decimals": 1,
+      "format": "celsius",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 18,
+        "y": 16
+      },
+      "id": 4,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "measurement": "temperature",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "slaveCur"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "max"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "title": "Max. Outside",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "max"
     }
   ],
-  "schemaVersion": 14,
+  "refresh": false,
+  "schemaVersion": 16,
   "style": "dark",
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now/w",
     "to": "now"
   },
   "timepicker": {
@@ -443,5 +731,6 @@
   },
   "timezone": "",
   "title": "Tempea",
+  "uid": "uLZKNQ7iz",
   "version": 1
 }
