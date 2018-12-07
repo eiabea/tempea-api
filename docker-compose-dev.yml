@@ -1,0 +1,64 @@
+version: "3"
+
+volumes:
+  influx:
+    driver: "local"
+  redis:
+    driver: "local"
+
+services:
+  influx:
+    image: "influxdb"
+    ports:
+      - "8086:8086"
+    volumes:
+      - "influx:/var/lib/influxdb"
+
+  redis:
+    image: "redis"
+    command: "redis-server --appendonly yes"
+    volumes:
+      - "redis:/data"
+
+  tempea:
+    build: "."
+    privileged: "true"
+    depends_on:
+      - "influx"
+      - "redis"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ".:/src"
+    environment:
+      # Mock hardware
+      CI: "true"
+      # Google
+      GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"
+      GOOGLE_CALENDAR_ID: "developer@eiabea.com"
+      # Modules
+      ROUTING_MODULE_HOST: "0.0.0.0"
+      ROUTING_MODULE_PORT: "3000"
+      # Database
+      #  Influx
+      INFLUX_HOST: "influx"
+      INFLUX_PORT: "8086"
+      INFLUX_DB: "temp"
+      #  Redis
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      # JWT
+      JWT_SECRET: "changeMe"
+      JWT_EXPIRES_IN: "1h"
+      # Hardware
+      SENSOR_ID: "10-0008032d5234"
+      # Slave
+      SLAVE_HOST: "192.168.0.7"
+      SLAVE_PORT: "3000"
+      SLAVE_ENDPOINT: "/v1/status"
+      # Celius (float)
+      MAX_TEMP: "25"
+      MIN_TEMP: "15"
+      OVERSHOOT_TEMP: "0.5"
+      # Minutes
+      FETCHING_INTERVAL: "1"
