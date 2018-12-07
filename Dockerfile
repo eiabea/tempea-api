@@ -1,4 +1,4 @@
-FROM node:9.4.0-slim
+FROM node:10.14.1-slim
 LABEL eiabea <developer@eiabea.com>
 
 # Using slim image and installing these dependencies manually results in a smaller image

@@ -6,8 +6,6 @@ const RateLimit = require('express-rate-limit');
 const rateLimiterLogin = new RateLimit({
   keyGenerator: req => req.header('x-real-ip') || req.connection.remoteAddress,
   windowMs: 5 * 60 * 1000,
-  delayAfter: 100,
-  delayMs: 50,
   max: 100,
 });
 
