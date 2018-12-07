@@ -49,12 +49,9 @@ describe('Status Route', () => {
   };
 
   before(async () => {
-    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
-      .get(SLAVE_ENDPOINT)
-      .reply(200, mockedSlaveResponse);
-
     nock('https://www.googleapis.com:443')
       .post('/oauth2/v4/token')
+      .times(3)
       .reply(200, {
         access_token: '1/fFAGRNJru1FTz70BzhT3Zg',
         expires_in: 3920,
@@ -63,6 +60,7 @@ describe('Status Route', () => {
       });
     nock('https://www.googleapis.com:443')
       .get(new RegExp(`/calendar/v3/calendars/${GOOGLE_CALENDAR_ID}/events/*`))
+      .times(3)
       .reply(200, {
         items: [
           {
@@ -94,6 +92,10 @@ describe('Status Route', () => {
   });
 
   it('should get status', async () => {
+    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
+      .get(SLAVE_ENDPOINT)
+      .reply(200, mockedSlaveResponse);
+
     const response = await chai.request(app).get('/v1/status');
     const { body } = response;
     const { data } = body;
@@ -107,5 +109,41 @@ describe('Status Route', () => {
     assert.isDefined(slave);
     expect(slave.currentTemp).to.equal(mockedSlaveResponse.data.temp);
     expect(slave.currentHum).to.equal(mockedSlaveResponse.data.hum);
+  });
+
+  it('should get status [no slave]', async () => {
+    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
+      .get(SLAVE_ENDPOINT)
+      .reply(404);
+
+    const response = await chai.request(app).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+    const { slave } = data;
+
+    assert.isTrue(body.success);
+    assert.isString(data.mode);
+    assert.isBoolean(data.heating);
+    assert.isNumber(data.desiredTemp);
+    assert.isNumber(data.currentTemp);
+    assert.isUndefined(slave);
+  });
+
+  it('should get status [faulty slave]', async () => {
+    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
+      .get(SLAVE_ENDPOINT)
+      .reply(500);
+
+    const response = await chai.request(app).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+    const { slave } = data;
+
+    assert.isTrue(body.success);
+    assert.isString(data.mode);
+    assert.isBoolean(data.heating);
+    assert.isNumber(data.desiredTemp);
+    assert.isNumber(data.currentTemp);
+    assert.isUndefined(slave);
   });
 });

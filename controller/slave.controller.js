@@ -12,7 +12,11 @@ module.exports = (log) => {
         return reject(error);
       }
       log.trace({ body }, 'Slavedata');
-      return resolve(JSON.parse(body));
+      try {
+        return resolve(JSON.parse(body));
+      } catch (err) {
+        return reject(err);
+      }
     });
   });
 

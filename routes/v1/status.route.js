@@ -14,24 +14,27 @@ const rateLimiterStatus = new RateLimit({
 
 module.exports = (log, controller) => {
   const getStatusObject = async () => {
-    let slaveData = {};
-
     try {
-      slaveData = await controller.slave.getData();
+      const slaveData = await controller.slave.getData();
+      return {
+        mode: State.mode,
+        heating: await controller.relay.getRelay() === 1,
+        desiredTemp: await controller.calendar.getDesiredTemperature(),
+        currentTemp: await controller.temp.getCurrentTemp(),
+        slave: {
+          currentTemp: slaveData.data.temp,
+          currentHum: slaveData.data.hum,
+        },
+      };
     } catch (err) {
       log.error({ err }, 'Error getting slave data', err);
+      return {
+        mode: State.mode,
+        heating: await controller.relay.getRelay() === 1,
+        desiredTemp: await controller.calendar.getDesiredTemperature(),
+        currentTemp: await controller.temp.getCurrentTemp(),
+      };
     }
-
-    return {
-      mode: State.mode,
-      heating: await controller.relay.getRelay() === 1,
-      desiredTemp: await controller.calendar.getDesiredTemperature(),
-      currentTemp: await controller.temp.getCurrentTemp(),
-      slave: {
-        currentTemp: slaveData.data.temp,
-        currentHum: slaveData.data.hum,
-      },
-    };
   };
 
   router.get('/', rateLimiterStatus, async (req, res) => {
