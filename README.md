@@ -9,7 +9,7 @@ The thermostat in our flat was pretty basic, so i decided to build my own one ba
 
 [Grafana](https://grafana.com/) is used to plot the temperature and heating period graphs.
 
-After some research i stumbled over the great idea to use the [Google Calender](https://calendar.google.com) to set a desired temperature. This reduced the complexity of the node application drastically and made it obsolete to expose the raspberry to the internet for managing it from anywhere. 
+After some research i stumbled over the great idea to use the [Google Calender](https://calendar.google.com) to set a desired temperature. This reduced the complexity of the node application drastically and made it obsolete to expose the raspberry to the internet to manage it from anywhere. 
 
 
 # [WIP] Setup
