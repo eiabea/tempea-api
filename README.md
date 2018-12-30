@@ -3,6 +3,15 @@
 [![Build Status](https://travis-ci.org/eiabea/tempea-api.svg?branch=master)](https://travis-ci.org/eiabea/tempea-api)
 [![Coverage Status](https://coveralls.io/repos/github/eiabea/tempea-api/badge.svg?branch=master)](https://coveralls.io/github/eiabea/tempea-api?branch=master)
 
+# Motivation
+
+The thermostat in our flat was pretty basic, so i decided to build my own one based on a [Raspberry Pi](https://www.raspberrypi.org/), [Docker](https://www.docker.com/), [InfluxDB](https://www.influxdata.com/), [node.js](https://nodejs.org/en/), a small PCB with a relay to control the gas boiler and a temperature sensor.
+
+[Grafana](https://grafana.com/) is used to plot the temperature and heating period graphs.
+
+After some research i stumbled over the great idea to use the [Google Calender](https://calendar.google.com) to set a desired temperature. This reduced the complexity of the node application drastically and made it obsolete to expose the raspberry to the internet for managing it from anywhere. 
+
+
 # [WIP] Setup
 
 ## [WIP] System
