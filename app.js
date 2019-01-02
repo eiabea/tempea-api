@@ -5,7 +5,6 @@ const helmet = require('helmet');
 const bunyan = require('bunyan');
 
 // Controller
-const Auth = require('./controller/auth.controller');
 const Calendar = require('./controller/calendar.controller');
 const Database = require('./controller/database.controller');
 const Heat = require('./controller/heat.controller');
@@ -17,9 +16,7 @@ const Temp = require('./controller/temp.controller');
 const State = require('./state');
 
 // Routes
-const AuthRoute = require('./routes/v1/auth.route');
 const StatusRoute = require('./routes/v1/status.route');
-const ModeRoute = require('./routes/v1/mode.route');
 
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
 
@@ -30,7 +27,6 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
   const controller = {};
 
   const initControllers = async () => {
-    controller.auth = Auth(log.child({ controller: 'auth' }));
     controller.calendar = Calendar(log.child({ controller: 'calendar' }));
     controller.database = await Database(log.child({ controller: 'database' }));
     controller.heat = Heat(log.child({ controller: 'heat' }));
@@ -41,7 +37,7 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
   };
 
   const initExpress = async () => {
-    log.info('Initializing routing module');
+    log.info('Initializing routing modules');
 
     const app = express();
 
@@ -49,15 +45,12 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(cors());
     app.use(helmet());
-    app.use(controller.auth.getAclMiddleware());
 
     const router = express.Router({ mergeParams: true });
 
     app.use(router);
 
-    app.use('/v1/auth', AuthRoute(log.child({ route: 'auth' }), controller));
     app.use('/v1/status', StatusRoute(log.child({ route: 'status' }), controller));
-    app.use('/v1/mode', ModeRoute(log.child({ route: 'mode' }), controller));
 
     log.info(`Starting Backend on port ${EXPRESS_PORT}`);
     app.listen(EXPRESS_PORT, () => {

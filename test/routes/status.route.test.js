@@ -27,7 +27,6 @@ process.env.GOOGLE_SERVICE_ACCOUNT_JSON = 'tempea-mocked.json';
 process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID;
 
 // Controller
-const Auth = require('../../controller/auth.controller');
 const Calendar = require('../../controller/calendar.controller');
 const Relay = require('../../controller/relay.controller');
 const Temp = require('../../controller/temp.controller');
@@ -75,7 +74,6 @@ describe('Status Route', () => {
         ],
       });
 
-    controller.auth = Auth(log);
     controller.calendar = Calendar(log);
     controller.relay = Relay(log);
     controller.slave = Slave(log);

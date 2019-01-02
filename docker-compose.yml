@@ -3,8 +3,6 @@ version: "3"
 volumes:
   influx:
     driver: "local"
-  redis:
-    driver: "local"
 
 services:
   influx:
@@ -14,18 +12,12 @@ services:
     volumes:
       - "influx:/var/lib/influxdb"
 
-  redis:
-    image: "arm32v7/redis"
-    command: "redis-server --appendonly yes"
-    volumes:
-      - "redis:/data"
-
   tempea:
     build: "."
     privileged: "true"
+    command: "npm run start:dev:pretty"
     depends_on:
       - "influx"
-      - "redis"
     ports:
       - "3000:3000"
     volumes:
@@ -42,9 +34,6 @@ services:
       INFLUX_HOST: "influx"
       INFLUX_PORT: "8086"
       INFLUX_DB: "temp"
-      #  Redis
-      REDIS_HOST: "redis"
-      REDIS_PORT: "6379"
       # JWT
       JWT_SECRET: "changeMe"
       JWT_EXPIRES_IN: "1h"
