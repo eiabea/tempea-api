@@ -31,7 +31,7 @@ module.exports = (log) => {
 
       return jwtClient;
     } catch (err) {
-      log.error({ err }, 'Error initializing google jwt auth client', err);
+      log.error({ err }, 'Error initializing google jwt auth client');
       throw err;
     }
   };

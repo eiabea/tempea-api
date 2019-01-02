@@ -12,35 +12,55 @@ const rateLimiterStatus = new RateLimit({
 
 module.exports = (log, controller) => {
   const getStatusObject = async () => {
+    const returnObj = {
+      mode: State.mode,
+    };
+
     try {
       const slaveData = await controller.slave.getData();
-      return {
-        mode: State.mode,
-        heating: await controller.relay.getRelay() === 1,
-        desiredTemp: await controller.calendar.getDesiredTemperature(),
-        currentTemp: await controller.temp.getCurrentTemp(),
-        slave: {
-          currentTemp: slaveData.data.temp,
-          currentHum: slaveData.data.hum,
-        },
+      returnObj.slave = {
+        currentTemp: slaveData.data.temp,
+        currentHum: slaveData.data.hum,
       };
     } catch (err) {
-      log.error({ err }, 'Error getting slave data', err);
-      return {
-        mode: State.mode,
-        heating: await controller.relay.getRelay() === 1,
-        desiredTemp: await controller.calendar.getDesiredTemperature(),
-        currentTemp: await controller.temp.getCurrentTemp(),
-      };
+      log.error({ err }, 'Error getting slave data');
     }
+
+    try {
+      const relayData = await controller.relay.getRelay();
+      returnObj.heating = relayData === 1;
+    } catch (err) {
+      log.error({ err }, 'Error getting relay data');
+    }
+
+    try {
+      returnObj.desiredTemp = await controller.calendar.getDesiredTemperature();
+    } catch (err) {
+      log.error({ err }, 'Error getting calendar data');
+    }
+
+    try {
+      returnObj.currentTemp = await controller.temp.getCurrentTemp();
+    } catch (err) {
+      log.error({ err }, 'Error getting temperature data');
+    }
+
+    return returnObj;
   };
 
   router.get('/', rateLimiterStatus, async (req, res) => {
     log.info('Got status request');
-    res.json({
-      success: true,
-      data: await getStatusObject(),
-    });
+    try {
+      res.json({
+        success: true,
+        data: await getStatusObject(),
+      });
+    } catch (err) {
+      res.json({
+        success: false,
+        message: err.message,
+      });
+    }
   });
 
   return router;

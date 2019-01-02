@@ -29,7 +29,7 @@ module.exports = async (log) => {
     try {
       await client.createDatabase();
     } catch (err) {
-      log.warn({ err }, 'Error creating database', err);
+      log.error({ err }, 'Error creating database');
     }
   };
 

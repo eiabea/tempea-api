@@ -21,7 +21,11 @@ const StatusRoute = require('./routes/v1/status.route');
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
 
 (async function tempea() {
-  const log = bunyan.createLogger({ name: 'tempea', level: 10 });
+  const log = bunyan.createLogger({
+    name: 'tempea',
+    level: 10,
+    serializers: bunyan.stdSerializers,
+  });
 
   let heating = false;
   const controller = {};
@@ -70,7 +74,7 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
       currentTemp = await controller.temp.getCurrentTemp();
       desiredTemp = await controller.calendar.getDesiredTemperature();
     } catch (err) {
-      log.error({ err }, 'Error getting temperatures', err);
+      log.error({ err }, 'Error getting temperatures');
       log.info('Disable heating');
       try {
         await controller.relay.setRelay(0);
@@ -88,7 +92,7 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
         await controller.relay.setRelay(enableHeating ? 1 : 0);
         heating = enableHeating;
       } catch (err) {
-        log.error({ err }, 'Error setting relay', err);
+        log.error({ err }, 'Error setting relay');
       }
     } else {
       log.info('Tempea disabled, disable heating');
@@ -96,7 +100,7 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
         await controller.relay.setRelay(0);
         heating = false;
       } catch (err) {
-        log.error({ err }, 'Error setting relay', err);
+        log.error({ err }, 'Error setting relay');
       }
     }
 
@@ -107,14 +111,14 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
         hum: rawSlaveData.data.hum,
       };
     } catch (err) {
-      log.error({ err }, 'Error getting slave data', err);
+      log.error({ err }, 'Error getting slave data');
     }
 
     try {
       await controller.database
         .writeMeasurement(currentTemp, desiredTemp, heating, slaveData);
     } catch (err) {
-      log.error({ err }, 'Error writing measurement', err);
+      log.error({ err }, 'Error writing measurement');
     }
   });
 }());
