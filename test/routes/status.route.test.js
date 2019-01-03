@@ -27,6 +27,7 @@ process.env.GOOGLE_SERVICE_ACCOUNT_JSON = 'tempea-mocked.json';
 process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID;
 
 // Controller
+const Cache = require('../../controller/cache.controller');
 const Calendar = require('../../controller/calendar.controller');
 const Relay = require('../../controller/relay.controller');
 const Temp = require('../../controller/temp.controller');
@@ -74,10 +75,17 @@ describe('Status Route', () => {
         ],
       });
 
-    controller.calendar = Calendar(log);
-    controller.relay = Relay(log);
-    controller.slave = Slave(log);
-    controller.temp = Temp(log);
+    controller.cache = Cache(log);
+    controller.calendar = Calendar(log, controller.cache);
+    controller.relay = Relay(log, controller.cache);
+    controller.slave = Slave(log, controller.cache);
+    controller.temp = Temp(log, controller.cache);
+
+    // Populate cache with useful data
+    await controller.cache.updateRelayState(0);
+    await controller.cache.updateCurrentTemperature(18.4);
+    await controller.cache.updateDesiredTemperature(19.4);
+    await controller.cache.updateSlaveData(mockedSlaveResponse);
 
     app = express();
 
@@ -90,9 +98,7 @@ describe('Status Route', () => {
   });
 
   it('should get status', async () => {
-    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
-      .get(SLAVE_ENDPOINT)
-      .reply(200, mockedSlaveResponse);
+    await controller.cache.updateSlaveData(mockedSlaveResponse);
 
     const response = await chai.request(app).get('/v1/status');
     const { body } = response;
@@ -110,9 +116,7 @@ describe('Status Route', () => {
   });
 
   it('should get status [no slave]', async () => {
-    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
-      .get(SLAVE_ENDPOINT)
-      .reply(404);
+    await controller.cache.updateSlaveData(undefined);
 
     const response = await chai.request(app).get('/v1/status');
     const { body } = response;
@@ -128,9 +132,7 @@ describe('Status Route', () => {
   });
 
   it('should get status [faulty slave]', async () => {
-    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
-      .get(SLAVE_ENDPOINT)
-      .reply(500);
+    await controller.cache.updateSlaveData(undefined);
 
     const response = await chai.request(app).get('/v1/status');
     const { body } = response;

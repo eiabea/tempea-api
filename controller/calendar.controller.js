@@ -19,7 +19,7 @@ const TOKEN_PATH = `${process.cwd()}/${TOKEN_DIR}/${GOOGLE_SERVICE_ACCOUNT_JSON}
 const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
 const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
 
-module.exports = (log) => {
+module.exports = (log, cache) => {
   const getGoogleAuthClient = async () => {
     try {
       const jwtClient = new JWT({
@@ -101,6 +101,8 @@ module.exports = (log) => {
     if (desiredTemp > MAX_TEMP) {
       desiredTemp = MAX_TEMP;
     }
+
+    cache.updateDesiredTemperature(desiredTemp);
 
     return desiredTemp;
   };

@@ -22,7 +22,8 @@ process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID_VALID;
 // Invalidate require cache to create instance with new environment variables
 delete require.cache[require.resolve('../../controller/calendar.controller')];
 
-const CalendarController = require('../../controller/calendar.controller')(log);
+const CacheController = require('../../controller/cache.controller')(log);
+const CalendarController = require('../../controller/calendar.controller')(log, CacheController);
 
 describe('Calendar Controller', () => {
   before(() => {
@@ -116,7 +117,7 @@ describe('Calendar Controller', () => {
     delete require.cache[require.resolve('../../controller/calendar.controller')];
 
     // eslint-disable-next-line global-require
-    const desiredTemp = await require('../../controller/calendar.controller')(log)
+    const desiredTemp = await require('../../controller/calendar.controller')(log, CacheController)
       .getDesiredTemperature();
 
     expect(desiredTemp).to.equal(MIN_TEMP);
@@ -129,7 +130,7 @@ describe('Calendar Controller', () => {
     delete require.cache[require.resolve('../../controller/calendar.controller')];
 
     // eslint-disable-next-line global-require
-    const desiredTemp = await require('../../controller/calendar.controller')(log)
+    const desiredTemp = await require('../../controller/calendar.controller')(log, CacheController)
       .getDesiredTemperature();
 
     expect(desiredTemp).to.equal(MIN_TEMP);
@@ -143,7 +144,7 @@ describe('Calendar Controller', () => {
     delete require.cache[require.resolve('../../controller/calendar.controller')];
 
     // eslint-disable-next-line global-require
-    const desiredTemp = await require('../../controller/calendar.controller')(log)
+    const desiredTemp = await require('../../controller/calendar.controller')(log, CacheController)
       .getDesiredTemperature();
 
     expect(desiredTemp).to.equal(MIN_TEMP);
@@ -158,7 +159,7 @@ describe('Calendar Controller', () => {
     delete require.cache[require.resolve('../../controller/calendar.controller')];
 
     // eslint-disable-next-line global-require
-    const desiredTemp = await require('../../controller/calendar.controller')(log)
+    const desiredTemp = await require('../../controller/calendar.controller')(log, CacheController)
       .getDesiredTemperature();
 
     expect(desiredTemp).to.equal(MAX_TEMP);
@@ -172,7 +173,8 @@ describe('Calendar Controller', () => {
 
     try {
       // eslint-disable-next-line global-require
-      await require('../../controller/calendar.controller')(log).getDesiredTemperature();
+      await require('../../controller/calendar.controller')(log, CacheController)
+        .getDesiredTemperature();
     } catch (err) {
       expect(err.code).to.equal('ENOENT');
     }

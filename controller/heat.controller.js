@@ -2,9 +2,9 @@ const OVERSHOOT_TEMP = parseFloat(process.env.OVERSHOOT_TEMP) || 0.5;
 
 module.exports = (log) => {
   const shouldHeat = (currentTemp, desiredTemp, isHeating) => {
-    if (desiredTemp < currentTemp &&
-      currentTemp < desiredTemp + OVERSHOOT_TEMP &&
-      !isHeating) {
+    if (desiredTemp < currentTemp
+      && currentTemp < desiredTemp + OVERSHOOT_TEMP
+      && !isHeating) {
       log.info(
         {
           currentTemp,
@@ -15,7 +15,9 @@ module.exports = (log) => {
       );
 
       return false;
-    } else if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
+    }
+
+    if (currentTemp < desiredTemp + OVERSHOOT_TEMP) {
       log.info(
         {
           currentTemp,

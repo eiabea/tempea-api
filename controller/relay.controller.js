@@ -4,7 +4,7 @@ const { CI } = process.env;
 
 const relay = CI ? require('../test/mock/relay') : new Gpio(17, 'out');
 
-module.exports = (log) => {
+module.exports = (log, cache) => {
   const getRelay = async () => {
     log.trace({ func: 'getRelay' }, 'Reading relay gpio');
     return new Promise((resolve, reject) => {
@@ -47,6 +47,9 @@ module.exports = (log) => {
         }
 
         log.trace({ func: 'setRelay', state }, 'Successfully changed the state');
+
+        cache.updateRelayState(state);
+
         return resolve();
       });
     });

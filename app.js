@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const bunyan = require('bunyan');
 
 // Controller
+const Cache = require('./controller/cache.controller');
 const Calendar = require('./controller/calendar.controller');
 const Database = require('./controller/database.controller');
 const Heat = require('./controller/heat.controller');
@@ -31,17 +32,18 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
   const controller = {};
 
   const initControllers = async () => {
-    controller.calendar = Calendar(log.child({ controller: 'calendar' }));
+    controller.cache = Cache(log.child({ controller: 'cache' }));
+    controller.calendar = Calendar(log.child({ controller: 'calendar' }), controller.cache);
     controller.database = await Database(log.child({ controller: 'database' }));
     controller.heat = Heat(log.child({ controller: 'heat' }));
-    controller.relay = Relay(log.child({ controller: 'relay' }));
+    controller.relay = Relay(log.child({ controller: 'relay' }), controller.cache);
     controller.schedule = Schedule(log.child({ controller: 'schedule' }));
-    controller.slave = Slave(log.child({ controller: 'slave' }));
-    controller.temp = Temp(log.child({ controller: 'temp' }));
+    controller.slave = Slave(log.child({ controller: 'slave' }), controller.cache);
+    controller.temp = Temp(log.child({ controller: 'temp' }), controller.cache);
   };
 
   const initExpress = async () => {
-    log.info('Initializing routing modules');
+    log.info('Initializing routing module');
 
     const app = express();
 
@@ -65,14 +67,27 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
   await initControllers();
   await initExpress();
 
+  // Setting initial relay state
+  await controller.cache.updateRelayState(0);
+
   controller.schedule.startJob(async () => {
     let currentTemp;
     let desiredTemp;
     let slaveData;
 
     try {
-      currentTemp = await controller.temp.getCurrentTemp();
+      const rawSlaveData = await controller.slave.getData();
+      slaveData = {
+        temp: rawSlaveData.data.temp,
+        hum: rawSlaveData.data.hum,
+      };
+    } catch (err) {
+      log.error({ err }, 'Error getting slave data');
+    }
+
+    try {
       desiredTemp = await controller.calendar.getDesiredTemperature();
+      currentTemp = await controller.temp.getCurrentTemp();
     } catch (err) {
       log.error({ err }, 'Error getting temperatures');
       log.info('Disable heating');
@@ -102,16 +117,6 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
       } catch (err) {
         log.error({ err }, 'Error setting relay');
       }
-    }
-
-    try {
-      const rawSlaveData = await controller.slave.getData();
-      slaveData = {
-        temp: rawSlaveData.data.temp,
-        hum: rawSlaveData.data.hum,
-      };
-    } catch (err) {
-      log.error({ err }, 'Error getting slave data');
     }
 
     try {

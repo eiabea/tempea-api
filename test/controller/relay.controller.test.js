@@ -6,7 +6,8 @@ const log = require('null-logger');
 process.env.CI = 'true';
 process.env.MOCK_RELAY_FAIL = 'false';
 
-const RelayController = require('../../controller/relay.controller')(log);
+const CacheController = require('../../controller/cache.controller')(log);
+const RelayController = require('../../controller/relay.controller')(log, CacheController);
 
 describe('Relay Controller', () => {
   it('should get initial state', async () => {
@@ -37,7 +38,8 @@ describe('Relay Controller', () => {
       process.env.MOCK_RELAY_READ_FAIL = 'true';
       process.env.MOCK_RELAY_WRITE_FAIL = 'false';
       // eslint-disable-next-line global-require
-      await require('../../controller/relay.controller')(log).setRelay(1);
+      await require('../../controller/relay.controller')(log, CacheController)
+        .setRelay(1);
     } catch (err) {
       assert.isDefined(err);
     }
@@ -51,7 +53,8 @@ describe('Relay Controller', () => {
       process.env.MOCK_RELAY_READ_FAIL = 'false';
       process.env.MOCK_RELAY_WRITE_FAIL = 'true';
       // eslint-disable-next-line global-require
-      await require('../../controller/relay.controller')(log).setRelay(1);
+      await require('../../controller/relay.controller')(log, CacheController)
+        .setRelay(1);
     } catch (err) {
       assert.isDefined(err);
     }
@@ -64,7 +67,8 @@ describe('Relay Controller', () => {
 
       process.env.MOCK_RELAY_READ_FAIL = 'true';
       // eslint-disable-next-line global-require
-      await require('../../controller/relay.controller')(log).getRelay();
+      await require('../../controller/relay.controller')(log, CacheController)
+        .getRelay();
     } catch (err) {
       assert.isDefined(err);
     }

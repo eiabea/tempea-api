@@ -14,7 +14,8 @@ process.env.SLAVE_HOST = SLAVE_HOST;
 process.env.SLAVE_PORT = SLAVE_PORT;
 process.env.SLAVE_ENDPOINT = SLAVE_ENDPOINT;
 
-const SlaveController = require('../../controller/slave.controller')(log);
+const CacheController = require('../../controller/cache.controller')(log);
+const SlaveController = require('../../controller/slave.controller')(log, CacheController);
 
 describe('Slave Controller', () => {
   const mockedSlaveResponse = {
@@ -47,7 +48,7 @@ describe('Slave Controller', () => {
 
     try {
       // eslint-disable-next-line global-require
-      await require('../../controller/slave.controller')(log).getData();
+      await require('../../controller/slave.controller')(log, CacheController).getData();
     } catch (err) {
       expect(err).to.be.instanceof(Error);
       expect(err.code).to.equal('ECONNREFUSED');

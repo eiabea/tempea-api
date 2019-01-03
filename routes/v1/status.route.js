@@ -17,7 +17,7 @@ module.exports = (log, controller) => {
     };
 
     try {
-      const slaveData = await controller.slave.getData();
+      const slaveData = await controller.cache.getSlaveData();
       returnObj.slave = {
         currentTemp: slaveData.data.temp,
         currentHum: slaveData.data.hum,
@@ -27,20 +27,20 @@ module.exports = (log, controller) => {
     }
 
     try {
-      const relayData = await controller.relay.getRelay();
+      const relayData = await controller.cache.getRelayState();
       returnObj.heating = relayData === 1;
     } catch (err) {
       log.error({ err }, 'Error getting relay data');
     }
 
     try {
-      returnObj.desiredTemp = await controller.calendar.getDesiredTemperature();
+      returnObj.desiredTemp = await controller.cache.getDesiredTemperature();
     } catch (err) {
       log.error({ err }, 'Error getting calendar data');
     }
 
     try {
-      returnObj.currentTemp = await controller.temp.getCurrentTemp();
+      returnObj.currentTemp = await controller.cache.getCurrentTemperature();
     } catch (err) {
       log.error({ err }, 'Error getting temperature data');
     }

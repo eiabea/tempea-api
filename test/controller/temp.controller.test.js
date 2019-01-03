@@ -5,7 +5,8 @@ const log = require('null-logger');
 
 process.env.CI = 'true';
 
-const TempController = require('../../controller/temp.controller')(log);
+const CacheController = require('../../controller/cache.controller')(log);
+const TempController = require('../../controller/temp.controller')(log, CacheController);
 
 describe('Temp Controller', () => {
   it('should get current temperature', async () => {
@@ -21,7 +22,7 @@ describe('Temp Controller', () => {
     process.env.MOCK_TEMP_RESET = 'true';
 
     // eslint-disable-next-line global-require
-    const temp = await require('../../controller/temp.controller')(log).getCurrentTemp();
+    const temp = await require('../../controller/temp.controller')(log, CacheController).getCurrentTemp();
 
     expect(temp).to.equal(20);
     process.env.MOCK_TEMP_RESET = 'false';
@@ -34,7 +35,7 @@ describe('Temp Controller', () => {
 
     try {
       // eslint-disable-next-line global-require
-      await require('../../controller/temp.controller')(log).getCurrentTemp();
+      await require('../../controller/temp.controller')(log, CacheController).getCurrentTemp();
     } catch (err) {
       assert.isDefined(err);
     }

@@ -4,7 +4,7 @@ const {
   SLAVE_HOST, SLAVE_PORT, SLAVE_ENDPOINT,
 } = process.env;
 
-module.exports = (log) => {
+module.exports = (log, cache) => {
   const getData = async () => new Promise((resolve, reject) => {
     request(`http://${SLAVE_HOST}:${SLAVE_PORT}${SLAVE_ENDPOINT}`, (error, response, body) => {
       if (error) {
@@ -13,7 +13,9 @@ module.exports = (log) => {
       }
       log.trace({ body }, 'Slavedata');
       try {
-        return resolve(JSON.parse(body));
+        const jsonData = JSON.parse(body);
+        cache.updateSlaveData(jsonData);
+        return resolve(jsonData);
       } catch (err) {
         return reject(err);
       }

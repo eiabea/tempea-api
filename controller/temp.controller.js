@@ -4,7 +4,7 @@ const ds18b20 = CI ? require('../test/mock/ds18b20') : require('ds18b20');
 
 const SENSOR_ID = process.env.SENSOR_ID || '10-0008032d5234';
 
-module.exports = (log) => {
+module.exports = (log, cache) => {
   let prevValue = 20.0;
 
   const getCurrentTemp = async () => {
@@ -28,6 +28,7 @@ module.exports = (log) => {
           value: returnValue,
         }, 'Successfully got current temperature');
         prevValue = returnValue;
+        cache.updateCurrentTemperature(returnValue);
         return resolve(returnValue);
       });
     });
