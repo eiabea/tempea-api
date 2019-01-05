@@ -2,8 +2,8 @@ require('../Helper').invalidateNodeCache();
 
 const { assert, expect } = require('chai');
 const log = require('null-logger');
-const { Gpio } = require('onoff');
 const sinon = require('sinon');
+const mockedRelay = require('../mock/relay');
 
 process.env.CI = 'true';
 process.env.MOCK_RELAY_FAIL = 'false';
@@ -13,12 +13,13 @@ const RelayController = require('../../controller/relay.controller')(log, CacheC
 
 describe('Relay Controller', () => {
   it('should get initial state', async () => {
-    const pin = new Gpio(17, 'out');
-    sinon.stub(pin, 'read').returns(0);
+    const stub = sinon.stub(mockedRelay, 'read').callsArgWith(0, null, 0);
 
     const initialState = await RelayController.getRelay();
 
     expect(initialState).to.equal(0);
+
+    stub.restore();
   });
 
   it('should set 1 state', async () => {
@@ -37,10 +38,9 @@ describe('Relay Controller', () => {
 
   it('should fail to set relay [read error]', async () => {
     try {
-      const pin = new Gpio(17, 'out');
-      sinon.stub(pin, 'read').throws('Unable to read pin');
+      sinon.stub(mockedRelay, 'read').throws(new Error('Unable to read pin'));
 
-      RelayController.setRelay(1);
+      await RelayController.setRelay(1);
     } catch (err) {
       assert.isDefined(err);
     }
@@ -48,14 +48,9 @@ describe('Relay Controller', () => {
 
   it('should fail to set relay [write error]', async () => {
     try {
-      delete require.cache[require.resolve('../mock/relay')];
-      delete require.cache[require.resolve('../../controller/relay.controller')];
+      sinon.stub(mockedRelay, 'write').throws(new Error('Unable to write pin'));
 
-      process.env.MOCK_RELAY_READ_FAIL = 'false';
-      process.env.MOCK_RELAY_WRITE_FAIL = 'true';
-      // eslint-disable-next-line global-require
-      await require('../../controller/relay.controller')(log, CacheController)
-        .setRelay(1);
+      await RelayController.setRelay(1);
     } catch (err) {
       assert.isDefined(err);
     }
@@ -63,13 +58,9 @@ describe('Relay Controller', () => {
 
   it('should fail to get relay', async () => {
     try {
-      delete require.cache[require.resolve('../mock/relay')];
-      delete require.cache[require.resolve('../../controller/relay.controller')];
+      sinon.stub(mockedRelay, 'read').throws(new Error('Unable to read pin'));
 
-      process.env.MOCK_RELAY_READ_FAIL = 'true';
-      // eslint-disable-next-line global-require
-      await require('../../controller/relay.controller')(log, CacheController)
-        .getRelay();
+      await RelayController.getRelay();
     } catch (err) {
       assert.isDefined(err);
     }
