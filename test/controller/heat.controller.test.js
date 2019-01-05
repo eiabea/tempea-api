@@ -1,28 +1,39 @@
-require('../Helper').invalidateNodeCache();
-
+const mockedEnv = require('mocked-env');
 const { assert } = require('chai');
 const log = require('null-logger');
 
-process.env.CI = 'true';
-
-process.env.OVERSHOOT_TEMP = 1;
-
-const HeatController = require('../../controller/heat.controller')(log);
-
 describe('Heat Controller', () => {
+  let restore;
+  let heatController;
+  beforeEach(() => {
+    restore = mockedEnv({
+      OVERSHOOT_TEMP: '1',
+    });
+
+    delete require.cache[require.resolve('../../controller/heat.controller')];
+
+    // ensure brand new instance with correct env variables for every test
+    // eslint-disable-next-line global-require
+    heatController = require('../../controller/heat.controller')(log);
+  });
+
+  afterEach(() => {
+    restore();
+  });
+
   it('should return true [current temp too low]', async () => {
-    assert.isTrue(await HeatController.shouldHeat(15, 19, false));
+    assert.isTrue(await heatController.shouldHeat(15, 19, false));
   });
 
   it('should return true [heating up to desired temp + overshoot]', async () => {
-    assert.isTrue(await HeatController.shouldHeat(19.5, 19, true));
+    assert.isTrue(await heatController.shouldHeat(19.5, 19, true));
   });
 
   it('should return false [current temp over temp + overshoot]', async () => {
-    assert.isFalse(await HeatController.shouldHeat(20.5, 19, true));
+    assert.isFalse(await heatController.shouldHeat(20.5, 19, true));
   });
 
   it('should return false [cooling down to desired temp]', async () => {
-    assert.isFalse(await HeatController.shouldHeat(19.5, 19, false));
+    assert.isFalse(await heatController.shouldHeat(19.5, 19, false));
   });
 });

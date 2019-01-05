@@ -38,8 +38,7 @@
     "jsonwebtoken": "^8.4.0",
     "moment": "^2.22.2",
     "onoff": "^3.2.2",
-    "request": "^2.88.0",
-    "sinon": "^7.2.2"
+    "request": "^2.88.0"
   },
   "devDependencies": {
     "chai-http": "^4.2.0",
@@ -51,10 +50,13 @@
     "eslint-plugin-mocha": "^5.2.0",
     "husky": "^1.2.0",
     "mocha": "^5.2.0",
+    "mocked-env": "^1.2.4",
     "nock": "^10.0.3",
     "node-mocks-http": "^1.7.3",
     "nodemon": "^1.18.7",
     "null-logger": "^1.0.0",
-    "nyc": "^13.1.0"
+    "nyc": "^13.1.0",
+    "proxyquire": "^2.1.0",
+    "sinon": "^7.2.2"
   }
 }

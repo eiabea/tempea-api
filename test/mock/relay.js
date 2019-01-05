@@ -1,13 +1,9 @@
-let state = 0;
-
 function read(callback) {
-  return callback(null, state);
+  return callback(null, 0);
 }
 
 function write(newState, callback) {
-  state = newState;
-
-  return callback(null, state);
+  return callback(null, newState);
 }
 
 module.exports = {
