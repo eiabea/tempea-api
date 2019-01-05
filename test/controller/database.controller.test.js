@@ -2,6 +2,14 @@ require('../Helper').invalidateNodeCache();
 
 const log = require('null-logger');
 const nock = require('nock');
+const sinon = require('sinon');
+const proxyquire = require('proxyquire');
+const mockedInflux = function Influx(uri) {
+  this.createDatabase = async () => {
+    throw new Error("Mocked creation error")
+  };
+  this.schema = (one, two, three)=>{ }
+};
 
 process.env.CI = 'true';
 
@@ -16,6 +24,14 @@ describe('Database Controller', () => {
       .post(/.*/g)
       .times(4)
       .reply(200);
+  });
+
+  it('should ignore database creation error', async () => {
+    const DBC = proxyquire('../../controller/database.controller', {
+      'influxdb-nodejs': mockedInflux,
+    });
+
+    await DBC(log);
   });
 
   it('should write measurement', async () => {
