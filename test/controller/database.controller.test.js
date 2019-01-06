@@ -32,7 +32,6 @@ describe('Database Controller', () => {
   });
 
   it('should fallback to default values if no env is set', async () => {
-
     const restore = mockedEnv({
       INFLUX_HOST: undefined,
       INFLUX_PORT: undefined,
@@ -42,7 +41,7 @@ describe('Database Controller', () => {
     const DBC = proxyquire('../../controller/database.controller', {
       'influxdb-nodejs': function Influx(uri) {
         this.uri = uri;
-        expect(uri).to.eq('http://influx:8086/temp')
+        expect(uri).to.eq('http://influx:8086/temp');
         this.createDatabase = sinon.stub();
         this.schema = sinon.stub();
       },
