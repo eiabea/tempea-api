@@ -1,5 +1,3 @@
-require('../Helper').invalidateNodeCache();
-
 const chai = require('chai');
 
 const { assert, expect } = chai;
@@ -10,8 +8,7 @@ chai.use(chaiHttp);
 const express = require('express');
 const bodyParser = require('body-parser');
 const log = require('null-logger');
-const nock = require('nock');
-const moment = require('moment');
+const sinon = require('sinon');
 
 const GOOGLE_CALENDAR_ID = '1337';
 const SLAVE_HOST = 'mocked.tempea.com';
@@ -38,6 +35,7 @@ const StatusRoute = require('../../routes/v1/status.route');
 
 describe('Status Route', () => {
   let app;
+  let statusRoute;
   const controller = {};
 
   const mockedSlaveResponse = {
@@ -49,32 +47,6 @@ describe('Status Route', () => {
   };
 
   before(async () => {
-    nock('https://www.googleapis.com:443')
-      .post('/oauth2/v4/token')
-      .times(3)
-      .reply(200, {
-        access_token: '1/fFAGRNJru1FTz70BzhT3Zg',
-        expires_in: 3920,
-        token_type: 'Bearer',
-        refresh_token: '1/xEoDL4iW3cxlI7yDbSRFYNG01kVKM2C-259HOF2aQbI',
-      });
-    nock('https://www.googleapis.com:443')
-      .get(new RegExp(`/calendar/v3/calendars/${GOOGLE_CALENDAR_ID}/events/*`))
-      .times(3)
-      .reply(200, {
-        items: [
-          {
-            summary: '18.4',
-            start: {
-              dateTime: moment().subtract(1, 'days').valueOf(),
-            },
-            end: {
-              dateTime: moment().add(1, 'days').valueOf(),
-            },
-          },
-        ],
-      });
-
     controller.cache = Cache(log);
     controller.calendar = Calendar(log, controller.cache);
     controller.relay = Relay(log, controller.cache);
@@ -145,5 +117,50 @@ describe('Status Route', () => {
     assert.isNumber(data.desiredTemp);
     assert.isNumber(data.currentTemp);
     assert.isUndefined(slave);
+  });
+
+  it('should get status [no desired]', async () => {
+    const stub = sinon.stub(controller.cache, 'getDesiredTemperature')
+      .throws(new Error('Mocked error'));
+
+    const response = await chai.request(app).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+
+    assert.isTrue(body.success);
+    assert.isString(data.mode);
+    assert.isUndefined(data.desiredTemp);
+
+    stub.restore();
+  });
+
+  it('should get status [no relay]', async () => {
+    const stub = sinon.stub(controller.cache, 'getRelayState')
+      .throws(new Error('Mocked error'));
+
+    const response = await chai.request(app).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+
+    assert.isTrue(body.success);
+    assert.isString(data.mode);
+    assert.isUndefined(data.heating);
+
+    stub.restore();
+  });
+
+  it('should get status [no current temperature]', async () => {
+    const stub = sinon.stub(controller.cache, 'getCurrentTemperature')
+      .throws(new Error('Mocked error'));
+
+    const response = await chai.request(app).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+
+    assert.isTrue(body.success);
+    assert.isString(data.mode);
+    assert.isUndefined(data.currentTemp);
+
+    stub.restore();
   });
 });
