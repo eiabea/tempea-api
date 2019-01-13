@@ -3,36 +3,25 @@ version: "3"
 volumes:
   influx:
     driver: "local"
-  redis:
-    driver: "local"
 
 services:
   influx:
-    image: "influxdb"
+    image: "arm32v7/influxdb"
     ports:
       - "8086:8086"
     volumes:
       - "influx:/var/lib/influxdb"
 
-  redis:
-    image: "redis"
-    command: "redis-server --appendonly yes"
-    volumes:
-      - "redis:/data"
-
   tempea:
-    build: "."
+    image: "eiabea/tempea-api:latest"
     privileged: "true"
     depends_on:
       - "influx"
-      - "redis"
     ports:
       - "3000:3000"
     volumes:
-      - ".:/src"
+      - "./secrets:/src/secrets"
     environment:
-      # Mock hardware
-      CI: "true"
       # Google
       GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"
       GOOGLE_CALENDAR_ID: "developer@eiabea.com"
@@ -44,14 +33,8 @@ services:
       INFLUX_HOST: "influx"
       INFLUX_PORT: "8086"
       INFLUX_DB: "temp"
-      #  Redis
-      REDIS_HOST: "redis"
-      REDIS_PORT: "6379"
-      # JWT
-      JWT_SECRET: "changeMe"
-      JWT_EXPIRES_IN: "1h"
       # Hardware
-      SENSOR_ID: "10-0008032d5234"
+      SENSOR_ID: "10-00080278b776"
       # Slave
       SLAVE_HOST: "192.168.0.7"
       SLAVE_PORT: "3000"

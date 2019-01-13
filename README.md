@@ -120,7 +120,7 @@ docker-compose version
 
 ### Breadboard
 
-In order to run tempea the raspberry pi needs to be connected to some peripherals. Namely a transistor driven relay to turn on the gas boiler and a digital temperature sensor with a one wire interface ([DS18B20](https://www.sparkfun.com/products/245))
+For running tempea the raspberry pi needs to be connected to some peripherals. Namely a transistor driven relay to turn on the gas boiler and a digital temperature sensor with a one wire interface ([DS18B20](https://www.sparkfun.com/products/245))
 
 ### Schematics
 
@@ -152,11 +152,23 @@ The following images in combination with the schematics should make it easy to b
 
 ## [WIP] Software
 
-### One Wire
+In order to get data from the [DS18B20](https://www.sparkfun.com/products/245) the one wire interface of the raspberry pi has to be enabled. Open up _/boot/config.txt_ and add following lines at the end of the file
 
 ```
+# OneWire
 dtoverlay=w1-gpio,gpiopin=4,pullup=on
 ```
+
+After rebooting it should be able to see the connected sensor
+
+```
+$ ls /sys/bus/w1/devices/
+10-00080278b776  w1_bus_master1
+```
+
+Take a note of the name (e.g. 10-00080278b776) of the slave, it is needed in the following steps
+
+[TODO] google calendar secret
 
 ## [WIP] Required packages
 
