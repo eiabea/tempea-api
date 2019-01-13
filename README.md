@@ -116,7 +116,27 @@ sudo pip install docker-compose
 docker-compose version
 ```
 
-## [WIP] Hardware
+## Hardware
+
+### Breadboard
+
+In order to run tempea the raspberry pi needs to be connected to some peripherals. Namely a transistor driven relay to turn on the gas boiler and a digital temperature sensor with a one wire interface ([DS18B20](https://www.sparkfun.com/products/245))
+
+### Schematics
+
+The schematics for this step can be found [here](https://github.com/eiabea/tempea-api/tree/master/schematic) and are created with [Fritzing](fritzing.org/home/)
+
+### Parts
+
+- Breadboard
+- Wires
+- Resistors (1kOhm, 4,7kOhm)
+- [1N4004](https://www.sparkfun.com/products/14884) 
+- [DS18B20](https://www.sparkfun.com/products/245)
+- [833H-1C-C](https://www.alibaba.com/product-detail/Relay-833H-1C-C-05VDC-TRD_60699398858.html?spm=a2700.7724838.2017115.35.77e36478QeKaZy)
+- [BC547](https://www.alibaba.com/product-detail/KEHE-bc547b-Transistor-TO92-bc547b-bc547_60786655233.html?spm=a2700.7724838.2017115.1.43036a93qsSS1L&s=p)
+
+The following images in combination with the schematics should make it easy to build up the circuit. Please note, that my relay had a different pinout than shown in the schematic. Check the data sheet of your relay to wire it up correctly. The relay should work as a closer, so if no power is supplied the outgoing pins must not be connected!
 
 <p align="center">
   <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/rpi_breadboard.jpg" target="_blank">
@@ -129,8 +149,6 @@ docker-compose version
     <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/breadboard_closeup.jpg" width="350" alt="Breadboard Closeup">
   </a>
 </p>
-
-### [WIP] Schematics
 
 ## [WIP] Software
 
