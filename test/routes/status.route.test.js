@@ -35,7 +35,6 @@ const StatusRoute = require('../../routes/v1/status.route');
 
 describe('Status Route', () => {
   let app;
-  let statusRoute;
   const controller = {};
 
   const mockedSlaveResponse = {

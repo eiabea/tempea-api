@@ -118,9 +118,22 @@ docker-compose version
 
 ## [WIP] Hardware
 
+![RaspberryPi with Breadboard](https://raw.githubusercontent.com/eiabea/tempea-api/master/images/rpi_breadboard.jpg)
+
+![GPIO Closeup](https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gpio_closeup.jpg)
+
+![Breadboard Closeup](https://raw.githubusercontent.com/eiabea/tempea-api/master/images/breadboard_closeup.jpg)
+
 ### [WIP] Schematics
 
 ## [WIP] Software
+
+### One Wire
+
+```
+dtoverlay=w1-gpio,gpiopin=4,pullup=on
+```
+
 ## [WIP] Required packages
 
 ## [WIP] Tempea itself
