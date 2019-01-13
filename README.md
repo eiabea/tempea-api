@@ -118,11 +118,17 @@ docker-compose version
 
 ## [WIP] Hardware
 
-![RaspberryPi with Breadboard](https://raw.githubusercontent.com/eiabea/tempea-api/master/images/rpi_breadboard.jpg)
-
-![GPIO Closeup](https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gpio_closeup.jpg)
-
-![Breadboard Closeup](https://raw.githubusercontent.com/eiabea/tempea-api/master/images/breadboard_closeup.jpg)
+<p align="center">
+  <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/rpi_breadboard.jpg" target="_blank">
+    <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/rpi_breadboard.jpg" width="350" alt="RaspberryPi with Breadboard">
+  </a>
+  <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gpio_closeup.jpg" target="_blank">
+    <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gpio_closeup.jpg" width="350" alt="GPIO Closeup">
+  </a>
+  <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/breadboard_closeup.jpg" target="_blank">
+    <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/breadboard_closeup.jpg" width="350" alt="Breadboard Closeup">
+  </a>
+</p>
 
 ### [WIP] Schematics
 
