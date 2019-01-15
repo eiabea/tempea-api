@@ -1,11 +1,11 @@
 jobs:
   include:
-  # - stage: test
-  #   language: node_js
-  #   node_js:
-  #   - 9.11.2
-  #   after_success:
-  #   - npm run coveralls
+  - stage: test
+    language: node_js
+    node_js:
+    - 9.11.2
+    after_success:
+    - npm run coveralls
   - stage: docker
     sudo: required
     services:
