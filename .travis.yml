@@ -1,5 +1,21 @@
-language: node_js
-node_js:
-  - "9.4.0"
-after_success:
-  - npm run coveralls 
+jobs:
+  include:
+  # - stage: test
+  #   language: node_js
+  #   node_js:
+  #   - 9.11.2
+  #   after_success:
+  #   - npm run coveralls
+  - stage: docker
+    sudo: required
+    services:
+    - docker
+    language: bash
+    script:
+    - >
+      if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+        docker run --rm --privileged multiarch/qemu-user-static:register --reset
+        docker build -t eiabea/tempea-api .
+        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        docker push eiabea/tempea-api
+      fi
