@@ -15,7 +15,7 @@ jobs:
     - >
       if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
         docker run --rm --privileged multiarch/qemu-user-static:register --reset
-        docker build -t eiabea/tempea-api .
+        docker build -t eiabea/tempea-api:arm-latest .
         echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-        docker push eiabea/tempea-api
+        docker push eiabea/tempea-api:arm-latest
       fi
