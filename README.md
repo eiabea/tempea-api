@@ -2,8 +2,6 @@
 
 [![Build Status](https://travis-ci.org/eiabea/tempea-api.svg?branch=master)](https://travis-ci.org/eiabea/tempea-api)
 [![Coverage Status](https://coveralls.io/repos/github/eiabea/tempea-api/badge.svg?branch=master)](https://coveralls.io/github/eiabea/tempea-api?branch=master)
-[![Docker Build](https://img.shields.io/docker/build/eiabea/tempea-api.svg)](https://cloud.docker.com/repository/docker/eiabea/tempea-api)
-[![Docker Automated](https://img.shields.io/docker/automated/eiabea/tempea-api.svg)](https://cloud.docker.com/repository/docker/eiabea/tempea-api)
 
 # Motivation
 
