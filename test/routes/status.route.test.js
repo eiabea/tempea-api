@@ -1,3 +1,4 @@
+const mockedEnv = require('mocked-env');
 const chai = require('chai');
 
 const { assert, expect } = chai;
@@ -5,37 +6,13 @@ const chaiHttp = require('chai-http');
 
 chai.use(chaiHttp);
 
-const express = require('express');
-const bodyParser = require('body-parser');
-const log = require('null-logger');
 const sinon = require('sinon');
-
-const GOOGLE_CALENDAR_ID = '1337';
-const SLAVE_HOST = 'mocked.tempea.com';
-const SLAVE_PORT = 80;
-const SLAVE_ENDPOINT = '/mocked';
-
-process.env.SLAVE_HOST = SLAVE_HOST;
-process.env.SLAVE_PORT = SLAVE_PORT;
-process.env.SLAVE_ENDPOINT = SLAVE_ENDPOINT;
-process.env.CI = 'true';
-process.env.TOKEN_DIR = 'test/secrets';
-process.env.GOOGLE_SERVICE_ACCOUNT_JSON = 'tempea-mocked.json';
-process.env.GOOGLE_CALENDAR_ID = GOOGLE_CALENDAR_ID;
-
-// Controller
-const Cache = require('../../controller/cache.controller');
-const Calendar = require('../../controller/calendar.controller');
-const Relay = require('../../controller/relay.controller');
-const Temp = require('../../controller/temp.controller');
-const Slave = require('../../controller/slave.controller');
-
-// Routes
-const StatusRoute = require('../../routes/v1/status.route');
+const App = require('../../app');
 
 describe('Status Route', () => {
-  let app;
-  const controller = {};
+  let restore;
+  let expressApp;
+  let controller;
 
   const mockedSlaveResponse = {
     success: true,
@@ -46,32 +23,38 @@ describe('Status Route', () => {
   };
 
   before(async () => {
-    controller.cache = Cache(log);
-    controller.calendar = Calendar(log, controller.cache);
-    controller.relay = Relay(log, controller.cache);
-    controller.slave = Slave(log, controller.cache);
-    controller.temp = Temp(log, controller.cache);
+    restore = mockedEnv({
+      EXPRESS_PORT: '3001',
+      SLAVE_HOST: 'mocked.tempea.com',
+      SLAVE_PORT: '80',
+      SLAVE_ENDPOINT: '/mocked',
+      GOOGLE_SERVICE_ACCOUNT_JSON: 'tempea-mocked.json',
+      GOOGLE_CALENDAR_ID: 'tempea-mocked',
+      TOKEN_DIR: 'test/secrets',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
+    });
+
+    const app = App(60);
+    await app.start();
+    expressApp = app.getExpressApp();
+    controller = app.getController();
 
     // Populate cache with useful data
     await controller.cache.updateRelayState(0);
     await controller.cache.updateCurrentTemperature(18.4);
     await controller.cache.updateDesiredTemperature(19.4);
     await controller.cache.updateSlaveData(mockedSlaveResponse);
+  });
 
-    app = express();
-
-    app.use(bodyParser.json({ limit: '50mb' }));
-    app.use(bodyParser.urlencoded({ extended: false }));
-
-    app.use(express.Router({ mergeParams: true }));
-
-    app.use('/v1/status', StatusRoute(log, controller));
+  after(async () => {
+    restore();
   });
 
   it('should get status', async () => {
     await controller.cache.updateSlaveData(mockedSlaveResponse);
 
-    const response = await chai.request(app).get('/v1/status');
+    const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
     const { slave } = data;
@@ -89,7 +72,7 @@ describe('Status Route', () => {
   it('should get status [no slave]', async () => {
     await controller.cache.updateSlaveData(undefined);
 
-    const response = await chai.request(app).get('/v1/status');
+    const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
     const { slave } = data;
@@ -105,7 +88,7 @@ describe('Status Route', () => {
   it('should get status [faulty slave]', async () => {
     await controller.cache.updateSlaveData(undefined);
 
-    const response = await chai.request(app).get('/v1/status');
+    const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
     const { slave } = data;
@@ -122,7 +105,7 @@ describe('Status Route', () => {
     const stub = sinon.stub(controller.cache, 'getDesiredTemperature')
       .throws(new Error('Mocked error'));
 
-    const response = await chai.request(app).get('/v1/status');
+    const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
 
@@ -137,7 +120,7 @@ describe('Status Route', () => {
     const stub = sinon.stub(controller.cache, 'getRelayState')
       .throws(new Error('Mocked error'));
 
-    const response = await chai.request(app).get('/v1/status');
+    const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
 
@@ -152,7 +135,7 @@ describe('Status Route', () => {
     const stub = sinon.stub(controller.cache, 'getCurrentTemperature')
       .throws(new Error('Mocked error'));
 
-    const response = await chai.request(app).get('/v1/status');
+    const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
 

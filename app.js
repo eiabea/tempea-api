@@ -21,14 +21,15 @@ const StatusRoute = require('./routes/v1/status.route');
 
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
 
-(async function tempea() {
+module.exports = (loglevel) => {
   const log = bunyan.createLogger({
     name: 'tempea',
-    level: 10,
+    level: loglevel,
     serializers: bunyan.stdSerializers,
   });
 
   let heating = false;
+  let app;
   const controller = {};
 
   const initControllers = async () => {
@@ -45,7 +46,7 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
   const initExpress = async () => {
     log.info('Initializing routing module');
 
-    const app = express();
+    app = express();
 
     app.use(bodyParser.json({ limit: '50mb' }));
     app.use(bodyParser.urlencoded({ extended: false }));
@@ -64,13 +65,7 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
     });
   };
 
-  await initControllers();
-  await initExpress();
-
-  // Setting initial relay state
-  await controller.cache.updateRelayState(0);
-
-  controller.schedule.startJob(async () => {
+  const job = async () => {
     let currentTemp;
     let desiredTemp;
     let slaveData;
@@ -125,5 +120,24 @@ const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
     } catch (err) {
       log.error({ err }, 'Error writing measurement');
     }
-  });
-}());
+  };
+
+  const getController = () => controller;
+  const getExpressApp = () => app;
+
+  const start = async () => {
+    await initControllers();
+    await initExpress();
+
+    // Setting initial relay state
+    await controller.cache.updateRelayState(0);
+
+    controller.schedule.startJob(job);
+  };
+
+  return {
+    start,
+    getController,
+    getExpressApp,
+  };
+};

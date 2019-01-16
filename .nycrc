@@ -1,10 +1,15 @@
 {
-    "reporter": [
-      "lcov",
-      "text"
-    ],
-    "include": [
-      "**/*.js",
-      "app.js"
-    ]
+  "exclude": [
+    "**/*.apidoc.js",
+    "coverage",
+    "apidoc",
+    "test",
+    "**/*test.js",
+    "index.js"
+  ],
+  "reporter": [
+    "text",
+    "html"
+  ],
+    "all": true
 }
