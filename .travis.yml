@@ -3,7 +3,7 @@ jobs:
   - stage: test
     language: node_js
     node_js:
-    - 9.11.2
+    - 10.14.0
     after_success:
     - npm run coveralls
   - stage: docker
