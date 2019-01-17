@@ -14,8 +14,6 @@ const Schedule = require('./controller/schedule.controller');
 const Slave = require('./controller/slave.controller');
 const Temp = require('./controller/temp.controller');
 
-const State = require('./state');
-
 // Routes
 const StatusRoute = require('./routes/v1/status.route');
 
@@ -29,6 +27,7 @@ module.exports = (loglevel) => {
   });
 
   let heating = false;
+  let server;
   let app;
   const controller = {};
 
@@ -60,7 +59,7 @@ module.exports = (loglevel) => {
     app.use('/v1/status', StatusRoute(log.child({ route: 'status' }), controller));
 
     log.info(`Starting Backend on port ${EXPRESS_PORT}`);
-    app.listen(EXPRESS_PORT, () => {
+    server = app.listen(EXPRESS_PORT, () => {
       log.info(`Backend listening on port ${EXPRESS_PORT}`);
     });
   };
@@ -95,23 +94,13 @@ module.exports = (loglevel) => {
       return;
     }
 
-    if (State.mode === 'automatic') {
-      const enableHeating = controller.heat.shouldHeat(currentTemp, desiredTemp, heating);
+    const enableHeating = controller.heat.shouldHeat(currentTemp, desiredTemp, heating);
 
-      try {
-        await controller.relay.setRelay(enableHeating ? 1 : 0);
-        heating = enableHeating;
-      } catch (err) {
-        log.error({ err }, 'Error setting relay');
-      }
-    } else {
-      log.info('Tempea disabled, disable heating');
-      try {
-        await controller.relay.setRelay(0);
-        heating = false;
-      } catch (err) {
-        log.error({ err }, 'Error setting relay');
-      }
+    try {
+      await controller.relay.setRelay(enableHeating ? 1 : 0);
+      heating = enableHeating;
+    } catch (err) {
+      log.error({ err }, 'Error setting relay');
     }
 
     try {
@@ -135,8 +124,25 @@ module.exports = (loglevel) => {
     controller.schedule.startJob(job);
   };
 
+  const stop = async () => {
+    if (server) {
+      server.close();
+    }
+  };
+
+  const stopJob = async () => {
+    await controller.schedule.stopJob();
+  };
+
+  const forceJob = async () => {
+    await job();
+  };
+
   return {
     start,
+    stop,
+    forceJob,
+    stopJob,
     getController,
     getExpressApp,
   };

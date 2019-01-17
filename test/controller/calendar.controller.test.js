@@ -9,10 +9,12 @@ const { request } = require('gaxios');
 const proxyquire = require('proxyquire');
 
 const CacheController = require('../../controller/cache.controller')(log);
+// Preload files
+require('../../controller/calendar.controller');
 
 describe('Calendar Controller', () => {
   let restore;
-  beforeEach(() => {
+  before(() => {
     restore = mockedEnv({
       GOOGLE_SERVICE_ACCOUNT_JSON: 'tempea-mocked.json',
       GOOGLE_CALENDAR_ID: 'tempea-mocked',
@@ -22,7 +24,7 @@ describe('Calendar Controller', () => {
     });
   });
 
-  afterEach(() => {
+  after(() => {
     restore();
   });
 

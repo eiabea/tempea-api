@@ -40,7 +40,7 @@ module.exports = (log, cache) => {
       }
       log.trace({ func: 'setRelay', state }, 'Changing gpio state');
 
-      return relay.write(state, (err) => {
+      return relay.write(state, async (err) => {
         if (err) {
           log.error({ func: 'getRelay', state, err }, 'Error setting relay gpio state');
           return reject(err);
@@ -48,7 +48,7 @@ module.exports = (log, cache) => {
 
         log.trace({ func: 'setRelay', state }, 'Successfully changed the state');
 
-        cache.updateRelayState(state);
+        await cache.updateRelayState(state);
 
         return resolve();
       });

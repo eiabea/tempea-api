@@ -2,7 +2,6 @@ const express = require('express');
 
 const router = express.Router();
 const RateLimit = require('express-rate-limit');
-const State = require('../../state');
 
 const rateLimiterStatus = new RateLimit({
   keyGenerator: req => req.header('x-real-ip') || req.connection.remoteAddress,
@@ -12,9 +11,7 @@ const rateLimiterStatus = new RateLimit({
 
 module.exports = (log, controller) => {
   const getStatusObject = async () => {
-    const returnObj = {
-      mode: State.mode,
-    };
+    const returnObj = {};
 
     try {
       const slaveData = await controller.cache.getSlaveData();
@@ -50,17 +47,11 @@ module.exports = (log, controller) => {
 
   router.get('/', rateLimiterStatus, async (req, res) => {
     log.info('Got status request');
-    try {
-      res.json({
-        success: true,
-        data: await getStatusObject(),
-      });
-    } catch (err) {
-      res.json({
-        success: false,
-        message: err.message,
-      });
-    }
+    res.json({
+      success: true,
+      // getStatusObject can not throw, so no need for try/catch
+      data: await getStatusObject(),
+    });
   });
 
   return router;

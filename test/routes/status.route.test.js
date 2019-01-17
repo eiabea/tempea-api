@@ -1,5 +1,10 @@
 const mockedEnv = require('mocked-env');
 const chai = require('chai');
+const nock = require('nock');
+const moment = require('moment');
+const proxyquire = require('proxyquire');
+const { request } = require('gaxios');
+const log = require('null-logger');
 
 const { assert, expect } = chai;
 const chaiHttp = require('chai-http');
@@ -7,20 +12,13 @@ const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 
 const sinon = require('sinon');
-const App = require('../../app');
+const mockedRelay = require('../mock/relay');
 
 describe('Status Route', () => {
   let restore;
+  let app;
   let expressApp;
   let controller;
-
-  const mockedSlaveResponse = {
-    success: true,
-    data: {
-      temp: 2.1,
-      hum: 62,
-    },
-  };
 
   before(async () => {
     restore = mockedEnv({
@@ -35,24 +33,72 @@ describe('Status Route', () => {
       MIN_TEMP: '15',
     });
 
-    const app = App(60);
+    // eslint-disable-next-line global-require
+    const App = require('../../app');
+    app = App(60);
     await app.start();
+    // ensure that no job gets triggered by cron
+    await app.stopJob();
     expressApp = app.getExpressApp();
     controller = app.getController();
+  });
 
-    // Populate cache with useful data
-    await controller.cache.updateRelayState(0);
-    await controller.cache.updateCurrentTemperature(18.4);
-    await controller.cache.updateDesiredTemperature(19.4);
-    await controller.cache.updateSlaveData(mockedSlaveResponse);
+  afterEach(async () => {
+    await controller.cache.invalidate();
   });
 
   after(async () => {
+    await app.stop();
     restore();
   });
 
   it('should get status', async () => {
-    await controller.cache.updateSlaveData(mockedSlaveResponse);
+    const mockedSlaveData = {
+      success: true,
+      data: {
+        temp: 12.5,
+        hum: 32,
+      },
+    };
+    // Mock slave
+    nock('http://mocked.tempea.com:80')
+      .get('/mocked')
+      .reply(200, mockedSlaveData);
+
+    // Mock calendar
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
+      .reply(200, {
+        items: [
+          {
+            summary: '25.4',
+            start: {
+              dateTime: moment().subtract(1, 'days').valueOf(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').valueOf(),
+            },
+          },
+        ],
+      });
+
+    const authorizeSpy = sinon.spy();
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    controller.calendar = await CC(log, controller.cache);
+
+    // Run the job
+    await app.forceJob();
+
+    assert.isTrue(authorizeSpy.called);
 
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
@@ -60,17 +106,55 @@ describe('Status Route', () => {
     const { slave } = data;
 
     assert.isTrue(body.success);
-    assert.isString(data.mode);
-    assert.isBoolean(data.heating);
-    assert.isNumber(data.desiredTemp);
-    assert.isNumber(data.currentTemp);
+    expect(data.desiredTemp).to.eq(25.4);
+    expect(data.currentTemp).to.eq(21);
+    // Desired temp is 25.4, mocked ds18b20 returns 21 -> heating on
+    assert.isTrue(data.heating);
     assert.isDefined(slave);
-    expect(slave.currentTemp).to.equal(mockedSlaveResponse.data.temp);
-    expect(slave.currentHum).to.equal(mockedSlaveResponse.data.hum);
+    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
   });
 
   it('should get status [no slave]', async () => {
-    await controller.cache.updateSlaveData(undefined);
+    // Mock slave
+    nock('http://mocked.tempea.com:80')
+      .get('/mocked')
+      .reply(404);
+
+    // Mock calendar
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
+      .reply(200, {
+        items: [
+          {
+            summary: '25.4',
+            start: {
+              dateTime: moment().subtract(1, 'days').valueOf(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').valueOf(),
+            },
+          },
+        ],
+      });
+
+    const authorizeSpy = sinon.spy();
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    controller.calendar = await CC(log, controller.cache);
+
+    // Run the job
+    await app.forceJob();
+
+    assert.isTrue(authorizeSpy.called);
 
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
@@ -78,15 +162,76 @@ describe('Status Route', () => {
     const { slave } = data;
 
     assert.isTrue(body.success);
-    assert.isString(data.mode);
-    assert.isBoolean(data.heating);
-    assert.isNumber(data.desiredTemp);
-    assert.isNumber(data.currentTemp);
+    expect(data.desiredTemp).to.eq(25.4);
+    expect(data.currentTemp).to.eq(21);
+    // Desired temp is 25.4, mocked ds18b20 returns 21 -> heating on
+    assert.isTrue(data.heating);
     assert.isUndefined(slave);
   });
 
-  it('should get status [faulty slave]', async () => {
-    await controller.cache.updateSlaveData(undefined);
+  it('should get status [error in temperatures]', async () => {
+    const mockedSlaveData = {
+      success: true,
+      data: {
+        temp: 12.5,
+        hum: 32,
+      },
+    };
+    // Mock slave
+    nock('http://mocked.tempea.com:80')
+      .get('/mocked')
+      .reply(200, mockedSlaveData);
+
+    // Mock calendar
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
+      .reply(200, {
+        items: [
+          {
+            summary: '25.4',
+            start: {
+              dateTime: moment().subtract(1, 'days').valueOf(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').valueOf(),
+            },
+          },
+        ],
+      });
+
+    const authorizeSpy = sinon.spy();
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    const mockedCalendar = await CC(log, controller.cache);
+    const stubDesired = sinon.stub(mockedCalendar, 'getDesiredTemperature')
+      .throws(new Error('Unable to get mocked temp'));
+    controller.calendar = mockedCalendar;
+
+    controller.relay = proxyquire('../../controller/relay.controller', {
+      '../test/mock/relay': mockedRelay,
+    })(log, controller.cache);
+
+    const stubRead = sinon.stub(mockedRelay, 'read');
+    // First "setRelay" gets called, which first gets the current state
+    // Simulate a 1 state
+    stubRead.onCall(0).callsArgWith(0, null, 1);
+    // Temperatures fail, so the relay should be off, simulate write
+    const stubWrite = sinon.stub(mockedRelay, 'write').callsArgWith(1, null);
+    // Now the cache should see the disabled heating
+
+    // Run the job
+    await app.forceJob();
+
+    // getDesiredTemperature fails instant, so no authorize call
+    assert.isFalse(authorizeSpy.called);
 
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
@@ -94,11 +239,33 @@ describe('Status Route', () => {
     const { slave } = data;
 
     assert.isTrue(body.success);
-    assert.isString(data.mode);
-    assert.isBoolean(data.heating);
-    assert.isNumber(data.desiredTemp);
-    assert.isNumber(data.currentTemp);
+    // The job returns if one or more temperatures are not available and turns of heating
+    assert.isUndefined(data.desiredTemp);
+    assert.isUndefined(data.currentTemp);
+    // Heating has to be disabled on unknown temperatures
+    assert.isFalse(data.heating);
+    // The slave should work as expected
+    assert.isDefined(slave);
+    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+
+    stubDesired.restore();
+    stubRead.restore();
+    stubWrite.restore();
+  });
+
+  it('should get status [faulty slave]', async () => {
+    const stub = sinon.stub(controller.cache, 'getSlaveData').returns(undefined);
+
+    const response = await chai.request(expressApp).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+    const { slave } = data;
+
+    assert.isTrue(body.success);
     assert.isUndefined(slave);
+
+    stub.restore();
   });
 
   it('should get status [no desired]', async () => {
@@ -110,7 +277,6 @@ describe('Status Route', () => {
     const { data } = body;
 
     assert.isTrue(body.success);
-    assert.isString(data.mode);
     assert.isUndefined(data.desiredTemp);
 
     stub.restore();
@@ -125,7 +291,6 @@ describe('Status Route', () => {
     const { data } = body;
 
     assert.isTrue(body.success);
-    assert.isString(data.mode);
     assert.isUndefined(data.heating);
 
     stub.restore();
@@ -140,7 +305,6 @@ describe('Status Route', () => {
     const { data } = body;
 
     assert.isTrue(body.success);
-    assert.isString(data.mode);
     assert.isUndefined(data.currentTemp);
 
     stub.restore();

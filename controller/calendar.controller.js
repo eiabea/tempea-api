@@ -97,7 +97,7 @@ module.exports = (log, cache) => {
       desiredTemp = MAX_TEMP;
     }
 
-    cache.updateDesiredTemperature(desiredTemp);
+    await cache.updateDesiredTemperature(desiredTemp);
 
     return desiredTemp;
   };
