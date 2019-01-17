@@ -12,7 +12,7 @@ module.exports = (log, cache) => {
   const getCurrentTemp = async () => {
     log.trace({ func: 'getCurrentTemp' }, 'Getting current temperature');
     return new Promise((resolve, reject) => {
-      ds18b20.temperature(SENSOR_ID, (err, value) => {
+      ds18b20.temperature(SENSOR_ID, async (err, value) => {
         if (err) {
           log.error({ func: 'getCurrentTemp', err }, 'Error current temperature');
           return reject(err);
@@ -30,7 +30,7 @@ module.exports = (log, cache) => {
           value: returnValue,
         }, 'Successfully got current temperature');
         prevValue = returnValue;
-        cache.updateCurrentTemperature(returnValue);
+        await cache.updateCurrentTemperature(returnValue);
         return resolve(returnValue);
       });
     });

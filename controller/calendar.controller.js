@@ -3,18 +3,13 @@ const { JWT } = require('google-auth-library');
 const { google } = require('googleapis');
 
 const calendar = google.calendar('v3');
-// const googleAuth = require('google-auth-library');
-// const { OAuth2Client } = require('google-auth-library');
 const moment = require('moment');
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/calendar-nodejs-quickstart.json
 const GOOGLE_AUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
-// let TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-//   process.env.USERPROFILE) + '/.credentials/';
 const { GOOGLE_CALENDAR_ID, GOOGLE_SERVICE_ACCOUNT_JSON } = process.env;
 const TOKEN_DIR = process.env.TOKEN_DIR || 'secrets';
-// const TOKEN_PATH = `${TOKEN_DIR}/calendar-nodejs-quickstart.json`;
 const TOKEN_PATH = `${process.cwd()}/${TOKEN_DIR}/${GOOGLE_SERVICE_ACCOUNT_JSON}`;
 const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
 const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
@@ -102,7 +97,7 @@ module.exports = (log, cache) => {
       desiredTemp = MAX_TEMP;
     }
 
-    cache.updateDesiredTemperature(desiredTemp);
+    await cache.updateDesiredTemperature(desiredTemp);
 
     return desiredTemp;
   };

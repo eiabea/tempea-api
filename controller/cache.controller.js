@@ -1,7 +1,7 @@
 module.exports = (log) => {
   log.info('Creating cache controller');
   // TODO: using redis?
-  const cache = {};
+  let cache = {};
 
   const updateRelayState = async (state) => {
     log.trace({ state }, 'Updating relay state');
@@ -63,7 +63,12 @@ module.exports = (log) => {
     throw Error('No cached value available');
   };
 
+  const invalidate = async () => {
+    cache = {};
+  };
+
   return {
+    invalidate,
     updateDesiredTemperature,
     getDesiredTemperature,
     updateRelayState,
