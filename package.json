@@ -11,7 +11,6 @@
     "start:dev:pretty": "${NODE_PATH:-node_modules}/.bin/nodemon index.js | ${NODE_PATH:-node_modules}/.bin/bunyan -o short",
     "lint": "${NODE_PATH:-node_modules}/.bin/eslint --fix .",
     "test": "CI=true ${NODE_PATH:-node_modules}/.bin/nyc ${NODE_PATH:-node_modules}/.bin/_mocha --color --exit test/**/*.test.js",
-    "coveralls": "cat ./coverage/lcov.info | ${NODE_PATH:-node_modules}/.bin/coveralls",
     "codecov": "${NODE_PATH:-node_modules}/.bin/nyc report --reporter=text-lcov > coverage.lcov && ${NODE_PATH:-node_modules}/.bin/codecov"
   },
   "repository": {
@@ -44,7 +43,6 @@
   "devDependencies": {
     "chai-http": "^4.2.0",
     "codecov": "^3.1.0",
-    "coveralls": "^3.0.2",
     "eslint": "^5.9.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-chai": "^0.0.1",
