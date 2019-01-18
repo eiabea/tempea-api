@@ -37,6 +37,7 @@ services:
       # Hardware
       SENSOR_ID: "10-0008032d5234"
       # Slave
+      SLAVE_ENABLED: "true"
       SLAVE_HOST: "192.168.0.7"
       SLAVE_PORT: "3000"
       SLAVE_ENDPOINT: "/v1/status"
