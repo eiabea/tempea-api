@@ -2,14 +2,10 @@ jobs:
   include:
   - stage: test
     language: node_js
-    install:
-      - npm install -g codecov
-      - npm install
     node_js:
       - 10.14.0
     after_success:
-      - cp coverage/lcov.info coverage.lcov
-      - codecov
+      - npm run codecov
   - stage: docker
     sudo: required
     services:
