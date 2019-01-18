@@ -23,6 +23,7 @@ describe('Status Route', () => {
   before(async () => {
     restore = mockedEnv({
       EXPRESS_PORT: '3001',
+      SLAVE_ENABLED: 'true',
       SLAVE_HOST: 'mocked.tempea.com',
       SLAVE_PORT: '80',
       SLAVE_ENDPOINT: '/mocked',
@@ -33,6 +34,7 @@ describe('Status Route', () => {
       MIN_TEMP: '15',
     });
 
+    delete require.cache[require.resolve('../../app')];
     // eslint-disable-next-line global-require
     const App = require('../../app');
     app = App(60);

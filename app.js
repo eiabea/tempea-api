@@ -18,6 +18,7 @@ const Temp = require('./controller/temp.controller');
 const StatusRoute = require('./routes/v1/status.route');
 
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
+const SLAVE_ENABLED = process.env.SLAVE_ENABLED === 'true';
 
 module.exports = (loglevel) => {
   const log = bunyan.createLogger({
@@ -38,7 +39,9 @@ module.exports = (loglevel) => {
     controller.heat = Heat(log.child({ controller: 'heat' }));
     controller.relay = Relay(log.child({ controller: 'relay' }), controller.cache);
     controller.schedule = Schedule(log.child({ controller: 'schedule' }));
-    controller.slave = Slave(log.child({ controller: 'slave' }), controller.cache);
+    if (SLAVE_ENABLED) {
+      controller.slave = Slave(log.child({ controller: 'slave' }), controller.cache);
+    }
     controller.temp = Temp(log.child({ controller: 'temp' }), controller.cache);
   };
 
@@ -69,14 +72,16 @@ module.exports = (loglevel) => {
     let desiredTemp;
     let slaveData;
 
-    try {
-      const rawSlaveData = await controller.slave.getData();
-      slaveData = {
-        temp: rawSlaveData.data.temp,
-        hum: rawSlaveData.data.hum,
-      };
-    } catch (err) {
-      log.error({ err }, 'Error getting slave data');
+    if (SLAVE_ENABLED) {
+      try {
+        const rawSlaveData = await controller.slave.getData();
+        slaveData = {
+          temp: rawSlaveData.data.temp,
+          hum: rawSlaveData.data.hum,
+        };
+      } catch (err) {
+        log.error({ err }, 'Error getting slave data');
+      }
     }
 
     try {
