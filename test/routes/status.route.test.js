@@ -43,6 +43,10 @@ describe('Status Route', () => {
     controller = app.getController();
   });
 
+  beforeEach(async () => {
+    await controller.cache.invalidate();
+  });
+
   afterEach(async () => {
     await controller.cache.invalidate();
   });
@@ -250,6 +254,168 @@ describe('Status Route', () => {
     expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
 
     stubDesired.restore();
+    stubRead.restore();
+    stubWrite.restore();
+  });
+
+  it('should get status [error in relay write]', async () => {
+    const mockedSlaveData = {
+      success: true,
+      data: {
+        temp: 12.5,
+        hum: 32,
+      },
+    };
+    // Mock slave
+    nock('http://mocked.tempea.com:80')
+      .get('/mocked')
+      .reply(200, mockedSlaveData);
+
+    // Mock calendar
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
+      .reply(200, {
+        items: [
+          {
+            summary: '25.4',
+            start: {
+              dateTime: moment().subtract(1, 'days').valueOf(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').valueOf(),
+            },
+          },
+        ],
+      });
+
+    const authorizeSpy = sinon.spy();
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    const mockedCalendar = await CC(log, controller.cache);
+    const stubDesired = sinon.stub(mockedCalendar, 'getDesiredTemperature')
+      .throws(new Error('Unable to get mocked temp'));
+    controller.calendar = mockedCalendar;
+
+    controller.relay = proxyquire('../../controller/relay.controller', {
+      '../test/mock/relay': mockedRelay,
+    })(log, controller.cache);
+
+    const stubRead = sinon.stub(mockedRelay, 'read');
+    // First "setRelay" gets called, which first gets the current state
+    // Simulate a 1 state
+    stubRead.onCall(0).callsArgWith(0, null, 1);
+    // Temperatures fail, so the relay should be off, simulate write
+    const stubWrite = sinon.stub(mockedRelay, 'write').callsArgWith(1, new Error('Mocked relay error'));
+
+    // Run the job
+    await app.forceJob();
+
+    assert.isFalse(authorizeSpy.called);
+
+    const response = await chai.request(expressApp).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+    const { slave } = data;
+
+    assert.isTrue(body.success);
+    // The job returns if one or more temperatures are not available and turns of heating
+    assert.isUndefined(data.desiredTemp);
+    assert.isUndefined(data.currentTemp);
+    // Heating should be false, but setting the relay fails, so cache never gets set
+    assert.isUndefined(data.heating);
+    // The slave should work as expected
+    assert.isDefined(slave);
+    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+
+    stubRead.restore();
+    stubWrite.restore();
+    stubDesired.restore();
+  });
+
+  it('should get status [second error in relay write]', async () => {
+    const mockedSlaveData = {
+      success: true,
+      data: {
+        temp: 12.5,
+        hum: 32,
+      },
+    };
+    // Mock slave
+    nock('http://mocked.tempea.com:80')
+      .get('/mocked')
+      .reply(200, mockedSlaveData);
+
+    // Mock calendar
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
+      .reply(200, {
+        items: [
+          {
+            summary: '25.4',
+            start: {
+              dateTime: moment().subtract(1, 'days').valueOf(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').valueOf(),
+            },
+          },
+        ],
+      });
+
+    const authorizeSpy = sinon.spy();
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    controller.calendar = await CC(log, controller.cache);
+
+    controller.relay = proxyquire('../../controller/relay.controller', {
+      '../test/mock/relay': mockedRelay,
+    })(log, controller.cache);
+
+    const stubRead = sinon.stub(mockedRelay, 'read');
+    // First "setRelay" gets called, which first gets the current state
+    // Simulate a 0 state
+    stubRead.onCall(0).callsArgWith(0, null, 0);
+    const stubWrite = sinon.stub(mockedRelay, 'write');
+    // Write fails
+    stubWrite.onCall(0).callsArgWith(1, new Error('Mocked relay error'));
+
+    // Run the job
+    await app.forceJob();
+
+    assert.isTrue(authorizeSpy.called);
+
+    const response = await chai.request(expressApp).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+    const { slave } = data;
+
+    assert.isTrue(body.success);
+    expect(data.desiredTemp).to.eq(25.4);
+    expect(data.currentTemp).to.eq(21);
+    // Heating should be true, but setting the relay fails, so cache never gets set
+    assert.isUndefined(data.heating);
+    // The slave should work as expected
+    assert.isDefined(slave);
+    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+
     stubRead.restore();
     stubWrite.restore();
   });
