@@ -8,6 +8,7 @@ jobs:
     node_js:
       - 10.14.0
     after_success:
+      - cp coverage/lcov.info coverage.lcov
       - codecov
   - stage: docker
     sudo: required
