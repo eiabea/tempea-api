@@ -12,9 +12,9 @@ The thermostat in our flat was pretty basic, so i decided to build my own one ba
 After some research i stumbled over the great idea to use the [Google Calender](https://calendar.google.com) to set a desired temperature. This reduced the complexity of the node application drastically and made it obsolete to expose the raspberry to the internet to manage it from anywhere. 
 
 
-# [WIP] Setup
+# Setup
 
-## [WIP] System
+## System
 
 ### Raspbian
 
@@ -150,7 +150,7 @@ The following images in combination with the schematics should make it easy to b
   </a>
 </p>
 
-## [WIP] Software
+## Software
 
 ### Enable OneWire
 
@@ -172,25 +172,25 @@ Take a note of the name (e.g. 10-00080278b776) of the slave, it is needed in the
 
 ### Obtaining Google Calendar Service JSON
 
-- Login at [Google Developer Console](https://console.developers.google.com)
+1. Login at [Google Developer Console](https://console.developers.google.com)
 
-- Create a new project (e.g.: tempea)
+2. Create a new project (e.g.: tempea)
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gdc_create_project.jpg" target="_blank">
-    <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gdc_create_project.jpg" width="350" alt="GDC create project">
+  <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gdc_create_project.png" target="_blank">
+    <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gdc_create_project.png" width="350" alt="GDC create project">
   </a>
 </p>
 
-- Click on "Enable APIs and Services"
+3. Click on "Enable APIs and Services"
 
-- Search for "Google Calendar API" and enable it
+4. Search for "Google Calendar API" and enable it
 
-- In the side menu click on "IAM & admin" - "Service accounts"
+5. In the side menu click on "IAM & admin" - "Service accounts"
 
-- Create a new Service account (leave optional fields empty)
+6. Create a new Service account (leave optional fields empty)
 
-- Create a new JSON key for the created service account
+7. Create a new JSON key for the created service account
 
 Service json file (example)
 
@@ -210,9 +210,109 @@ Service json file (example)
 
 ```
 
-### [Setup project directory]
-### [Setup docker-compose]
-### [Start]
+### Setup tempea
+
+1. Connect to the Raspberry Pi via ssh (username: pi, password: raspberry)
+```
+ssh pi@192.168.0.8
+```
+
+2. Create tempea directory
+```
+mkdir tempea
+```
+
+3. Change into the tempea directory
+```
+cd tempea
+```
+
+4. Create secrets directory and copy/paste your google-service.json content into a new file called _tempea-service.json_
+```
+mkdir secrets
+nano secrets/tempea-service.json
+```
+
+5. Download the latest _docker-compose-production.yml_
+```
+wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose-production.yml
+```
+
+6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
+```
+environment:
+  # Google
+  GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"  # Name of the google service json file
+  GOOGLE_CALENDAR_ID: "developer@eiabea.com"          # Email address of your service account
+  # Modules
+  ROUTING_MODULE_HOST: "0.0.0.0"                      # Host option of the node application
+  ROUTING_MODULE_PORT: "3000"                         # Port definition
+  # Database
+  #  Influx
+  INFLUX_HOST: "influx"
+  INFLUX_PORT: "8086"
+  INFLUX_DB: "temp"
+  # Hardware
+  SENSOR_ID: "10-00080278b776"                        # Address of your OneWire sensor noted in the "OneWire"-section
+  # Slave
+  SLAVE_ENABLED: "true"                               # Enable/Disable slave feature
+  SLAVE_HOST: "192.168.0.7"                           # Host of the slave
+  SLAVE_PORT: "3000"                                  # Port of the slave
+  SLAVE_ENDPOINT: "/v1/status"                        # Endpoint of the slave to get data from
+  # Celius (float)
+  MAX_TEMP: "25"                                      # Maximal temperature accepted
+  MIN_TEMP: "15"                                      # Minimal temperature accepted
+  OVERSHOOT_TEMP: "0.5"                               # How much degrees should be "overheated"
+  # Minutes
+  FETCHING_INTERVAL: "1"                              # How often should the calendar be checked
+```
+
+### Setup calendar
+
+1. Login to your [Google Calendar](https://calendar.google.com)
+
+2. Add the calendar of your service account (e.g.: tempea@tempea.iam.gserviceaccount.com)
+
+3. Create a new event in this calendar with the desired temperature in the summery (e.g.: 21.5)
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/calendar_event.png" target="_blank">
+    <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/calendar_event.png" width="350" alt="Calendar event">
+  </a>
+</p>
+
+4. Create more events in the same manner to set different temperatures on different dates/time. Keep in mind that all days should be covered by a specific event, otherwise tempea will fallback to the MIN_TEMP for this period.
+
+### Start
+
+Tempea can be started by simply run the following command in the project directory
+```
+docker-compose up -d
+```
+
+This command starts all necessary containers in background
+
+In order to see the logs run
+
+```
+docker-compose logs -f
+```
+
+Example output:
+```
+tempea_1  | > tempea@0.3.5 start /src
+tempea_1  | > node index.js | ${NODE_PATH:-node_modules}/.bin/bunyan -o short -l 30
+tempea_1  | 
+tempea_1  | 13:46:38.340Z  INFO tempea: Creating cache controller (controller=cache)
+tempea_1  | 13:46:38.349Z  INFO tempea: Creating influx client (controller=database)
+influx_1  | ts=2019-01-20T13:46:38.484164Z lvl=info msg="Executing query" log_id=0D6rhs5G000 service=query query="CREATE DATABASE temp"
+influx_1  | [httpd] 172.19.0.3 - - [20/Jan/2019:13:46:38 +0000] "POST /query HTTP/1.1" 200 57 "-" "node-superagent/3.8.3" cf5a2162-1cb9-11e9-8018-0242ac130002 6017
+tempea_1  | 13:46:38.611Z  INFO tempea: Initializing routing module
+tempea_1  | 13:46:38.651Z  INFO tempea: Starting Backend on port 3000
+tempea_1  | 13:46:38.678Z  INFO tempea: Starting cron job (controller=schedule)
+tempea_1  | 13:46:38.885Z  INFO tempea: Backend listening on port 3000
+tempea_1  | 13:47:01.658Z  INFO tempea: Room temperature high enough, disabling heating (controller=heat, currentTemp=19.4, desiredTemp=18, overshoot=0.5)
+```
 
 # [WIP] Contribution
 
@@ -237,7 +337,7 @@ cd tempea-api
 mkdir secrets
 ```
 
-4. Copy the secrets json file from google into the secrets directory and name it _tempea-service.json_ [Obtaining Google Calendar Service JSON](https://github.com/eiabea/tempea-api#obtaining-google-calendar-service-json)
+4. Copy the secrets json file from google into the secrets directory and name it _tempea-service.json_ [Obtaining Google Calendar Service JSON](#obtaining-google-calendar-service-json)
 
 5. Connect to the Raspberry Pi via ssh (username: pi, password: raspberry)
 ```

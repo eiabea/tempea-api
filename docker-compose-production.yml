@@ -13,7 +13,7 @@ services:
       - "influx:/var/lib/influxdb"
 
   tempea:
-    image: "eiabea/tempea-api:latest"
+    image: "eiabea/tempea-api:arm-latest"
     privileged: "true"
     depends_on:
       - "influx"
