@@ -152,6 +152,8 @@ The following images in combination with the schematics should make it easy to b
 
 ## [WIP] Software
 
+### Enable OneWire
+
 In order to get data from the [DS18B20](https://www.sparkfun.com/products/245) the one wire interface of the raspberry pi has to be enabled. Open up _/boot/config.txt_ and add following lines at the end of the file
 
 ```
@@ -168,12 +170,49 @@ $ ls /sys/bus/w1/devices/
 
 Take a note of the name (e.g. 10-00080278b776) of the slave, it is needed in the following steps
 
-[TODO] google calendar secret
+### Obtaining Google Calendar Service JSON
 
-## [WIP] Required packages
+- Login at [Google Developer Console](https://console.developers.google.com)
 
-## [WIP] Tempea itself
-### [WIP] Tempea-slave
+- Create a new project (e.g.: tempea)
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gdc_create_project.jpg" target="_blank">
+    <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/gdc_create_project.jpg" width="350" alt="GDC create project">
+  </a>
+</p>
+
+- Click on "Enable APIs and Services"
+
+- Search for "Google Calendar API" and enable it
+
+- In the side menu click on "IAM & admin" - "Service accounts"
+
+- Create a new Service account (leave optional fields empty)
+
+- Create a new JSON key for the created service account
+
+Service json file (example)
+
+```
+{
+  "type": "service_account",
+  "project_id": "tempea",
+  "private_key_id": "bbc5f5b4422b7848d47cf2a4221c47ec1718f071",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEDAI=\n-----END PRIVATE KEY-----\n",
+  "client_email": "tempea@tempea.iam.gserviceaccount.com",
+  "client_id": "108968564556464390537",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/tempea%40tempea.iam.gserviceaccount.com"
+}
+
+```
+
+### [Setup project directory]
+### [Setup docker-compose]
+### [Start]
 
 # [WIP] Contribution
 
@@ -198,7 +237,7 @@ cd tempea-api
 mkdir secrets
 ```
 
-4. Copy the secrets json file from google into the secrets directory and name it _tempea-service.json_ (TODO: step-by-step tutorial)
+4. Copy the secrets json file from google into the secrets directory and name it _tempea-service.json_ [Obtaining Google Calendar Service JSON](https://github.com/eiabea/tempea-api#obtaining-google-calendar-service-json)
 
 5. Connect to the Raspberry Pi via ssh (username: pi, password: raspberry)
 ```
