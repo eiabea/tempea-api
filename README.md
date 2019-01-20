@@ -11,6 +11,24 @@ The thermostat in our flat was pretty basic, so i decided to build my own one ba
 
 After some research i stumbled over the great idea to use the [Google Calender](https://calendar.google.com) to set a desired temperature. This reduced the complexity of the node application drastically and made it obsolete to expose the raspberry to the internet to manage it from anywhere. 
 
+# Table of Contents
+- [Setup](#setup)
+  - [System](#system)
+    - [Raspbian](#raspbian)
+    - [Docker](#docker)
+  - [Hardware](#hardware)
+    - [Breadboard](#breadboard)
+    - [Schematics](#schematics)
+    - [Parts](#parts)
+  - [Software](#software)
+    - [OneWire](#onewire)
+    - [Setup Tempea](#setup-tempea)
+    - [Setup Calendar](#setup-calendar)
+    - [Start](#start)
+  - [Develop](#develop)
+    - [Linux](#linux)
+  - [Testing](#testing)
+  - [Contribute](#contribute)
 
 # Setup
 
@@ -314,8 +332,6 @@ tempea_1  | 13:46:38.885Z  INFO tempea: Backend listening on port 3000
 tempea_1  | 13:47:01.658Z  INFO tempea: Room temperature high enough, disabling heating (controller=heat, currentTemp=19.4, desiredTemp=18, overshoot=0.5)
 ```
 
-# [WIP] Contribution
-
 ## Develop
 
 ### Linux
@@ -367,3 +383,7 @@ ssh pi@192.168.0.8
 ```
 docker exec -it tempea-api_tempea_1 npm test
 ```
+
+# Contribute
+
+Every help is appreciated, take a look at the [Contributing file](https://github.com/eiabea/tempea-api/tree/master/CONTRIBUTION.md).
