@@ -170,7 +170,7 @@ The following images in combination with the schematics should make it easy to b
 
 ## Software
 
-### Enable OneWire
+### OneWire
 
 In order to get data from the [DS18B20](https://www.sparkfun.com/products/245) the one wire interface of the raspberry pi has to be enabled. Open up _/boot/config.txt_ and add following lines at the end of the file
 
