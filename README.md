@@ -5,11 +5,11 @@
 
 # Motivation
 
-The thermostat in our flat was pretty basic, so i decided to build my own one based on a [Raspberry Pi](https://www.raspberrypi.org/), [Docker](https://www.docker.com/), [InfluxDB](https://www.influxdata.com/), [node.js](https://nodejs.org/en/), a small PCB with a relay to control the gas boiler and a temperature sensor.
+The thermostat in our flat was pretty basic, so I decided to build my own one based on a [Raspberry Pi](https://www.raspberrypi.org/), [Docker](https://www.docker.com/), [InfluxDB](https://www.influxdata.com/), [node.js](https://nodejs.org/en/), a small PCB with a relay to control a gas boiler and a temperature sensor.
 
-[Grafana](https://grafana.com/) is used to plot the temperature and heating period graphs.
+[Grafana](https://grafana.com/) is used to plot temperature and heating period graphs.
 
-After some research i stumbled over the great idea to use the [Google Calender](https://calendar.google.com) to set a desired temperature. This reduced the complexity of the node application drastically and made it obsolete to expose the raspberry to the internet to manage it from anywhere. 
+After some research I stumbled over the great idea to use [Google Calender](https://calendar.google.com) to set a desired temperature. This reduced the complexity of the node application drastically and made it obsolete to expose the Raspberry Pi to the internet for remote management. 
 
 # Table of Contents
 - [Setup](#setup)
@@ -43,23 +43,23 @@ After some research i stumbled over the great idea to use the [Google Calender](
 unzip 2018-11-13-raspbian-stretch-lite.zip
 ```
 
-3. Insert sd card into your pc
+3. Insert your sd card into your PC
 
-4. Run the following command to find out the name of the sd card
+4. Run the following command to find out the name of your sd card
 ```
 dmesg
 ```
 
-5. Flash the image using dd (may requires root permissions)
+5. Flash the previously downloaded image using dd (may requires root permissions) to your sd card
 ```
 dd if=/home/eiabea/2018-11-13-raspbian-stretch-lite.img of=/dev/mmcblk0 bs=4M && sync
 ```
 
-6. Wait until the command finishes successfully
+6. Wait until the command has finished successfully
 
-7. Remove and reinsert the sd card to get it mounted
+7. Remove and reinsert your sd card (to initialize your sd card again)
 
-8. To set a static ip address open up the _etc/network/interfaces_ file on the sd card and paste the following content (may requires root permissions)
+8. To set a static ip address open up the _etc/network/interfaces_ file on your sd card and paste the following content (may requires root permissions)
 ```
 # interfaces(5) file used by ifup(8) and ifdown(8)
 
@@ -75,7 +75,7 @@ iface lo inet loopback
 iface eth0 inet manual
 ```
 
-9. Open up the _etc/dhcpcd.conf_ and add the following content at the end of the file. Edit the values according to your network (may requires root permissions)
+9. Open up the _etc/dhcpcd.conf_ file and add the following content at the end of the file. Edit all values according to your network (may requires root permissions)
 ```
 interface eth0
 static ip_address=192.168.0.8/24
@@ -88,11 +88,11 @@ static domain_name_servers=192.168.0.1 8.8.8.8 4.2.2.1
 touch ssh
 ```
 
-11. Unmount and remove the sd card from your pc and insert it into your raspberry pi
+11. Unmount and remove your sd card from your PC and insert it into your Raspberry Pi
 
-12. Connect a ethernet cable between your router and the raspberry pi
+12. Connect a ethernet cable between your router and the Raspberry Pi
 
-13. Connect the power supply to boot up the raspberry pi
+13. Connect the power supply to boot up your Raspberry Pi
 
 14. Login via ssh (username: pi, password: raspberry)
 ```
@@ -138,7 +138,7 @@ docker-compose version
 
 ### Breadboard
 
-For running tempea the raspberry pi needs to be connected to some peripherals. Namely a transistor driven relay to turn on the gas boiler and a digital temperature sensor with a one wire interface ([DS18B20](https://www.sparkfun.com/products/245))
+For running tempea the Raspberry Pi needs to be connected to some peripherals. In this case, a transistor driven relay is used to turn on a gas boiler and a digital temperature sensor with a one wire interface ([DS18B20](https://www.sparkfun.com/products/245))
 
 ### Schematics
 
@@ -172,21 +172,21 @@ The following images in combination with the schematics should make it easy to b
 
 ### OneWire
 
-In order to get data from the [DS18B20](https://www.sparkfun.com/products/245) the one wire interface of the raspberry pi has to be enabled. Open up _/boot/config.txt_ and add following lines at the end of the file
+In order to get data from the [DS18B20](https://www.sparkfun.com/products/245), the one wire interface of the Raspberry Pi has to be enabled. Open up _/boot/config.txt_ and add the following lines at the end of the file
 
 ```
 # OneWire
 dtoverlay=w1-gpio,gpiopin=4,pullup=on
 ```
 
-After rebooting it should be able to see the connected sensor
+After rebooting, it should be able to see the connected sensor
 
 ```
 $ ls /sys/bus/w1/devices/
 10-00080278b776  w1_bus_master1
 ```
 
-Take a note of the name (e.g. 10-00080278b776) of the slave, it is needed in the following steps
+Take a note of the name (e.g. 10-00080278b776) of the slave, it will be needed in the following steps
 
 ### Obtaining Google Calendar Service JSON
 
@@ -200,15 +200,15 @@ Take a note of the name (e.g. 10-00080278b776) of the slave, it is needed in the
   </a>
 </p>
 
-3. Click on "Enable APIs and Services"
+3. Click "Enable APIs and Services"
 
 4. Search for "Google Calendar API" and enable it
 
 5. In the side menu click on "IAM & admin" - "Service accounts"
 
-6. Create a new Service account (leave optional fields empty)
+6. Create a new service account (leave optional fields empty)
 
-7. Create a new JSON key for the created service account
+7. Create a new JSON key for your service account
 
 Service json file (example)
 
@@ -291,7 +291,7 @@ environment:
 
 2. Add the calendar of your service account (e.g.: tempea@tempea.iam.gserviceaccount.com)
 
-3. Create a new event in this calendar with the desired temperature in the summery (e.g.: 21.5)
+3. Create a new event in this calendar with the desired temperature in the summary (e.g.: 21.5)
 
 <p align="center">
   <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/calendar_event.png" target="_blank">
@@ -299,7 +299,7 @@ environment:
   </a>
 </p>
 
-4. Create more events in the same manner to set different temperatures on different dates/time. Keep in mind that all days should be covered by a specific event, otherwise tempea will fallback to the MIN_TEMP for this period.
+4. Create more events in the same manner in order to set different temperatures on different dates/time. Keep in mind, that all days should be covered by a specific event, otherwise tempea will fallback to the MIN_TEMP for this period.
 
 ### Start
 
@@ -335,7 +335,7 @@ tempea_1  | 13:47:01.658Z  INFO tempea: Room temperature high enough, disabling 
 ## Develop
 
 ### Linux
-1. Mount the home directory of the pi on your pc
+1. Mount the home directory of your Pi on your PC
 ```
 mkdir raspberry
 sshfs pi@192.168.0.8:/home/pi raspberry
@@ -353,7 +353,7 @@ cd tempea-api
 mkdir secrets
 ```
 
-4. Copy the secrets json file from google into the secrets directory and name it _tempea-service.json_ [Obtaining Google Calendar Service JSON](#obtaining-google-calendar-service-json)
+4. Copy the secrets json file from Google into the secrets directory and name it _tempea-service.json_ [Obtaining Google Calendar Service JSON](#obtaining-google-calendar-service-json)
 
 5. Connect to the Raspberry Pi via ssh (username: pi, password: raspberry)
 ```
