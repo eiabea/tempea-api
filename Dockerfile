@@ -16,6 +16,9 @@ COPY ./package.json /root/package.json
 WORKDIR /root
 RUN npm -q install && npm cache clean --force
 
+COPY bin/wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
 WORKDIR /src
 COPY . /src
 

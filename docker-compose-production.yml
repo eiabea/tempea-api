@@ -21,6 +21,10 @@ services:
       - "3000:3000"
     volumes:
       - "./secrets:/src/secrets"
+    command: [ 
+      "wait-for-it.sh", "${INFLUX_HOST}:${INFLUX_PORT}", "--",
+      "npm", "start"
+    ]
     environment:
       # Google
       GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"
