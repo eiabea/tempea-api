@@ -332,6 +332,47 @@ tempea_1  | 13:46:38.885Z  INFO tempea: Backend listening on port 3000
 tempea_1  | 13:47:01.658Z  INFO tempea: Room temperature high enough, disabling heating (controller=heat, currentTemp=19.4, desiredTemp=18, overshoot=0.5)
 ```
 
+## Grafana
+
+Due to the fact that a [InfluxDB](https://www.influxdata.com/) is running on the Raspberry Pi [Grafana](https://grafana.com/) can be used to plot various data.
+
+### Docker
+
+The easiest way is to run [Grafana](https://grafana.com/) as a docker container on your PC
+
+```
+docker run -d -p 3000:3000 grafana/grafana
+```
+
+To access the container open up a browser and enter
+```
+http://localhost:3000
+```
+
+The login credentials are
+```
+username: admin
+password: admin
+```
+
+Add a new data source with the following parameters
+```
+Name: tempea
+Type: InfluxDB
+URL: http://192.168.0.8:8086
+Database: temp
+```
+
+Import the tempea dashboard by uploading the _Tempea-Dashboard.json_ from the grafana directory of this project
+
+Select the newly created tempea data source and click *Import*
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/grafana_readme.png" target="_blank">
+    <img src="https://raw.githubusercontent.com/eiabea/tempea-api/master/images/grafana_readme.png" width="350" alt="Grafana">
+  </a>
+</p>
+
 ## Develop
 
 ### Linux
