@@ -25,6 +25,7 @@ After some research I stumbled over the great idea to use [Google Calender](http
     - [Setup Tempea](#setup-tempea)
     - [Setup Calendar](#setup-calendar)
     - [Start](#start)
+  - [Grafana](#grafana)
   - [Develop](#develop)
     - [Linux](#linux)
   - [Testing](#testing)
