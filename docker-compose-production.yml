@@ -1,12 +1,32 @@
 version: "3"
 
 volumes:
+  mqtt:
+    driver: "local"
   influx:
     driver: "local"
 
 services:
+  mqtt:
+    image: "eclipse-mosquitto:1.5.5"
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - "mqtt:/mosquitto/data"
+
+  telegraf:
+    image: "telegraf:1.9.2"
+    restart: unless-stopped
+    depends_on:
+      - "mqtt"
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
   influx:
     image: "arm32v7/influxdb"
+    restart: unless-stopped
     ports:
       - "8086:8086"
     volumes:
@@ -14,6 +34,7 @@ services:
 
   tempea:
     image: "eiabea/tempea-api:arm-latest"
+    restart: unless-stopped
     privileged: "true"
     depends_on:
       - "influx"
