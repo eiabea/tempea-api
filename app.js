@@ -87,6 +87,7 @@ module.exports = (loglevel) => {
   };
 
   const job = async () => {
+    let prioTemp;
     let currentTemp;
     let desiredTemp;
     let slaveData;
@@ -110,7 +111,7 @@ module.exports = (loglevel) => {
       const desiredObj = await controller.calendar.getDesiredObject();
       const temp = await controller.temp.getCurrentTemp();
 
-      currentTemp = getDesiredTemperature(
+      prioTemp = getDesiredTemperature(
         desiredObj,
         slaveData,
         temp,
@@ -128,7 +129,7 @@ module.exports = (loglevel) => {
       return;
     }
 
-    const enableHeating = controller.heat.shouldHeat(currentTemp, desiredTemp, heating);
+    const enableHeating = controller.heat.shouldHeat(prioTemp, desiredTemp, heating);
 
     try {
       await controller.relay.setRelay(enableHeating ? 1 : 0);
