@@ -109,12 +109,12 @@ module.exports = (loglevel) => {
 
     try {
       const desiredObj = await controller.calendar.getDesiredObject();
-      const temp = await controller.temp.getCurrentTemp();
+      currentTemp = await controller.temp.getCurrentTemp();
 
       prioTemp = getDesiredTemperature(
         desiredObj,
         slaveData,
-        temp,
+        currentTemp,
       );
       desiredTemp = desiredObj.temp;
     } catch (err) {
