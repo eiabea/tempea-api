@@ -143,7 +143,6 @@ describe('Status Route', () => {
     const { slave } = data;
     const { mqtt } = data;
 
-    console.log(body);
     assert.isTrue(body.success);
 
     assert.isDefined(master);
@@ -162,7 +161,7 @@ describe('Status Route', () => {
 
     assert.isDefined(mqtt);
     expect(mqtt.updated).to.equal(1550586338221);
-    expect(mqtt.value).to.equal(12.5);
+    expect(mqtt.temp).to.equal(12.5);
   });
 
   it('should get status [with prio]', async () => {

@@ -132,7 +132,7 @@ describe('Database Controller', () => {
 
     const latestEntry = await instance.getLatestMqttEntry();
     expect(latestEntry.updated).to.eq(1550586338221);
-    expect(latestEntry.value).to.eq(12.5);
+    expect(latestEntry.temp).to.eq(12.5);
   });
 
   it('should fail to get latest mqtt entry', async () => {
