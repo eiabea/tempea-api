@@ -93,11 +93,7 @@ module.exports = (loglevel) => {
 
     if (SLAVE_ENABLED) {
       try {
-        const rawSlaveData = await controller.slave.getData();
-        slaveData = {
-          temp: rawSlaveData.data.temp,
-          hum: rawSlaveData.data.hum,
-        };
+        slaveData = await controller.slave.getData();
       } catch (err) {
         log.error({ err }, 'Error getting slave data');
       }
@@ -119,7 +115,7 @@ module.exports = (loglevel) => {
         slaveData,
         temp,
       );
-      desiredTemp = desiredObj.desired;
+      desiredTemp = desiredObj.temp;
     } catch (err) {
       log.error({ err }, 'Error getting temperatures');
       log.info('Disable heating');

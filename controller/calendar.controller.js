@@ -82,7 +82,7 @@ module.exports = (log, cache) => {
     const event = await getCurrentEvent(auth);
     if (!event) {
       return {
-        desired: MIN_TEMP,
+        temp: MIN_TEMP,
         master: 100,
         slave: 0,
       };
@@ -93,7 +93,7 @@ module.exports = (log, cache) => {
       const prioArray = event.summary.split(';');
       if (prioArray.length === 3) {
         desiredObj = {
-          desired: parseFloat(prioArray[0]),
+          temp: parseFloat(prioArray[0]),
           master: parseFloat(prioArray[1]),
           slave: parseFloat(prioArray[2]),
         };
@@ -102,34 +102,34 @@ module.exports = (log, cache) => {
         if (prioSum !== 100) {
           log.warn({ prioSum }, 'The sum does not equal 100%, falling back to 100%');
           desiredObj = {
-            desired: parseFloat(prioArray[0]),
+            temp: parseFloat(prioArray[0]),
             master: 100,
             slave: 0,
           };
         }
       } else {
         desiredObj = {
-          desired: parseFloat(event.summary),
+          temp: parseFloat(event.summary),
           master: 100,
           slave: 0,
         };
       }
 
-      assert.isNotNaN(desiredObj.desired);
+      assert.isNotNaN(desiredObj.temp);
       assert.isNotNaN(desiredObj.master);
       assert.isNotNaN(desiredObj.slave);
     } catch (e) {
       log.error({ e }, 'Unable to parse, fallback to MIN_TEMP');
       desiredObj = {
-        desired: MIN_TEMP,
+        temp: MIN_TEMP,
         master: 100,
         slave: 0,
       };
     }
 
-    if (desiredObj.desired > MAX_TEMP) {
+    if (desiredObj.temp > MAX_TEMP) {
       desiredObj = {
-        desired: MAX_TEMP,
+        temp: MAX_TEMP,
         master: 100,
         slave: 0,
       };

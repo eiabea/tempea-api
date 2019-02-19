@@ -75,7 +75,7 @@ module.exports = async (log, cache) => {
 
     const returnObject = {
       updated: time,
-      value,
+      temp: value,
     };
 
     await cache.updateMqttData(returnObject);

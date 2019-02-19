@@ -138,22 +138,30 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { master } = data;
+    const { desired } = data;
     const { slave } = data;
     const { mqtt } = data;
 
     assert.isTrue(body.success);
-    expect(data.desiredTemp.desired).to.eq(25.4);
-    expect(data.desiredTemp.master).to.eq(100);
-    expect(data.desiredTemp.slave).to.eq(0);
-    expect(data.currentTemp).to.eq(21);
+
+    assert.isDefined(master);
     // Desired temp is 25.4, mocked ds18b20 returns 21 -> heating on
-    assert.isTrue(data.heating);
+    assert.isTrue(master.heating);
+    expect(master.temp).to.eq(21);
+
+    assert.isDefined(desired);
+    expect(desired.temp).to.eq(25.4);
+    expect(desired.master).to.eq(100);
+    expect(desired.slave).to.eq(0);
+
     assert.isDefined(slave);
-    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
-    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+    expect(slave.temp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.hum).to.equal(mockedSlaveData.data.hum);
+
     assert.isDefined(mqtt);
     expect(mqtt.updated).to.equal(1550586338221);
-    expect(mqtt.value).to.equal(12.5);
+    expect(mqtt.temp).to.equal(12.5);
   });
 
   it('should get status [with prio]', async () => {
@@ -207,19 +215,26 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { desired } = data;
+    const { master } = data;
     const { slave } = data;
 
     assert.isTrue(body.success);
-    expect(data.desiredTemp.desired).to.eq(20.4);
-    expect(data.desiredTemp.master).to.eq(0);
-    expect(data.desiredTemp.slave).to.eq(100);
-    expect(data.currentTemp).to.eq(21);
+
+    assert.isDefined(master);
     // Desired temp is 20.4, master temperature is high enough (21), but master has 0% priority,
     // so only the slave temperature is getting into account and heating should be on
-    assert.isTrue(data.heating);
+    assert.isTrue(master.heating);
+    expect(master.temp).to.eq(21);
+
+    assert.isDefined(desired);
+    expect(desired.temp).to.eq(20.4);
+    expect(desired.master).to.eq(0);
+    expect(desired.slave).to.eq(100);
+
     assert.isDefined(slave);
-    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
-    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+    expect(slave.temp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.hum).to.equal(mockedSlaveData.data.hum);
   });
 
   it('should get status [no slave]', async () => {
@@ -266,15 +281,22 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { desired } = data;
+    const { master } = data;
     const { slave } = data;
 
     assert.isTrue(body.success);
-    expect(data.desiredTemp.desired).to.eq(25.4);
-    expect(data.desiredTemp.master).to.eq(100);
-    expect(data.desiredTemp.slave).to.eq(0);
-    expect(data.currentTemp).to.eq(21);
+
+    assert.isDefined(master);
     // Desired temp is 25.4, mocked ds18b20 returns 21 -> heating on
-    assert.isTrue(data.heating);
+    assert.isTrue(master.heating);
+    expect(master.temp).to.eq(21);
+
+    assert.isDefined(desired);
+    expect(desired.temp).to.eq(25.4);
+    expect(desired.master).to.eq(100);
+    expect(desired.slave).to.eq(0);
+
     assert.isUndefined(slave);
   });
 
@@ -322,16 +344,110 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { desired } = data;
+    const { master } = data;
     const { slave } = data;
 
     assert.isTrue(body.success);
-    expect(data.desiredTemp.desired).to.eq(25.4);
-    expect(data.desiredTemp.master).to.eq(50);
-    expect(data.desiredTemp.slave).to.eq(50);
-    expect(data.currentTemp).to.eq(21);
+
+    assert.isDefined(master);
     // Desired temp is 25.4, mocked ds18b20 returns 21 -> heating on
-    assert.isTrue(data.heating);
+    assert.isTrue(master.heating);
+    expect(master.temp).to.eq(21);
+
+    assert.isDefined(desired);
+    expect(desired.temp).to.eq(25.4);
+    expect(desired.master).to.eq(50);
+    expect(desired.slave).to.eq(50);
+
     assert.isUndefined(slave);
+  });
+
+  it('should get status [invalid mqtt value]', async () => {
+    const mockedSlaveData = {
+      success: true,
+      data: {
+        temp: 12.5,
+        hum: 32,
+      },
+    };
+    // Mock slave
+    nock('http://mocked.tempea.com:80')
+      .get('/mocked')
+      .reply(200, mockedSlaveData);
+
+    // Mock calendar
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
+      .reply(200, {
+        items: [
+          {
+            summary: '25.4',
+            start: {
+              dateTime: moment().subtract(1, 'days').valueOf(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').valueOf(),
+            },
+          },
+        ],
+      });
+
+    // Mock influx
+    nock('http://influx:8086')
+      .get(/.*/g)
+      .reply(200, {
+        results: [
+          {
+            statement_id: 0,
+            invalid: [],
+          },
+        ],
+      });
+
+    const authorizeSpy = sinon.spy();
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    controller.calendar = await CC(log, controller.cache);
+
+    // Run the job
+    await app.forceJob();
+
+    assert.isTrue(authorizeSpy.called);
+
+    const response = await chai.request(expressApp).get('/v1/status');
+    const { body } = response;
+    const { data } = body;
+    const { master } = data;
+    const { desired } = data;
+    const { slave } = data;
+    const { mqtt } = data;
+
+    assert.isTrue(body.success);
+
+    assert.isDefined(master);
+    // Desired temp is 25.4, mocked ds18b20 returns 21 -> heating on
+    assert.isTrue(master.heating);
+    expect(master.temp).to.eq(21);
+
+    assert.isDefined(desired);
+    expect(desired.temp).to.eq(25.4);
+    expect(desired.master).to.eq(100);
+    expect(desired.slave).to.eq(0);
+
+    assert.isDefined(slave);
+    expect(slave.temp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.hum).to.equal(mockedSlaveData.data.hum);
+
+    assert.isUndefined(mqtt);
   });
 
   it('should get status [error in temperatures]', async () => {
@@ -401,18 +517,20 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { desired } = data;
+    const { master } = data;
     const { slave } = data;
 
     assert.isTrue(body.success);
     // The job returns if one or more temperatures are not available and turns of heating
-    assert.isUndefined(data.desiredTemp);
-    assert.isUndefined(data.currentTemp);
+    assert.isUndefined(desired);
+    assert.isUndefined(master.temp);
     // Heating has to be disabled on unknown temperatures
-    assert.isFalse(data.heating);
+    assert.isFalse(master.heating);
     // The slave should work as expected
     assert.isDefined(slave);
-    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
-    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+    expect(slave.temp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.hum).to.equal(mockedSlaveData.data.hum);
 
     stubDesired.restore();
     stubRead.restore();
@@ -484,18 +602,20 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { desired } = data;
+    const { master } = data;
     const { slave } = data;
 
     assert.isTrue(body.success);
     // The job returns if one or more temperatures are not available and turns of heating
-    assert.isUndefined(data.desiredTemp);
-    assert.isUndefined(data.currentTemp);
+    assert.isUndefined(desired);
+    assert.isUndefined(master.temp);
     // Heating should be false, but setting the relay fails, so cache never gets set
-    assert.isUndefined(data.heating);
+    assert.isUndefined(master.heating);
     // The slave should work as expected
     assert.isDefined(slave);
-    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
-    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+    expect(slave.temp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.hum).to.equal(mockedSlaveData.data.hum);
 
     stubRead.restore();
     stubWrite.restore();
@@ -565,17 +685,19 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { desired } = data;
+    const { master } = data;
     const { slave } = data;
 
     assert.isTrue(body.success);
-    expect(data.desiredTemp.desired).to.eq(25.4);
-    expect(data.currentTemp).to.eq(21);
+    expect(desired.temp).to.eq(25.4);
+    expect(master.temp).to.eq(21);
     // Heating should be true, but setting the relay fails, so cache never gets set
-    assert.isUndefined(data.heating);
+    assert.isUndefined(master.heating);
     // The slave should work as expected
     assert.isDefined(slave);
-    expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
-    expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+    expect(slave.temp).to.equal(mockedSlaveData.data.temp);
+    expect(slave.hum).to.equal(mockedSlaveData.data.hum);
 
     stubRead.restore();
     stubWrite.restore();
@@ -602,9 +724,10 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { desired } = data;
 
     assert.isTrue(body.success);
-    assert.isUndefined(data.desiredTemp);
+    assert.isUndefined(desired);
 
     stub.restore();
   });
@@ -616,9 +739,10 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { master } = data;
 
     assert.isTrue(body.success);
-    assert.isUndefined(data.heating);
+    assert.isUndefined(master.heating);
 
     stub.restore();
   });
@@ -630,9 +754,10 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
+    const { master } = data;
 
     assert.isTrue(body.success);
-    assert.isUndefined(data.currentTemp);
+    assert.isUndefined(master.temp);
 
     stub.restore();
   });

@@ -59,7 +59,7 @@ describe('Calendar Controller', () => {
     const desiredObj = await CC(log, CacheController)
       .getDesiredObject();
 
-    expect(desiredObj.desired).to.equal(18.4);
+    expect(desiredObj.temp).to.equal(18.4);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
@@ -96,7 +96,7 @@ describe('Calendar Controller', () => {
     const desiredObj = await CC(log, CacheController)
       .getDesiredObject();
 
-    expect(desiredObj.desired).to.equal(18.4);
+    expect(desiredObj.temp).to.equal(18.4);
     expect(desiredObj.master).to.equal(95);
     expect(desiredObj.slave).to.equal(5);
     assert.isTrue(authorizeSpy.called);
@@ -123,7 +123,7 @@ describe('Calendar Controller', () => {
     const desiredObj = await CC(log, CacheController)
       .getDesiredObject();
 
-    expect(desiredObj.desired).to.equal(15);
+    expect(desiredObj.temp).to.equal(15);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
@@ -160,7 +160,7 @@ describe('Calendar Controller', () => {
     const desiredObj = await CC(log, CacheController)
       .getDesiredObject();
 
-    expect(desiredObj.desired).to.equal(15);
+    expect(desiredObj.temp).to.equal(15);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
@@ -197,7 +197,7 @@ describe('Calendar Controller', () => {
     const desiredObj = await CC(log, CacheController)
       .getDesiredObject();
 
-    expect(desiredObj.desired).to.equal(15);
+    expect(desiredObj.temp).to.equal(15);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
@@ -234,7 +234,7 @@ describe('Calendar Controller', () => {
     const desiredObj = await CC(log, CacheController)
       .getDesiredObject();
 
-    expect(desiredObj.desired).to.equal(18.4);
+    expect(desiredObj.temp).to.equal(18.4);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
@@ -271,7 +271,7 @@ describe('Calendar Controller', () => {
     const desiredObj = await CC(log, CacheController)
       .getDesiredObject();
 
-    expect(desiredObj.desired).to.equal(27);
+    expect(desiredObj.temp).to.equal(27);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
