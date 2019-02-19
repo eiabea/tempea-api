@@ -35,7 +35,7 @@ module.exports = (loglevel) => {
   const initControllers = async () => {
     controller.cache = Cache(log.child({ controller: 'cache' }));
     controller.calendar = Calendar(log.child({ controller: 'calendar' }), controller.cache);
-    controller.database = await Database(log.child({ controller: 'database' }));
+    controller.database = await Database(log.child({ controller: 'database' }), controller.cache);
     controller.heat = Heat(log.child({ controller: 'heat' }));
     controller.relay = Relay(log.child({ controller: 'relay' }), controller.cache);
     controller.schedule = Schedule(log.child({ controller: 'schedule' }));
@@ -82,6 +82,13 @@ module.exports = (loglevel) => {
       } catch (err) {
         log.error({ err }, 'Error getting slave data');
       }
+    }
+
+    try {
+      // Currently only used to update cache
+      await controller.database.getLatestMqttEntry();
+    } catch (err) {
+      log.error({ err }, 'Error getting mqtt data');
     }
 
     try {
