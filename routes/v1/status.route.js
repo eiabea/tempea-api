@@ -31,7 +31,7 @@ module.exports = (log, controller) => {
     }
 
     try {
-      returnObj.desiredTemp = await controller.cache.getDesiredTemperature();
+      returnObj.desiredTemp = await controller.cache.getDesiredObject();
     } catch (err) {
       log.error({ err }, 'Error getting calendar data');
     }

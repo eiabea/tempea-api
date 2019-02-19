@@ -75,40 +75,72 @@ module.exports = (log, cache) => {
     return event;
   };
 
-  const getDesiredTemperature = async () => {
-    log.trace('getDesiredTemperature');
+  const getDesiredObject = async () => {
+    log.trace('getDesiredObject');
 
     const auth = await getGoogleAuthClient();
     const event = await getCurrentEvent(auth);
     if (!event) {
-      return MIN_TEMP;
+      return {
+        desired: MIN_TEMP,
+        master: 100,
+        slave: 0,
+      };
     }
 
-    let desiredTemp;
+    let desiredObj = {};
     try {
       const prioArray = event.summary.split(';');
-      if (prioArray.length > 1) {
-        desiredTemp = parseFloat(prioArray[0]);
+      if (prioArray.length === 3) {
+        desiredObj = {
+          desired: parseFloat(prioArray[0]),
+          master: parseFloat(prioArray[1]),
+          slave: parseFloat(prioArray[2]),
+        };
+
+        const prioSum = desiredObj.master + desiredObj.slave;
+        if (prioSum !== 100) {
+          log.warn({ prioSum }, 'The sum does not equal 100%, falling back to 100%');
+          desiredObj = {
+            desired: parseFloat(prioArray[0]),
+            master: 100,
+            slave: 0,
+          };
+        }
       } else {
-        desiredTemp = parseFloat(event.summary);
+        desiredObj = {
+          desired: parseFloat(event.summary),
+          master: 100,
+          slave: 0,
+        };
       }
 
-      assert.isNotNaN(desiredTemp);
+      assert.isNotNaN(desiredObj.desired);
+      assert.isNotNaN(desiredObj.master);
+      assert.isNotNaN(desiredObj.slave);
     } catch (e) {
       log.error({ e }, 'Unable to parse, fallback to MIN_TEMP');
-      desiredTemp = MIN_TEMP;
+      desiredObj = {
+        desired: MIN_TEMP,
+        master: 100,
+        slave: 0,
+      };
     }
 
-    if (desiredTemp > MAX_TEMP) {
-      desiredTemp = MAX_TEMP;
+    if (desiredObj.desired > MAX_TEMP) {
+      desiredObj = {
+        desired: MAX_TEMP,
+        master: 100,
+        slave: 0,
+      };
     }
 
-    await cache.updateDesiredTemperature(desiredTemp);
+    await cache.updateDesiredObject(desiredObj);
 
-    return desiredTemp;
+    return desiredObj;
   };
 
   return {
-    getDesiredTemperature,
+    getDesiredObject,
   };
 };

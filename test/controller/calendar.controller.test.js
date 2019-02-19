@@ -56,10 +56,12 @@ describe('Calendar Controller', () => {
       },
     });
 
-    const desiredTemp = await CC(log, CacheController)
-      .getDesiredTemperature();
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
 
-    expect(desiredTemp).to.equal(18.4);
+    expect(desiredObj.desired).to.equal(18.4);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
   });
 
@@ -91,10 +93,12 @@ describe('Calendar Controller', () => {
       },
     });
 
-    const desiredTemp = await CC(log, CacheController)
-      .getDesiredTemperature();
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
 
-    expect(desiredTemp).to.equal(18.4);
+    expect(desiredObj.desired).to.equal(18.4);
+    expect(desiredObj.master).to.equal(95);
+    expect(desiredObj.slave).to.equal(5);
     assert.isTrue(authorizeSpy.called);
   });
 
@@ -116,10 +120,12 @@ describe('Calendar Controller', () => {
       },
     });
 
-    const desiredTemp = await CC(log, CacheController)
-      .getDesiredTemperature();
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
 
-    expect(desiredTemp).to.equal(15);
+    expect(desiredObj.desired).to.equal(15);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
   });
 
@@ -151,10 +157,12 @@ describe('Calendar Controller', () => {
       },
     });
 
-    const desiredTemp = await CC(log, CacheController)
-      .getDesiredTemperature();
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
 
-    expect(desiredTemp).to.equal(15);
+    expect(desiredObj.desired).to.equal(15);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
   });
 
@@ -186,10 +194,49 @@ describe('Calendar Controller', () => {
       },
     });
 
-    const desiredTemp = await CC(log, CacheController)
-      .getDesiredTemperature();
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
 
-    expect(desiredTemp).to.equal(15);
+    expect(desiredObj.desired).to.equal(15);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
+    assert.isTrue(authorizeSpy.called);
+  });
+
+  it('should return desired temperature [wrong sum of prio]', async () => {
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
+      .reply(200, {
+        items: [
+          {
+            summary: '18.4;90;5',
+            start: {
+              dateTime: moment().subtract(1, 'days').toISOString(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').toISOString(),
+            },
+          },
+        ],
+      });
+
+    const authorizeSpy = sinon.spy();
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
+
+    expect(desiredObj.desired).to.equal(18.4);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
   });
 
@@ -221,10 +268,12 @@ describe('Calendar Controller', () => {
       },
     });
 
-    const desiredTemp = await CC(log, CacheController)
-      .getDesiredTemperature();
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
 
-    expect(desiredTemp).to.equal(27);
+    expect(desiredObj.desired).to.equal(27);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
     assert.isTrue(authorizeSpy.called);
   });
 
@@ -246,7 +295,7 @@ describe('Calendar Controller', () => {
     });
 
     try {
-      await CC(log, CacheController).getDesiredTemperature();
+      await CC(log, CacheController).getDesiredObject();
     } catch (err) {
       expect(err.code).to.equal('ENOENT');
     }
@@ -285,7 +334,7 @@ describe('Calendar Controller', () => {
     });
 
     try {
-      await CC(log, CacheController).getDesiredTemperature();
+      await CC(log, CacheController).getDesiredObject();
     } catch (err) {
       assert.isDefined(err);
     }

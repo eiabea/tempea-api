@@ -67,6 +67,25 @@ module.exports = (loglevel) => {
     });
   };
 
+  const getDesiredTemperature = (desiredObj, slaveData, masterTemp) => {
+    let validSlaveData;
+    let { master, slave } = desiredObj;
+    if (!slaveData) {
+      slave = 0;
+      master = 100;
+      validSlaveData = {
+        // will be multiplied by 0, so irrelevant
+        temp: 1337,
+        // won't be taken into account
+        hum: 0,
+      };
+    } else {
+      validSlaveData = slaveData;
+    }
+
+    return (masterTemp * master / 100) + (validSlaveData.temp * slave / 100);
+  };
+
   const job = async () => {
     let currentTemp;
     let desiredTemp;
@@ -85,8 +104,15 @@ module.exports = (loglevel) => {
     }
 
     try {
-      desiredTemp = await controller.calendar.getDesiredTemperature();
-      currentTemp = await controller.temp.getCurrentTemp();
+      const desiredObj = await controller.calendar.getDesiredObject();
+      const temp = await controller.temp.getCurrentTemp();
+
+      currentTemp = getDesiredTemperature(
+        desiredObj,
+        slaveData,
+        temp,
+      );
+      desiredTemp = desiredObj.desired;
     } catch (err) {
       log.error({ err }, 'Error getting temperatures');
       log.info('Disable heating');

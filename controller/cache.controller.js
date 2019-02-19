@@ -18,13 +18,13 @@ module.exports = (log) => {
     throw Error('No cached value available');
   };
 
-  const updateDesiredTemperature = async (desired) => {
+  const updateDesiredObject = async (desired) => {
     log.trace({ desired }, 'Updating desired temperature');
     cache.desired = desired;
     return true;
   };
 
-  const getDesiredTemperature = async () => {
+  const getDesiredObject = async () => {
     log.trace('Getting desired temperature');
     if (cache.desired) {
       return cache.desired;
@@ -69,8 +69,8 @@ module.exports = (log) => {
 
   return {
     invalidate,
-    updateDesiredTemperature,
-    getDesiredTemperature,
+    updateDesiredObject,
+    getDesiredObject,
     updateRelayState,
     getRelayState,
     updateCurrentTemperature,
