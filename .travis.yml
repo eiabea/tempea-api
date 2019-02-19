@@ -19,3 +19,9 @@ jobs:
         echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         docker push eiabea/tempea-api:arm-latest
       fi
+
+      if [ -v "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+        docker tag eiabea/tempea-api:arm-latest eiabea/tempea-api:arm-"$TRAVIS_TAG"
+        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        docker push eiabea/tempea-api:arm-"$TRAVIS_TAG"
+      fi
