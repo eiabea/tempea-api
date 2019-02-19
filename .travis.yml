@@ -11,6 +11,8 @@ jobs:
     services:
     - docker
     language: bash
+    on:
+      tags: true
     script:
     - >
       if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
