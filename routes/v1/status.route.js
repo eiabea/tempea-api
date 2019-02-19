@@ -11,40 +11,37 @@ const rateLimiterStatus = new RateLimit({
 
 module.exports = (log, controller) => {
   const getStatusObject = async () => {
-    const returnObj = {};
+    const returnObj = {
+      master: {},
+    };
 
     try {
-      const slaveData = await controller.cache.getSlaveData();
-      returnObj.slave = {
-        currentTemp: slaveData.data.temp,
-        currentHum: slaveData.data.hum,
-      };
+      returnObj.slave = await controller.cache.getSlaveData();
     } catch (err) {
       log.error({ err }, 'Error getting slave data');
     }
 
     try {
-      const mqttData = await controller.cache.getMqttData();
-      returnObj.mqtt = mqttData;
+      returnObj.mqtt = await controller.cache.getMqttData();
     } catch (err) {
       log.error({ err }, 'Error getting mqtt data');
     }
 
     try {
-      const relayData = await controller.cache.getRelayState();
-      returnObj.heating = relayData === 1;
-    } catch (err) {
-      log.error({ err }, 'Error getting relay data');
-    }
-
-    try {
-      returnObj.desiredTemp = await controller.cache.getDesiredObject();
+      returnObj.desired = await controller.cache.getDesiredObject();
     } catch (err) {
       log.error({ err }, 'Error getting calendar data');
     }
 
     try {
-      returnObj.currentTemp = await controller.cache.getCurrentTemperature();
+      const relayData = await controller.cache.getRelayState();
+      returnObj.master.heating = relayData === 1;
+    } catch (err) {
+      log.error({ err }, 'Error getting relay data');
+    }
+
+    try {
+      returnObj.master.temp = await controller.cache.getCurrentTemperature();
     } catch (err) {
       log.error({ err }, 'Error getting temperature data');
     }

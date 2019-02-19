@@ -44,7 +44,8 @@ describe('Slave Controller', () => {
 
     const slaveData = await SC(log, CacheController).getData();
 
-    expect(slaveData).to.deep.equal(mockedSlaveResponse);
+    expect(slaveData.temp).to.eq(mockedSlaveResponse.data.temp);
+    expect(slaveData.hum).to.eq(mockedSlaveResponse.data.hum);
   });
 
   it('should fail [wrong host]', async () => {

@@ -1,4 +1,5 @@
 const request = require('request');
+const { assert } = require('chai');
 
 module.exports = (log, cache) => {
   const getData = async () => new Promise((resolve, reject) => {
@@ -13,8 +14,13 @@ module.exports = (log, cache) => {
       log.trace({ body }, 'Slavedata');
       try {
         const jsonData = JSON.parse(body);
-        await cache.updateSlaveData(jsonData);
-        return resolve(jsonData);
+
+        assert.isTrue(jsonData.success);
+        assert.isDefined(jsonData.data);
+        assert.isNumber(jsonData.data.temp);
+
+        await cache.updateSlaveData(jsonData.data);
+        return resolve(jsonData.data);
       } catch (err) {
         return reject(err);
       }
