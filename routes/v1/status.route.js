@@ -24,6 +24,13 @@ module.exports = (log, controller) => {
     }
 
     try {
+      const mqttData = await controller.cache.getMqttData();
+      returnObj.mqtt = mqttData;
+    } catch (err) {
+      log.error({ err }, 'Error getting mqtt data');
+    }
+
+    try {
       const relayData = await controller.cache.getRelayState();
       returnObj.heating = relayData === 1;
     } catch (err) {

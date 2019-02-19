@@ -32,6 +32,8 @@ describe('Status Route', () => {
       TOKEN_DIR: 'test/secrets',
       MAX_TEMP: '27',
       MIN_TEMP: '15',
+      INFLUX_HOST: 'influx',
+      INFLUX_PORT: '8086',
     });
 
     delete require.cache[require.resolve('../../app')];
@@ -88,6 +90,33 @@ describe('Status Route', () => {
         ],
       });
 
+    // Mock influx
+    nock('http://influx:8086')
+      .get(/.*/g)
+      .reply(200, {
+        results: [
+          {
+            statement_id: 0,
+            series: [
+              {
+              // default name set by telegraf
+                name: 'mqtt_consumer',
+                columns: [
+                  'time',
+                  'last',
+                ],
+                values: [
+                  [
+                    1550586338221,
+                    12.5,
+                  ],
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
     const authorizeSpy = sinon.spy();
 
     const CC = proxyquire('../../controller/calendar.controller', {
@@ -110,6 +139,7 @@ describe('Status Route', () => {
     const { body } = response;
     const { data } = body;
     const { slave } = data;
+    const { mqtt } = data;
 
     assert.isTrue(body.success);
     expect(data.desiredTemp.desired).to.eq(25.4);
@@ -121,6 +151,9 @@ describe('Status Route', () => {
     assert.isDefined(slave);
     expect(slave.currentTemp).to.equal(mockedSlaveData.data.temp);
     expect(slave.currentHum).to.equal(mockedSlaveData.data.hum);
+    assert.isDefined(mqtt);
+    expect(mqtt.updated).to.equal(1550586338221);
+    expect(mqtt.value).to.equal(12.5);
   });
 
   it('should get status [with prio]', async () => {

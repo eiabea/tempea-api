@@ -63,6 +63,21 @@ module.exports = (log) => {
     throw Error('No cached value available');
   };
 
+  const updateMqttData = async (data) => {
+    log.trace({ data }, 'Updating mqtt data');
+    cache.mqtt = data;
+    return true;
+  };
+
+  const getMqttData = async () => {
+    log.trace('Getting mqtt data');
+    if (cache.mqtt) {
+      return cache.mqtt;
+    }
+
+    throw Error('No cached value available');
+  };
+
   const invalidate = async () => {
     cache = {};
   };
@@ -77,5 +92,7 @@ module.exports = (log) => {
     getCurrentTemperature,
     updateSlaveData,
     getSlaveData,
+    getMqttData,
+    updateMqttData,
   };
 };
