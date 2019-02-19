@@ -286,6 +286,11 @@ environment:
   FETCHING_INTERVAL: "1"                              # How often should the calendar be checked
 ```
 
+7. Download the latest telegraf.conf
+```
+wget https://raw.githubusercontent.com/eiabea/tempea-api/master/telegraf.conf
+```
+
 ### Setup calendar
 
 1. Login to your [Google Calendar](https://calendar.google.com)

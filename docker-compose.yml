@@ -1,10 +1,32 @@
 version: "3"
 
 volumes:
+  mqtt:
+    driver: "local"
   influx:
     driver: "local"
 
 services:
+  grafana:
+    image: "grafana/grafana"
+    ports:
+      - "3001:3000"
+      
+  mqtt:
+    image: "eclipse-mosquitto:1.5.5"
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - "mqtt:/mosquitto/data"
+
+  telegraf:
+    image: "telegraf:1.9.2"
+    depends_on:
+      - "mqtt"
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+
   influx:
     image: "arm32v7/influxdb"
     ports:
@@ -35,7 +57,7 @@ services:
       INFLUX_PORT: "8086"
       INFLUX_DB: "temp"
       # Hardware
-      SENSOR_ID: "10-0008032d5234"
+      SENSOR_ID: "10-00080278b776"
       # Slave
       SLAVE_ENABLED: "true"
       SLAVE_HOST: "192.168.0.7"
