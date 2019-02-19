@@ -63,6 +63,41 @@ describe('Calendar Controller', () => {
     assert.isTrue(authorizeSpy.called);
   });
 
+  it('should get desired temperature with prioritization', async () => {
+    nock('https://www.googleapis.com:443')
+      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
+      .reply(200, {
+        items: [
+          {
+            summary: '18.4;95;5',
+            start: {
+              dateTime: moment().subtract(1, 'days').valueOf(),
+            },
+            end: {
+              dateTime: moment().add(1, 'days').valueOf(),
+            },
+          },
+        ],
+      });
+
+    const authorizeSpy = sinon.spy();
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    const desiredTemp = await CC(log, CacheController)
+      .getDesiredTemperature();
+
+    expect(desiredTemp).to.equal(18.4);
+    assert.isTrue(authorizeSpy.called);
+  });
+
   it('should return MIN_TEMP [no events]', async () => {
     nock('https://www.googleapis.com:443')
       .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))

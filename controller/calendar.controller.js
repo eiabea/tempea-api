@@ -86,7 +86,13 @@ module.exports = (log, cache) => {
 
     let desiredTemp;
     try {
-      desiredTemp = parseFloat(event.summary);
+      const prioArray = event.summary.split(';');
+      if (prioArray.length > 1) {
+        desiredTemp = parseFloat(prioArray[0]);
+      } else {
+        desiredTemp = parseFloat(event.summary);
+      }
+
       assert.isNotNaN(desiredTemp);
     } catch (e) {
       log.error({ e }, 'Unable to parse, fallback to MIN_TEMP');
