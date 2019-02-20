@@ -46,6 +46,12 @@ module.exports = (log, controller) => {
       log.error({ err }, 'Error getting temperature data');
     }
 
+    try {
+      returnObj.master.updated = await controller.cache.getMasterUpdated();
+    } catch (err) {
+      log.error({ err }, 'Error getting master updated data');
+    }
+
     return returnObj;
   };
 

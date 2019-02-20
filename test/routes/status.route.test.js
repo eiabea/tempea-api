@@ -148,14 +148,17 @@ describe('Status Route', () => {
     assert.isDefined(master);
     // Desired temp is 25.4, mocked ds18b20 returns 21 -> heating on
     assert.isTrue(master.heating);
+    assert.isNumber(master.updated);
     expect(master.temp).to.eq(21);
 
     assert.isDefined(desired);
+    assert.isNumber(desired.updated);
     expect(desired.temp).to.eq(25.4);
     expect(desired.master).to.eq(100);
     expect(desired.slave).to.eq(0);
 
     assert.isDefined(slave);
+    assert.isNumber(slave.updated);
     expect(slave.temp).to.equal(mockedSlaveData.data.temp);
     expect(slave.hum).to.equal(mockedSlaveData.data.hum);
 

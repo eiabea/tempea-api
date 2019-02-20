@@ -1,26 +1,30 @@
 module.exports = (log) => {
   log.info('Creating cache controller');
   // TODO: using redis?
-  let cache = {};
+  let cache = {
+    master: {},
+  };
 
   const updateRelayState = async (state) => {
     log.trace({ state }, 'Updating relay state');
-    cache.relay = state;
+    cache.master.updated = Date.now();
+    cache.master.relay = state;
     return true;
   };
 
   const getRelayState = async () => {
     log.trace('Getting relay state');
-    if (cache.relay !== undefined) {
-      return cache.relay;
+    if (cache.master.relay !== undefined) {
+      return cache.master.relay;
     }
 
     throw Error('No cached value available');
   };
 
   const updateDesiredObject = async (desired) => {
-    log.trace({ desired }, 'Updating desired temperature');
-    cache.desired = desired;
+    const desiredTagged = Object.assign(desired, { updated: Date.now() });
+    log.trace({ desiredTagged }, 'Updating desired temperature');
+    cache.desired = desiredTagged;
     return true;
   };
 
@@ -35,14 +39,15 @@ module.exports = (log) => {
 
   const updateCurrentTemperature = async (current) => {
     log.trace({ current }, 'Updating current temperature');
-    cache.current = current;
+    cache.master.updated = Date.now();
+    cache.master.current = current;
     return true;
   };
 
   const getCurrentTemperature = async () => {
     log.trace('Getting current temperature');
-    if (cache.current) {
-      return cache.current;
+    if (cache.master.current) {
+      return cache.master.current;
     }
 
     throw Error('No cached value available');
@@ -50,7 +55,8 @@ module.exports = (log) => {
 
   const updateSlaveData = async (data) => {
     log.trace({ data }, 'Updating slave data');
-    cache.slave = data;
+    const slaveTagged = Object.assign(data, { updated: Date.now() });
+    cache.slave = slaveTagged;
     return true;
   };
 
@@ -64,6 +70,7 @@ module.exports = (log) => {
   };
 
   const updateMqttData = async (data) => {
+    // Do not override updated, already present from influx
     log.trace({ data }, 'Updating mqtt data');
     cache.mqtt = data;
     return true;
@@ -78,8 +85,19 @@ module.exports = (log) => {
     throw Error('No cached value available');
   };
 
+  const getMasterUpdated = async () => {
+    log.trace('Getting master updated data');
+    if (cache.master.updated) {
+      return cache.master.updated;
+    }
+
+    throw Error('No cached value available');
+  };
+
   const invalidate = async () => {
-    cache = {};
+    cache = {
+      master: {},
+    };
   };
 
   return {
@@ -94,5 +112,6 @@ module.exports = (log) => {
     getSlaveData,
     getMqttData,
     updateMqttData,
+    getMasterUpdated,
   };
 };
