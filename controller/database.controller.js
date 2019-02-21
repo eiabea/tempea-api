@@ -4,6 +4,8 @@ const { assert } = require('chai');
 const INFLUX_HOST = process.env.INFLUX_HOST || 'influx';
 const INFLUX_PORT = process.env.INFLUX_PORT || 8086;
 const INFLUX_DB = process.env.INFLUX_DB || 'temp';
+const INFLUX_MQTT_SERIES = process.env.INFLUX_MQTT_SERIES || 'mqtt_consumer';
+const INFLUX_MQTT_TOPIC = process.env.INFLUX_MQTT_TOPIC || 'esp_temp';
 
 const INFLUX_URI = `http://${INFLUX_HOST}:${INFLUX_PORT}/${INFLUX_DB}`;
 
@@ -61,8 +63,8 @@ module.exports = async (log, cache) => {
   const getLatestMqttEntry = async () => {
     log.trace('Getting latest mqtt entry');
     client.epoch = 'ms';
-    const result = await client.query('mqtt_consumer')
-      .where('topic', 'esp_temp')
+    const result = await client.query(INFLUX_MQTT_SERIES)
+      .where('topic', INFLUX_MQTT_TOPIC)
       .addFunction('last', 'value');
 
     assert.isArray(result.results);

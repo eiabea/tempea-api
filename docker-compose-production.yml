@@ -63,6 +63,8 @@ services:
       INFLUX_HOST: "influx"
       INFLUX_PORT: "8086"
       INFLUX_DB: "temp"
+      INFLUX_MQTT_SERIES: "mqtt_consumer"
+      INFLUX_MQTT_TOPIC: "esp_temp"
       # Hardware
       SENSOR_ID: "10-00080278b776"
       # Slave
