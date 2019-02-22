@@ -1151,7 +1151,7 @@
             [
               {
                 "params": [
-                  "cur"
+                  "slaveCur"
                 ],
                 "type": "field"
               },
@@ -1253,7 +1253,7 @@
             [
               {
                 "params": [
-                  "cur"
+                  "slaveCur"
                 ],
                 "type": "field"
               },
@@ -1356,7 +1356,7 @@
             [
               {
                 "params": [
-                  "cur"
+                  "slaveCur"
                 ],
                 "type": "field"
               },
@@ -1455,7 +1455,7 @@
             [
               {
                 "params": [
-                  "cur"
+                  "slaveCur"
                 ],
                 "type": "field"
               },
@@ -1553,7 +1553,7 @@
             [
               {
                 "params": [
-                  "cur"
+                  "slaveCur"
                 ],
                 "type": "field"
               },
@@ -2227,7 +2227,7 @@
   },
   "time": {
     "from": "now/d",
-    "to": "now"
+    "to": "now/d"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -2257,5 +2257,5 @@
   "timezone": "",
   "title": "Tempea",
   "uid": "uLZKNQ7iz",
-  "version": 5
+  "version": 7
 }
