@@ -6,6 +6,7 @@ jobs:
       - 10.14.0
     after_success:
       - npm run codecov
+
   - stage: docker
     sudo: required
     services:
@@ -20,8 +21,20 @@ jobs:
         docker build -t eiabea/tempea-api:arm-latest .
         echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         docker push eiabea/tempea-api:arm-latest
-      elif [ -v "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-        docker tag eiabea/tempea-api:arm-latest eiabea/tempea-api:arm-"$TRAVIS_TAG"
+      fi
+
+  - stage: dockertag
+    sudo: required
+    services:
+    - docker
+    language: bash
+    on:
+      tags: true
+    script:
+    - >
+      if [ -v "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+        docker run --rm --privileged multiarch/qemu-user-static:register --reset
+        docker build -t eiabea/tempea-api:arm-"$TRAVIS_TAG" .
         echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         docker push eiabea/tempea-api:arm-"$TRAVIS_TAG"
       fi
