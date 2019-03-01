@@ -12,7 +12,7 @@ const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 
 const sinon = require('sinon');
-const mockedRelay = require('../mock/relay');
+const mockedRelay = require('../../mock/relay');
 
 describe('Status Route', () => {
   let restore;
@@ -36,9 +36,9 @@ describe('Status Route', () => {
       INFLUX_PORT: '8086',
     });
 
-    delete require.cache[require.resolve('../../app')];
+    delete require.cache[require.resolve('../../../app')];
     // eslint-disable-next-line global-require
-    const App = require('../../app');
+    const App = require('../../../app');
     app = App(60);
     await app.start();
     // ensure that no job gets triggered by cron
@@ -119,7 +119,7 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const CC = proxyquire('../../../controller/calendar.controller', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
@@ -199,7 +199,7 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const CC = proxyquire('../../../controller/calendar.controller', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
@@ -265,7 +265,7 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const CC = proxyquire('../../../controller/calendar.controller', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
@@ -328,7 +328,7 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const CC = proxyquire('../../../controller/calendar.controller', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
@@ -410,7 +410,7 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const CC = proxyquire('../../../controller/calendar.controller', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
@@ -485,7 +485,7 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const CC = proxyquire('../../../controller/calendar.controller', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
@@ -499,7 +499,7 @@ describe('Status Route', () => {
       .throws(new Error('Unable to get mocked temp'));
     controller.calendar = mockedCalendar;
 
-    controller.relay = proxyquire('../../controller/relay.controller', {
+    controller.relay = proxyquire('../../../controller/relay.controller', {
       '../test/mock/relay': mockedRelay,
     })(log, controller.cache);
 
@@ -572,7 +572,7 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const CC = proxyquire('../../../controller/calendar.controller', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
@@ -586,7 +586,7 @@ describe('Status Route', () => {
       .throws(new Error('Unable to get mocked temp'));
     controller.calendar = mockedCalendar;
 
-    controller.relay = proxyquire('../../controller/relay.controller', {
+    controller.relay = proxyquire('../../../controller/relay.controller', {
       '../test/mock/relay': mockedRelay,
     })(log, controller.cache);
 
@@ -657,7 +657,7 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const CC = proxyquire('../../../controller/calendar.controller', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
@@ -668,7 +668,7 @@ describe('Status Route', () => {
 
     controller.calendar = await CC(log, controller.cache);
 
-    controller.relay = proxyquire('../../controller/relay.controller', {
+    controller.relay = proxyquire('../../../controller/relay.controller', {
       '../test/mock/relay': mockedRelay,
     })(log, controller.cache);
 
