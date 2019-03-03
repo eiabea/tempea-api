@@ -55,10 +55,7 @@ module.exports = (log, controller) => {
         log.error({ err }, 'Error getting master updated data');
       }
     } else {
-      // TODO Matches current slave implementation, will change with different senors
-      const temp = await controller.temp.getCurrentTemp();
-      returnObj.temp = temp;
-      returnObj.hum = 62;
+      returnObj.temp = await controller.temp.getCurrentTemp();
     }
 
     return returnObj;
@@ -66,11 +63,19 @@ module.exports = (log, controller) => {
 
   router.get('/', rateLimiterStatus, async (req, res) => {
     log.info('Got status request');
-    res.json({
-      success: true,
-      // getStatusObject can not throw, so no need for try/catch
-      data: await getStatusObject(),
-    });
+    try {
+      const statusObject = await getStatusObject();
+      res.json({
+        success: true,
+        data: statusObject,
+      });
+    } catch (err) {
+      log.error({ err }, 'Error getting status object');
+      res.json({
+        success: false,
+        message: err.message,
+      });
+    }
   });
 
   return router;

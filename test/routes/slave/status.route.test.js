@@ -34,26 +34,9 @@ describe('Status Route', () => {
     const response = await chai.request(expressApp).get('/v1/status');
     const { body } = response;
     const { data } = body;
-    const { temp, hum } = data;
+    const { temp } = data;
 
     assert.isTrue(body.success);
-
     assert.isNumber(temp);
-    assert.isNumber(hum);
   });
-
-  // it('should get status [no current temperature]', async () => {
-  //   const stub = sinon.stub(controller.cache, 'getCurrentTemperature')
-  //     .throws(new Error('Mocked error'));
-
-  //   const response = await chai.request(expressApp).get('/v1/status');
-  //   const { body } = response;
-  //   const { data } = body;
-  //   const { master } = data;
-
-  //   assert.isTrue(body.success);
-  //   assert.isUndefined(master.temp);
-
-  //   stub.restore();
-  // });
 });
