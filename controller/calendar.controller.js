@@ -1,6 +1,10 @@
 const { assert } = require('chai');
 const { JWT } = require('google-auth-library');
 const { google } = require('googleapis');
+const dav = require('dav');
+// const ical = require('node-ical');
+
+dav.debug.enabled = true;
 
 const calendar = google.calendar('v3');
 const moment = require('moment');
@@ -15,6 +19,43 @@ const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
 const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
 
 module.exports = (log, cache) => {
+  const getDesiredObjectNC = async () => {
+    const xhr = new dav.transport.Basic(
+      new dav.Credentials({
+        username: 'eiabea',
+        password: 'secret',
+      }),
+    );
+
+    const account = await dav.createAccount({
+      server: 'https://nextcloud.secret.at/remote.php/dav',
+      xhr,
+    });
+
+    const foundCal = account.calendars.find(cal => cal.displayName === 'tempea');
+
+    const tmp = await dav.syncCalendar(foundCal, {
+      filters: [{
+        type: 'comp-filter',
+        attrs: { name: 'VCALENDAR' },
+        children: [{
+          type: 'comp-filter',
+          attrs: { name: 'VEVENT' },
+          children: [{
+            type: 'time-range',
+            attrs: {
+              start: '20190304T000000Z',
+              end: '20190304T235959Z',
+            },
+          }],
+        }],
+      }],
+      xhr,
+    });
+
+    console.log(tmp.objects);
+  };
+
   const getGoogleAuthClient = async () => {
     try {
       const jwtClient = new JWT({
@@ -141,6 +182,7 @@ module.exports = (log, cache) => {
   };
 
   return {
+    getDesiredObjectNC,
     getDesiredObject,
   };
 };

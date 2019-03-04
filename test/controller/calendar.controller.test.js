@@ -28,6 +28,22 @@ describe('Calendar Controller', () => {
     restore();
   });
 
+  it.skip('should test dav', async () => {
+    const authorizeSpy = sinon.spy();
+    const CC = proxyquire('../../controller/calendar.controller', {
+      'google-auth-library': {
+        JWT: function JWT() {
+          this.authorize = authorizeSpy;
+          this.request = async opts => request(opts);
+        },
+      },
+    });
+
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObjectNC();
+    console.log(desiredObj);
+  });
+
   it('should get desired temperature', async () => {
     nock('https://www.googleapis.com:443')
       .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
