@@ -22,7 +22,9 @@ After some research I stumbled over the great idea to use [Google Calender](http
     - [Parts](#parts)
   - [Software](#software)
     - [OneWire](#onewire)
-    - [Setup Tempea](#setup-tempea)
+    - [Setup Tempea general](#setup-tempea-general)
+      - [Setup Master](#setup-master)
+      - [Setup Slave](#setup-slave)
     - [Setup Calendar](#setup-calendar)
     - [Start](#start)
   - [Grafana](#grafana)
@@ -229,7 +231,7 @@ Service json file (example)
 
 ```
 
-### Setup tempea
+### Setup tempea general
 
 1. Connect to the Raspberry Pi via ssh (username: pi, password: raspberry)
 ```
@@ -245,6 +247,10 @@ $ mkdir tempea
 ```
 $ cd tempea
 ```
+
+Tempea can run in master and slave mode, to setup tempea as a slave jump to [Setup Slave](#setup-slave), otherwise continue reading
+
+### Setup master
 
 4. Create secrets directory and copy/paste your google-service.json content into a new file called _tempea-service.json_
 ```
@@ -290,6 +296,26 @@ environment:
 ```
 $ wget https://raw.githubusercontent.com/eiabea/tempea-api/master/telegraf.conf
 ```
+
+### Setup slave
+
+4. Download the latest _docker-compose-production.yml_
+```
+$ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose-production.yml
+```
+
+6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
+```
+environment:
+  # Tempea
+  TEMPEA_SLAVE: "true"                                # Run tempea in slave mode
+  # Modules
+  ROUTING_MODULE_HOST: "0.0.0.0"                      # Host option of the node application
+  ROUTING_MODULE_PORT: "3000"                         # Port definition
+  # Hardware
+  SENSOR_ID: "10-00080278b776"                        # Address of your OneWire sensor noted in the "OneWire"-section
+```
+
 
 ### Setup calendar
 
