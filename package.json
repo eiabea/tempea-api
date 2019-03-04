@@ -10,7 +10,7 @@
     "start:dev": "${NODE_PATH:-node_modules}/.bin/nodemon index.js",
     "start:dev:pretty": "${NODE_PATH:-node_modules}/.bin/nodemon index.js | ${NODE_PATH:-node_modules}/.bin/bunyan -o short",
     "lint": "${NODE_PATH:-node_modules}/.bin/eslint --fix .",
-    "test": "CI=true ${NODE_PATH:-node_modules}/.bin/nyc ${NODE_PATH:-node_modules}/.bin/_mocha --color --exit test/**/*.test.js",
+    "test": "CI=true ${NODE_PATH:-node_modules}/.bin/nyc ${NODE_PATH:-node_modules}/.bin/_mocha --recursive --color --exit test",
     "codecov": "${NODE_PATH:-node_modules}/.bin/nyc report --reporter=text-lcov > coverage.lcov && ${NODE_PATH:-node_modules}/.bin/codecov"
   },
   "repository": {
@@ -53,7 +53,6 @@
     "mocha": "^5.2.0",
     "mocked-env": "^1.2.4",
     "nock": "^10.0.6",
-    "node-mocks-http": "^1.7.3",
     "nodemon": "^1.18.10",
     "null-logger": "^1.0.0",
     "nyc": "^13.3.0",

@@ -18,6 +18,7 @@ const Temp = require('./controller/temp.controller');
 const StatusRoute = require('./routes/v1/status.route');
 
 const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
+const IS_MASTER = process.env.TEMPEA_SLAVE !== 'true';
 const SLAVE_ENABLED = process.env.SLAVE_ENABLED === 'true';
 
 module.exports = (loglevel) => {
@@ -34,11 +35,13 @@ module.exports = (loglevel) => {
 
   const initControllers = async () => {
     controller.cache = Cache(log.child({ controller: 'cache' }));
-    controller.calendar = Calendar(log.child({ controller: 'calendar' }), controller.cache);
-    controller.database = await Database(log.child({ controller: 'database' }), controller.cache);
-    controller.heat = Heat(log.child({ controller: 'heat' }));
-    controller.relay = Relay(log.child({ controller: 'relay' }), controller.cache);
-    controller.schedule = Schedule(log.child({ controller: 'schedule' }));
+    if (IS_MASTER) {
+      controller.calendar = Calendar(log.child({ controller: 'calendar' }), controller.cache);
+      controller.database = await Database(log.child({ controller: 'database' }), controller.cache);
+      controller.heat = Heat(log.child({ controller: 'heat' }));
+      controller.relay = Relay(log.child({ controller: 'relay' }), controller.cache);
+      controller.schedule = Schedule(log.child({ controller: 'schedule' }));
+    }
     if (SLAVE_ENABLED) {
       controller.slave = Slave(log.child({ controller: 'slave' }), controller.cache);
     }
@@ -153,10 +156,12 @@ module.exports = (loglevel) => {
     await initControllers();
     await initExpress();
 
-    // Setting initial relay state
-    await controller.cache.updateRelayState(0);
+    if (IS_MASTER) {
+      // Setting initial relay state
+      await controller.cache.updateRelayState(0);
 
-    controller.schedule.startJob(job);
+      controller.schedule.startJob(job);
+    }
   };
 
   const stop = async () => {
@@ -166,7 +171,9 @@ module.exports = (loglevel) => {
   };
 
   const stopJob = async () => {
-    await controller.schedule.stopJob();
+    if (IS_MASTER) {
+      await controller.schedule.stopJob();
+    }
   };
 
   const forceJob = async () => {
