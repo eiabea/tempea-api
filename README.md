@@ -41,19 +41,19 @@ After some research I stumbled over the great idea to use [Google Calender](http
 
 2. Unzip the image
 ```
-unzip 2018-11-13-raspbian-stretch-lite.zip
+$ unzip 2018-11-13-raspbian-stretch-lite.zip
 ```
 
 3. Insert your sd card into your PC
 
 4. Run the following command to find out the name of your sd card
 ```
-dmesg
+$ dmesg
 ```
 
 5. Flash the previously downloaded image using dd (may requires root permissions) to your sd card
 ```
-dd if=/home/eiabea/2018-11-13-raspbian-stretch-lite.img of=/dev/mmcblk0 bs=4M && sync
+# dd if=/home/eiabea/2018-11-13-raspbian-stretch-lite.img of=/dev/mmcblk0 bs=4M && sync
 ```
 
 6. Wait until the command has finished successfully
@@ -86,7 +86,7 @@ static domain_name_servers=192.168.0.1 8.8.8.8 4.2.2.1
 
 10. Create a blank file on the boot partition named ssh to enable ssh
 ```
-touch ssh
+$ touch ssh
 ```
 
 11. Unmount and remove your sd card from your PC and insert it into your Raspberry Pi
@@ -97,42 +97,42 @@ touch ssh
 
 14. Login via ssh (username: pi, password: raspberry)
 ```
-ssh pi@192.168.0.8
+$ ssh pi@192.168.0.8
 ```
 
 15. Update the system to the latest version
 ```
-sudo apt update && sudo apt upgrade -y
+$ sudo apt update && sudo apt upgrade -y
 ```
 
 ### Docker
 
 1. Run the following command to install docker
 ```
-curl -sSL https://get.docker.com | sh
+$ curl -sSL https://get.docker.com | sh
 ```
 
 2. Add the pi user to the docker group to start container as user
 ```
-sudo usermod -aG docker pi
+$ sudo usermod -aG docker pi
 ```
 
 3. Log out and in again to gain access to docker
 
 4. Verify the correct installation of docker
 ```
-docker ps
+$ docker ps
 ```
 
 5. Install docker-compose
 ```
-sudo apt install -y python-pip
-sudo pip install docker-compose
+$ sudo apt install -y python-pip
+$ sudo pip install docker-compose
 ```
 
 6. Verify the correct installation of docker-compose
 ```
-docker-compose version
+$ docker-compose version
 ```
 
 ## Hardware
@@ -233,28 +233,28 @@ Service json file (example)
 
 1. Connect to the Raspberry Pi via ssh (username: pi, password: raspberry)
 ```
-ssh pi@192.168.0.8
+$ ssh pi@192.168.0.8
 ```
 
 2. Create tempea directory
 ```
-mkdir tempea
+$ mkdir tempea
 ```
 
 3. Change into the tempea directory
 ```
-cd tempea
+$ cd tempea
 ```
 
 4. Create secrets directory and copy/paste your google-service.json content into a new file called _tempea-service.json_
 ```
-mkdir secrets
-nano secrets/tempea-service.json
+$ mkdir secrets
+$ nano secrets/tempea-service.json
 ```
 
 5. Download the latest _docker-compose-production.yml_
 ```
-wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose-production.yml
+$ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose-production.yml
 ```
 
 6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
@@ -288,7 +288,7 @@ environment:
 
 7. Download the latest telegraf.conf
 ```
-wget https://raw.githubusercontent.com/eiabea/tempea-api/master/telegraf.conf
+$ wget https://raw.githubusercontent.com/eiabea/tempea-api/master/telegraf.conf
 ```
 
 ### Setup calendar
@@ -311,7 +311,7 @@ wget https://raw.githubusercontent.com/eiabea/tempea-api/master/telegraf.conf
 
 Tempea can be started by simply run the following command in the project directory
 ```
-docker-compose up -d
+$ docker-compose up -d
 ```
 
 This command starts all necessary containers in background
@@ -319,7 +319,7 @@ This command starts all necessary containers in background
 In order to see the logs run
 
 ```
-docker-compose logs -f
+$ docker-compose logs -f
 ```
 
 Example output:
@@ -340,19 +340,11 @@ tempea_1  | 13:47:01.658Z  INFO tempea: Room temperature high enough, disabling 
 
 ## Grafana
 
-Due to the fact that a [InfluxDB](https://www.influxdata.com/) is running on the Raspberry Pi [Grafana](https://grafana.com/) can be used to plot various data.
+[Grafana](https://grafana.com/) can be used to visualize the data stored by tempea into the [InfluxDB](https://www.influxdata.com/). The Raspberry Pi is potent enough to handle both services locally.
 
-### Docker
-
-The easiest way is to run [Grafana](https://grafana.com/) as a docker container on your PC
-
+In order to access [Grafana](https://grafana.com/) open up a browser and enter
 ```
-docker run -d -p 3000:3000 grafana/grafana
-```
-
-To access the container open up a browser and enter
-```
-http://localhost:3000
+http://192.168.0.8:3001
 ```
 
 The login credentials are
@@ -365,7 +357,7 @@ Add a new data source with the following parameters
 ```
 Name: tempea
 Type: InfluxDB
-URL: http://192.168.0.8:8086
+URL: http://influx:8086
 Database: temp
 ```
 
@@ -384,51 +376,61 @@ Select the newly created tempea data source and click *Import*
 ### Linux
 1. Mount the home directory of your Pi on your PC
 ```
-mkdir raspberry
-sshfs pi@192.168.0.8:/home/pi raspberry
+$ mkdir raspberry
+$ sshfs pi@192.168.0.8:/home/pi raspberry
 ```
 
 2. Clone the project
 ```
-cd raspberry
-git clone https://github.com/eiabea/tempea-api.git
+$ cd raspberry
+$ git clone https://github.com/eiabea/tempea-api.git
 ```
 
 3. Change into the project directory and create the secrets folder
 ```
-cd tempea-api
-mkdir secrets
+$ cd tempea-api
+$ mkdir secrets
 ```
 
 4. Copy the secrets json file from Google into the secrets directory and name it _tempea-service.json_ [Obtaining Google Calendar Service JSON](#obtaining-google-calendar-service-json)
 
 5. Connect to the Raspberry Pi via ssh (username: pi, password: raspberry)
 ```
-ssh pi@192.168.0.8
+$ ssh pi@192.168.0.8
 ```
 
 6. Change to the project directory
 ```
-cd tempea-api
+$ cd tempea-api
 ```
 
 7. Start tempea in development mode
 ```
-docker-compose up
+$ docker-compose up
 ```
 
 ## Testing
 
-1. Connect to the Raspberry Pi and start the application in development mode like shown in the previous step "Develop"
+1. Make sure you have at least [NodeJS](https://nodejs.org/en/) v10.14.0 installed
+```
+$ node -v
+v10.14.0
+```
 
-2. Open up a second terminal and also connect to the Raspberry Pi
+2. Clone the project on your machine
 ```
-ssh pi@192.168.0.8
+$ git clone https://github.com/eiabea/tempea-api.git
 ```
 
-3. Run the tests with the following command
+3. Change to the project directory and install all npm packages
 ```
-docker exec -it tempea-api_tempea_1 npm test
+$ cd tempea-api
+$ npm install
+```
+
+4. Run the tests with the following command
+```
+$ npm test
 ```
 
 # Contribute
