@@ -16,6 +16,11 @@ describe('Calendar Controller', () => {
   let restore;
   before(() => {
     restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'google',
+      NEXTCLOUD_HOST: 'https://nextcloud.codecove.at/remote.php/dav',
+      NEXTCLOUD_USERNAME: 'eiabea',
+      NEXTCLOUD_PASSWORD: 'secret',
+      NEXTCLOUD_CALENDAR: 'tempea',
       GOOGLE_SERVICE_ACCOUNT_JSON: 'tempea-mocked.json',
       GOOGLE_CALENDAR_ID: 'tempea-mocked',
       TOKEN_DIR: 'test/secrets',
@@ -28,21 +33,21 @@ describe('Calendar Controller', () => {
     restore();
   });
 
-  it.skip('should test dav', async () => {
-    const authorizeSpy = sinon.spy();
-    const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
-    });
+  // it.skip('should test dav', async () => {
+  //   const authorizeSpy = sinon.spy();
+  //   const CC = proxyquire('../../controller/calendar.controller', {
+  //     'google-auth-library': {
+  //       JWT: function JWT() {
+  //         this.authorize = authorizeSpy;
+  //         this.request = async opts => request(opts);
+  //       },
+  //     },
+  //   });
 
-    const desiredObj = await CC(log, CacheController)
-      .getDesiredObjectNC();
-    console.log(desiredObj);
-  });
+  //   const desiredObj = await CC(log, CacheController)
+  //     .getDesiredObject();
+  //   console.log(desiredObj);
+  // });
 
   it('should get desired temperature', async () => {
     nock('https://www.googleapis.com:443')
@@ -63,13 +68,17 @@ describe('Calendar Controller', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -100,13 +109,17 @@ describe('Calendar Controller', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -127,13 +140,17 @@ describe('Calendar Controller', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -164,13 +181,17 @@ describe('Calendar Controller', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -201,13 +222,17 @@ describe('Calendar Controller', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -238,13 +263,17 @@ describe('Calendar Controller', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -275,13 +304,17 @@ describe('Calendar Controller', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -302,12 +335,16 @@ describe('Calendar Controller', () => {
       MIN_TEMP: '15',
     });
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT(obj) {
           fs.readFileSync(obj.keyFile);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     try {
@@ -329,7 +366,7 @@ describe('Calendar Controller', () => {
     const authorizeSpy = sinon.spy();
     const listStub = sinon.stub().callsArgWith(1, new Error(), 0);
 
-    const CC = proxyquire('../../controller/calendar.controller', {
+    const google = proxyquire('../../controller/calendar/google', {
       googleapis: {
         google: {
           calendar() {
@@ -347,6 +384,10 @@ describe('Calendar Controller', () => {
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     try {

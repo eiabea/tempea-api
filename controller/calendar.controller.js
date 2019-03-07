@@ -1,126 +1,34 @@
 const { assert } = require('chai');
-const { JWT } = require('google-auth-library');
-const { google } = require('googleapis');
-const dav = require('dav');
-// const ical = require('node-ical');
 
-dav.debug.enabled = true;
+const GoogleController = require('./calendar/google');
+const NextcloudController = require('./calendar/nextcloud');
 
-const calendar = google.calendar('v3');
-const moment = require('moment');
+const TEMPEA_CALENDAR_PROVIDER = process.env.TEMPEA_CALENDAR_PROVIDER || 'none';
 
-// If modifying these scopes, delete your previously saved credentials
-// at ~/.credentials/calendar-nodejs-quickstart.json
-const GOOGLE_AUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
-const { GOOGLE_CALENDAR_ID, GOOGLE_SERVICE_ACCOUNT_JSON } = process.env;
-const TOKEN_DIR = process.env.TOKEN_DIR || 'secrets';
-const TOKEN_PATH = `${process.cwd()}/${TOKEN_DIR}/${GOOGLE_SERVICE_ACCOUNT_JSON}`;
 const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
 const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
 
 module.exports = (log, cache) => {
-  const getDesiredObjectNC = async () => {
-    const xhr = new dav.transport.Basic(
-      new dav.Credentials({
-        username: 'eiabea',
-        password: 'secret',
-      }),
-    );
-
-    const account = await dav.createAccount({
-      server: 'https://nextcloud.secret.at/remote.php/dav',
-      xhr,
-    });
-
-    const foundCal = account.calendars.find(cal => cal.displayName === 'tempea');
-
-    const tmp = await dav.syncCalendar(foundCal, {
-      filters: [{
-        type: 'comp-filter',
-        attrs: { name: 'VCALENDAR' },
-        children: [{
-          type: 'comp-filter',
-          attrs: { name: 'VEVENT' },
-          children: [{
-            type: 'time-range',
-            attrs: {
-              start: '20190304T000000Z',
-              end: '20190304T235959Z',
-            },
-          }],
-        }],
-      }],
-      xhr,
-    });
-
-    console.log(tmp.objects);
-  };
-
-  const getGoogleAuthClient = async () => {
-    try {
-      const jwtClient = new JWT({
-        keyFile: TOKEN_PATH,
-        scopes: GOOGLE_AUTH_SCOPES,
-      });
-
-      await jwtClient.authorize();
-
-      return jwtClient;
-    } catch (err) {
-      log.error({ err }, 'Error initializing google jwt auth client');
-      throw err;
-    }
-  };
-
-  const listEvents = async auth => new Promise((resolve, reject) => {
-    calendar.events.list({
-      auth,
-      calendarId: GOOGLE_CALENDAR_ID,
-      timeMin: (new Date()).toISOString(),
-      maxResults: 1,
-      singleEvents: true,
-      orderBy: 'startTime',
-    }, (err, response) => {
-      if (err) {
-        return reject(err);
-      }
-
-      return resolve(response.data.items);
-    });
-  });
-
-  /*
- * Lists the next 10 events on the user's primary calendar.
- *
- * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
- */
-  const getCurrentEvent = async (auth) => {
-    const events = await listEvents(auth);
-    if (events.length === 0) {
-      log.info('No upcoming events found.');
-      return null;
-    }
-
-    const event = events[0];
-
-    const start = event.start.dateTime || event.start.date;
-    const end = event.end.dateTime || event.end.date;
-    const utcStart = moment.utc(start);
-    const utcEnd = moment.utc(end);
-
-    if (!moment().isBetween(utcStart, utcEnd)) {
-      log.trace({ event }, 'Event is not in range');
-      return null;
-    }
-    log.trace({ event }, 'Event is in range');
-    return event;
-  };
+  const googleController = GoogleController(log);
+  const nextcloudController = NextcloudController(log);
 
   const getDesiredObject = async () => {
     log.trace('getDesiredObject');
 
-    const auth = await getGoogleAuthClient();
-    const event = await getCurrentEvent(auth);
+    let event;
+
+    switch (TEMPEA_CALENDAR_PROVIDER) {
+      case 'nextcloud':
+        event = await nextcloudController.getCurrentEvent();
+        break;
+      case 'google':
+        event = await googleController.getCurrentEvent();
+        break;
+      default:
+        log.error({ provider: TEMPEA_CALENDAR_PROVIDER }, 'Unknown calendar provider');
+        break;
+    }
+
     if (!event) {
       return {
         temp: MIN_TEMP,
@@ -182,7 +90,6 @@ module.exports = (log, cache) => {
   };
 
   return {
-    getDesiredObjectNC,
     getDesiredObject,
   };
 };
