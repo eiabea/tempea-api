@@ -55,7 +55,7 @@ module.exports = (log) => {
     log.trace({ calendar: NEXTCLOUD_CALENDAR }, 'Parsing calendar event');
     const calArray = syncedCalendar.objects.map(cal => ical.parseICS(cal.calendarData));
 
-    let currentEvent;
+    let currentEvent = null;
 
     // TODO refactor
     /* eslint-disable */
