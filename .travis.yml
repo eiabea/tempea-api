@@ -4,11 +4,25 @@ jobs:
     language: node_js
     cache: npm
     node_js:
-      - 10.14.0
+      - 10.15.0
     after_success:
       - npm run codecov
     on:
       tags: false
+
+  - stage: docker
+    if: NOT type = pull_request AND branch = develop
+    sudo: required
+    services:
+    - docker
+    language: bash
+    on:
+      tags: false
+    script:
+    - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+    - docker build --build-arg NODE_ENV=production -t eiabea/tempea-api:arm-develop .
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker push eiabea/tempea-api:arm-develop
 
   - stage: docker
     if: NOT type = pull_request AND branch = master
@@ -20,7 +34,7 @@ jobs:
       tags: false
     script:
     - docker run --rm --privileged multiarch/qemu-user-static:register --reset
-    - docker build -t eiabea/tempea-api:arm-latest .
+    - docker build --build-arg NODE_ENV=production -t eiabea/tempea-api:arm-latest .
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - docker push eiabea/tempea-api:arm-latest
 
@@ -33,10 +47,7 @@ jobs:
     on:
       tags: true
     script:
-    - >
-      if [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-        docker run --rm --privileged multiarch/qemu-user-static:register --reset
-        docker build -t eiabea/tempea-api:arm-"$TRAVIS_TAG" .
-        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-        docker push eiabea/tempea-api:arm-"$TRAVIS_TAG"
-      fi
+    - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+    - docker build --build-arg NODE_ENV=production -t eiabea/tempea-api:arm-"$TRAVIS_TAG" .
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker push eiabea/tempea-api:arm-"$TRAVIS_TAG"

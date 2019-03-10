@@ -1,4 +1,4 @@
-FROM balenalib/rpi-node:10.14.0-stretch
+FROM balenalib/rpi-node:10.15.0-stretch
 LABEL eiabea <developer@eiabea.com>
 
 ENV NODE_PATH=/root/node_modules
