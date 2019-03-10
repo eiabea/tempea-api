@@ -1,16 +1,18 @@
 const { CI } = process.env;
 
+// TODO use sinon
+// eslint-disable-next-line
 const ds18b20 = CI ? require('../test/mock/ds18b20') : require('ds18b20');
 
 const SENSOR_ID = process.env.SENSOR_ID || '10-0008032d5234';
 
-module.exports = (log) => {
+module.exports = (log, cache) => {
   let prevValue = 20.0;
 
   const getCurrentTemp = async () => {
     log.trace({ func: 'getCurrentTemp' }, 'Getting current temperature');
     return new Promise((resolve, reject) => {
-      ds18b20.temperature(SENSOR_ID, (err, value) => {
+      ds18b20.temperature(SENSOR_ID, async (err, value) => {
         if (err) {
           log.error({ func: 'getCurrentTemp', err }, 'Error current temperature');
           return reject(err);
@@ -28,6 +30,7 @@ module.exports = (log) => {
           value: returnValue,
         }, 'Successfully got current temperature');
         prevValue = returnValue;
+        await cache.updateCurrentTemperature(returnValue);
         return resolve(returnValue);
       });
     });

@@ -9,11 +9,13 @@ volumes:
 services:
   grafana:
     image: "grafana/grafana"
+    restart: unless-stopped
     ports:
       - "3001:3000"
       
   mqtt:
     image: "eclipse-mosquitto:1.5.5"
+    restart: unless-stopped
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -22,6 +24,7 @@ services:
 
   telegraf:
     image: "telegraf:1.9.2"
+    restart: unless-stopped
     depends_on:
       - "mqtt"
     volumes:
@@ -29,19 +32,26 @@ services:
 
   influx:
     image: "arm32v7/influxdb"
+    restart: unless-stopped
     ports:
       - "8086:8086"
     volumes:
       - "influx:/var/lib/influxdb"
 
   tempea:
-    image: "eiabea/tempea-api"
+    image: "eiabea/tempea-api:arm-latest"
+    restart: unless-stopped
     privileged: "true"
-    command: "npm run start:dev:pretty"
     depends_on:
       - "influx"
     ports:
       - "3000:3000"
+    volumes:
+      - "./secrets:/src/secrets"
+    command: [ 
+      "wait-for-it.sh", "influx:8086","--timeout=60", "--",
+      "npm", "start"
+    ]
     environment:
       # Google
       GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"

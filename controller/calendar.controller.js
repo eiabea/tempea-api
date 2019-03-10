@@ -1,53 +1,32 @@
-const fs = require('fs');
 const { assert } = require('chai');
 const { JWT } = require('google-auth-library');
 const { google } = require('googleapis');
 
 const calendar = google.calendar('v3');
-// const googleAuth = require('google-auth-library');
-// const { OAuth2Client } = require('google-auth-library');
 const moment = require('moment');
 
 // If modifying these scopes, delete your previously saved credentials
 // at ~/.credentials/calendar-nodejs-quickstart.json
 const GOOGLE_AUTH_SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
-// let TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-//   process.env.USERPROFILE) + '/.credentials/';
 const { GOOGLE_CALENDAR_ID, GOOGLE_SERVICE_ACCOUNT_JSON } = process.env;
 const TOKEN_DIR = process.env.TOKEN_DIR || 'secrets';
-// const TOKEN_PATH = `${TOKEN_DIR}/calendar-nodejs-quickstart.json`;
 const TOKEN_PATH = `${process.cwd()}/${TOKEN_DIR}/${GOOGLE_SERVICE_ACCOUNT_JSON}`;
 const MAX_TEMP = parseFloat(process.env.MAX_TEMP) || 27;
 const MIN_TEMP = parseFloat(process.env.MIN_TEMP) || 15;
 
-module.exports = (log) => {
-  const getServiceJson = () => new Promise((resolve, reject) => {
-    // Check if we have previously stored a token.
-    fs.readFile(TOKEN_PATH, async (err, token) => {
-      if (err) {
-        return reject(err);
-      }
-
-      return resolve(JSON.parse(token));
-    });
-  });
-
+module.exports = (log, cache) => {
   const getGoogleAuthClient = async () => {
     try {
-      const serviceAccount = await getServiceJson();
-
-      const jwtClient = new JWT(
-        serviceAccount.client_email,
-        null,
-        serviceAccount.private_key,
-        GOOGLE_AUTH_SCOPES,
-      );
+      const jwtClient = new JWT({
+        keyFile: TOKEN_PATH,
+        scopes: GOOGLE_AUTH_SCOPES,
+      });
 
       await jwtClient.authorize();
 
       return jwtClient;
     } catch (err) {
-      log.error({ err }, 'Error initializing google jwt auth client', err);
+      log.error({ err }, 'Error initializing google jwt auth client');
       throw err;
     }
   };
@@ -96,32 +75,72 @@ module.exports = (log) => {
     return event;
   };
 
-  const getDesiredTemperature = async () => {
-    log.trace('getDesiredTemperature');
+  const getDesiredObject = async () => {
+    log.trace('getDesiredObject');
 
     const auth = await getGoogleAuthClient();
     const event = await getCurrentEvent(auth);
     if (!event) {
-      return MIN_TEMP;
+      return {
+        temp: MIN_TEMP,
+        master: 100,
+        slave: 0,
+      };
     }
 
-    let desiredTemp;
+    let desiredObj = {};
     try {
-      desiredTemp = parseFloat(event.summary);
-      assert.isNotNaN(desiredTemp);
+      const prioArray = event.summary.split(';');
+      if (prioArray.length === 3) {
+        desiredObj = {
+          temp: parseFloat(prioArray[0]),
+          master: parseFloat(prioArray[1]),
+          slave: parseFloat(prioArray[2]),
+        };
+
+        const prioSum = desiredObj.master + desiredObj.slave;
+        if (prioSum !== 100) {
+          log.warn({ prioSum }, 'The sum does not equal 100%, falling back to 100%');
+          desiredObj = {
+            temp: parseFloat(prioArray[0]),
+            master: 100,
+            slave: 0,
+          };
+        }
+      } else {
+        desiredObj = {
+          temp: parseFloat(event.summary),
+          master: 100,
+          slave: 0,
+        };
+      }
+
+      assert.isNotNaN(desiredObj.temp);
+      assert.isNotNaN(desiredObj.master);
+      assert.isNotNaN(desiredObj.slave);
     } catch (e) {
       log.error({ e }, 'Unable to parse, fallback to MIN_TEMP');
-      desiredTemp = MIN_TEMP;
+      desiredObj = {
+        temp: MIN_TEMP,
+        master: 100,
+        slave: 0,
+      };
     }
 
-    if (desiredTemp > MAX_TEMP) {
-      desiredTemp = MAX_TEMP;
+    if (desiredObj.temp > MAX_TEMP) {
+      desiredObj = {
+        temp: MAX_TEMP,
+        master: 100,
+        slave: 0,
+      };
     }
 
-    return desiredTemp;
+    await cache.updateDesiredObject(desiredObj);
+
+    return desiredObj;
   };
 
   return {
-    getDesiredTemperature,
+    getDesiredObject,
   };
 };

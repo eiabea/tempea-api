@@ -1,20 +1,17 @@
-require('../Helper').invalidateNodeCache();
+const mockedEnv = require('mocked-env');
 
 const { expect } = require('chai');
 const log = require('null-logger');
 const nock = require('nock');
-
-process.env.CI = 'true';
+const proxyquire = require('proxyquire');
 
 const SLAVE_HOST = 'mocked.tempea.com';
-const SLAVE_PORT = 80;
+const SLAVE_PORT = '80';
 const SLAVE_ENDPOINT = '/mocked';
 
-process.env.SLAVE_HOST = SLAVE_HOST;
-process.env.SLAVE_PORT = SLAVE_PORT;
-process.env.SLAVE_ENDPOINT = SLAVE_ENDPOINT;
-
-const SlaveController = require('../../controller/slave.controller')(log);
+const CacheController = require('../../controller/cache.controller')(log);
+// Preload files
+require('../../controller/slave.controller');
 
 describe('Slave Controller', () => {
   const mockedSlaveResponse = {
@@ -25,32 +22,70 @@ describe('Slave Controller', () => {
     },
   };
 
+  let restore;
   before(() => {
-    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
-      .get(SLAVE_ENDPOINT)
-      .reply(200, mockedSlaveResponse);
+    restore = mockedEnv({
+      SLAVE_HOST,
+      SLAVE_PORT,
+      SLAVE_ENDPOINT,
+    });
+  });
+
+  after(() => {
+    restore();
   });
 
   it('should get slave temperature', async () => {
-    const slaveData = await SlaveController.getData();
+    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
+      .get(SLAVE_ENDPOINT)
+      .reply(200, mockedSlaveResponse);
 
-    expect(slaveData).to.deep.equal(mockedSlaveResponse);
+    const SC = proxyquire('../../controller/slave.controller', {});
+
+    const slaveData = await SC(log, CacheController).getData();
+
+    expect(slaveData.temp).to.eq(mockedSlaveResponse.data.temp);
+    expect(slaveData.hum).to.eq(mockedSlaveResponse.data.hum);
   });
 
-  it('should fail', async () => {
-    // Invalidate require cache to create instance with new environment variables
-    delete require.cache[require.resolve('../../controller/slave.controller')];
+  it('should fail [wrong host]', async () => {
+    restore = mockedEnv({
+      SLAVE_HOST: 'localhost',
+      SLAVE_PORT: '80',
+      SLAVE_ENDPOINT: '/mocked',
+    });
 
-    process.env.SLAVE_HOST = 'localhost';
-    process.env.SLAVE_PORT = 80;
-    process.env.SLAVE_ENDPOINT = '/mocked';
+    const SC = proxyquire('../../controller/slave.controller', {});
+
+    const slaveController = await SC(log, CacheController);
 
     try {
-      // eslint-disable-next-line global-require
-      await require('../../controller/slave.controller')(log).getData();
+      await slaveController.getData();
     } catch (err) {
       expect(err).to.be.instanceof(Error);
       expect(err.code).to.equal('ECONNREFUSED');
+    }
+  });
+
+  it('should fail [invalid json]', async () => {
+    restore = mockedEnv({
+      SLAVE_HOST,
+      SLAVE_PORT,
+      SLAVE_ENDPOINT: `${SLAVE_ENDPOINT}_invalid_json`,
+    });
+
+    nock(`http://${SLAVE_HOST}:${SLAVE_PORT}`)
+      .get(`${SLAVE_ENDPOINT}_invalid_json`)
+      .reply(200, '{"success":false');
+
+    const SC = proxyquire('../../controller/slave.controller', {});
+
+    const slaveController = await SC(log, CacheController);
+
+    try {
+      await slaveController.getData();
+    } catch (err) {
+      expect(err).to.be.instanceof(SyntaxError);
     }
   });
 });

@@ -1,73 +1,82 @@
 const express = require('express');
 
 const router = express.Router();
-const State = require('../../state');
 const RateLimit = require('express-rate-limit');
 
 const rateLimiterStatus = new RateLimit({
   keyGenerator: req => req.header('x-real-ip') || req.connection.remoteAddress,
   windowMs: 5 * 60 * 1000,
-  delayAfter: 100,
-  delayMs: 50,
   max: 100,
 });
 
+
 module.exports = (log, controller) => {
   const getStatusObject = async () => {
-    let slaveData = {};
+    // Must not be defined outside of the function to ensure correct process.env
+    const IS_MASTER = process.env.TEMPEA_SLAVE !== 'true';
+    const returnObj = {};
 
-    try {
-      slaveData = await controller.slave.getData();
-    } catch (err) {
-      log.error({ err }, 'Error getting slave data', err);
+    if (IS_MASTER) {
+      returnObj.master = {};
+      try {
+        returnObj.slave = await controller.cache.getSlaveData();
+      } catch (err) {
+        log.error({ err }, 'Error getting slave data');
+      }
+
+      try {
+        returnObj.mqtt = await controller.cache.getMqttData();
+      } catch (err) {
+        log.error({ err }, 'Error getting mqtt data');
+      }
+
+      try {
+        returnObj.desired = await controller.cache.getDesiredObject();
+      } catch (err) {
+        log.error({ err }, 'Error getting calendar data');
+      }
+
+      try {
+        const relayData = await controller.cache.getRelayState();
+        returnObj.master.heating = relayData === 1;
+      } catch (err) {
+        log.error({ err }, 'Error getting relay data');
+      }
+
+      try {
+        returnObj.master.temp = await controller.cache.getCurrentTemperature();
+      } catch (err) {
+        log.error({ err }, 'Error getting temperature data');
+      }
+
+      try {
+        returnObj.master.updated = await controller.cache.getMasterUpdated();
+      } catch (err) {
+        log.error({ err }, 'Error getting master updated data');
+      }
+    } else {
+      returnObj.temp = await controller.temp.getCurrentTemp();
     }
 
-    return {
-      mode: State.mode,
-      heating: await controller.relay.getRelay() === 1,
-      desiredTemp: await controller.calendar.getDesiredTemperature(),
-      currentTemp: await controller.temp.getCurrentTemp(),
-      slave: {
-        currentTemp: slaveData.data.temp,
-        currentHum: slaveData.data.hum,
-      },
-    };
+    return returnObj;
   };
 
   router.get('/', rateLimiterStatus, async (req, res) => {
     log.info('Got status request');
-    res.json({
-      success: true,
-      data: await getStatusObject(),
-    });
+    try {
+      const statusObject = await getStatusObject();
+      res.json({
+        success: true,
+        data: statusObject,
+      });
+    } catch (err) {
+      log.error({ err }, 'Error getting status object');
+      res.json({
+        success: false,
+        message: err.message,
+      });
+    }
   });
-
-  // router.post('/mode', controller.auth.authenticate(),
-  //  controller.auth.authorize(), async (req, res) => {
-  //   const { mode } = req.body;
-  //   log.info({ mode }, 'Got mode request');
-
-  //   switch (mode) {
-  //     case 'automatic':
-  //     case 'disable':
-  //       State.mode = mode;
-  //       res.json({
-  //         success: true,
-  //         data: {
-  //           msg: `Successfully set mode to ${mode}`,
-  //         },
-  //       });
-  //       break;
-  //     default:
-  //       res.json({
-  //         success: false,
-  //         error: {
-  //           msg: 'Unknown mode',
-  //         },
-  //       });
-  //       break;
-  //   }
-  // });
 
   return router;
 };
