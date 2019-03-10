@@ -22,6 +22,7 @@ describe('Status Route', () => {
 
   before(async () => {
     restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'google',
       EXPRESS_PORT: '3001',
       SLAVE_ENABLED: 'true',
       SLAVE_HOST: 'mocked.tempea.com',
@@ -119,13 +120,17 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../../controller/calendar.controller', {
+    const google = proxyquire('../../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     controller.calendar = await CC(log, controller.cache);
@@ -199,13 +204,17 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../../controller/calendar.controller', {
+    const google = proxyquire('../../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     controller.calendar = await CC(log, controller.cache);
@@ -265,13 +274,17 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../../controller/calendar.controller', {
+    const google = proxyquire('../../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     controller.calendar = await CC(log, controller.cache);
@@ -328,13 +341,17 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../../controller/calendar.controller', {
+    const google = proxyquire('../../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     controller.calendar = await CC(log, controller.cache);
@@ -410,13 +427,17 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../../controller/calendar.controller', {
+    const google = proxyquire('../../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     controller.calendar = await CC(log, controller.cache);
@@ -485,13 +506,17 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../../controller/calendar.controller', {
+    const google = proxyquire('../../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const mockedCalendar = await CC(log, controller.cache);
@@ -572,13 +597,17 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../../controller/calendar.controller', {
+    const google = proxyquire('../../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     const mockedCalendar = await CC(log, controller.cache);
@@ -657,13 +686,17 @@ describe('Status Route', () => {
 
     const authorizeSpy = sinon.spy();
 
-    const CC = proxyquire('../../../controller/calendar.controller', {
+    const google = proxyquire('../../../controller/calendar/google', {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
           this.request = async opts => request(opts);
         },
       },
+    });
+
+    const CC = proxyquire('../../../controller/calendar.controller', {
+      './calendar/google': google,
     });
 
     controller.calendar = await CC(log, controller.cache);
