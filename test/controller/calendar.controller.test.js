@@ -1,11 +1,7 @@
 const mockedEnv = require('mocked-env');
 const { assert, expect } = require('chai');
 const log = require('null-logger');
-const nock = require('nock');
-const moment = require('moment');
 const sinon = require('sinon');
-const fs = require('fs');
-const { request } = require('gaxios');
 const proxyquire = require('proxyquire');
 
 const CacheController = require('../../controller/cache.controller')(log);
@@ -14,110 +10,43 @@ require('../../controller/calendar.controller');
 
 describe('Calendar Controller', () => {
   let restore;
-  before(() => {
-    restore = mockedEnv({
-      GOOGLE_SERVICE_ACCOUNT_JSON: 'tempea-mocked.json',
-      GOOGLE_CALENDAR_ID: 'tempea-mocked',
-      TOKEN_DIR: 'test/secrets',
-      MAX_TEMP: '27',
-      MIN_TEMP: '15',
-    });
+  beforeEach(() => {
+    delete require.cache[require.resolve('../../controller/calendar.controller')];
   });
 
-  after(() => {
+  afterEach(() => {
     restore();
   });
 
-  it('should get desired temperature', async () => {
-    nock('https://www.googleapis.com:443')
-      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
-      .reply(200, {
-        items: [
-          {
-            summary: '18.4',
-            start: {
-              dateTime: moment().subtract(1, 'days').valueOf(),
-            },
-            end: {
-              dateTime: moment().add(1, 'days').valueOf(),
-            },
-          },
-        ],
-      });
-
-    const authorizeSpy = sinon.spy();
-
-    const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
+  it('should return MIN_TEMP [wrong provider]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'wrong',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
     });
+
+    const CC = proxyquire('../../controller/calendar.controller', {});
 
     const desiredObj = await CC(log, CacheController)
       .getDesiredObject();
 
-    expect(desiredObj.temp).to.equal(18.4);
+    expect(desiredObj.temp).to.equal(15);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
-    assert.isTrue(authorizeSpy.called);
   });
 
-  it('should get desired temperature with prioritization', async () => {
-    nock('https://www.googleapis.com:443')
-      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
-      .reply(200, {
-        items: [
-          {
-            summary: '18.4;95;5',
-            start: {
-              dateTime: moment().subtract(1, 'days').valueOf(),
-            },
-            end: {
-              dateTime: moment().add(1, 'days').valueOf(),
-            },
-          },
-        ],
-      });
-
-    const authorizeSpy = sinon.spy();
-
-    const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
+  it('should return MIN_TEMP [no event, nextcloud]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
     });
 
-    const desiredObj = await CC(log, CacheController)
-      .getDesiredObject();
-
-    expect(desiredObj.temp).to.equal(18.4);
-    expect(desiredObj.master).to.equal(95);
-    expect(desiredObj.slave).to.equal(5);
-    assert.isTrue(authorizeSpy.called);
-  });
-
-  it('should return MIN_TEMP [no events]', async () => {
-    nock('https://www.googleapis.com:443')
-      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
-      .reply(200, {
-        items: [],
-      });
-
-    const authorizeSpy = sinon.spy();
-
+    const getCurrentEventStub = sinon.stub().returns(null);
     const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
+      './calendar/nextcloud': () => ({
+        getCurrentEvent: getCurrentEventStub,
+      }),
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -126,35 +55,21 @@ describe('Calendar Controller', () => {
     expect(desiredObj.temp).to.equal(15);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
-    assert.isTrue(authorizeSpy.called);
+    assert.isTrue(getCurrentEventStub.called);
   });
 
-  it('should return MIN_TEMP [event not in range]', async () => {
-    nock('https://www.googleapis.com:443')
-      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
-      .reply(200, {
-        items: [
-          {
-            summary: '18.4',
-            start: {
-              dateTime: moment().subtract(2, 'days').toISOString(),
-            },
-            end: {
-              dateTime: moment().subtract(1, 'days').toISOString(),
-            },
-          },
-        ],
-      });
+  it('should return MIN_TEMP [no event, google]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'google',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
+    });
 
-    const authorizeSpy = sinon.spy();
-
+    const getCurrentEventStub = sinon.stub().returns(null);
     const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
+      './calendar/google': () => ({
+        getCurrentEvent: getCurrentEventStub,
+      }),
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -163,35 +78,84 @@ describe('Calendar Controller', () => {
     expect(desiredObj.temp).to.equal(15);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
-    assert.isTrue(authorizeSpy.called);
+    assert.isTrue(getCurrentEventStub.called);
   });
 
-  it('should return MIN_TEMP [wrong summery]', async () => {
-    nock('https://www.googleapis.com:443')
-      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
-      .reply(200, {
-        items: [
-          {
-            summary: 'wrongSummery',
-            start: {
-              dateTime: moment().subtract(1, 'days').toISOString(),
-            },
-            end: {
-              dateTime: moment().add(1, 'days').toISOString(),
-            },
-          },
-        ],
-      });
+  /**
+   * Summary only has one ';'
+   */
+  it('should return desired temperature [invalid prio]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
+    });
 
-    const authorizeSpy = sinon.spy();
+    const getCurrentEventStub = sinon.stub().returns({
+      summary: '21;5',
+    });
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/nextcloud': () => ({
+        getCurrentEvent: getCurrentEventStub,
+      }),
+    });
+
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
+
+    expect(desiredObj.temp).to.equal(21);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
+    assert.isTrue(getCurrentEventStub.called);
+  });
+
+  /**
+   * Summary has correct number of parameters, but the sum of
+   * the prioritization elements is not 100
+   */
+  it('should return desired temperature [invalid prio sum]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
+    });
+
+    const getCurrentEventStub = sinon.stub().returns({
+      summary: '21;5;5',
+    });
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/nextcloud': () => ({
+        getCurrentEvent: getCurrentEventStub,
+      }),
+    });
+
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
+
+    expect(desiredObj.temp).to.equal(21);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
+    assert.isTrue(getCurrentEventStub.called);
+  });
+
+  /**
+   * Summary contains a string
+   */
+  it('should return MIN_TEMP [summary is a string]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
+    });
+
+    const getCurrentEventStub = sinon.stub().returns({
+      summary: 'IAmAString',
+    });
 
     const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
+      './calendar/nextcloud': () => ({
+        getCurrentEvent: getCurrentEventStub,
+      }),
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -200,72 +164,27 @@ describe('Calendar Controller', () => {
     expect(desiredObj.temp).to.equal(15);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
-    assert.isTrue(authorizeSpy.called);
+    assert.isTrue(getCurrentEventStub.called);
   });
 
-  it('should return desired temperature [wrong sum of prio]', async () => {
-    nock('https://www.googleapis.com:443')
-      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
-      .reply(200, {
-        items: [
-          {
-            summary: '18.4;90;5',
-            start: {
-              dateTime: moment().subtract(1, 'days').toISOString(),
-            },
-            end: {
-              dateTime: moment().add(1, 'days').toISOString(),
-            },
-          },
-        ],
-      });
-
-    const authorizeSpy = sinon.spy();
-
-    const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
+  /**
+   * Summary is correct, but the value is way above the MAX_TEMP
+   */
+  it('should return MAX_TEMP [temperature above MAX_TEMP]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
     });
 
-    const desiredObj = await CC(log, CacheController)
-      .getDesiredObject();
-
-    expect(desiredObj.temp).to.equal(18.4);
-    expect(desiredObj.master).to.equal(100);
-    expect(desiredObj.slave).to.equal(0);
-    assert.isTrue(authorizeSpy.called);
-  });
-
-  it('should return MAX_TEMP [desired temp too high]', async () => {
-    nock('https://www.googleapis.com:443')
-      .get(new RegExp('/calendar/v3/calendars/tempea-mocked/events/*'))
-      .reply(200, {
-        items: [
-          {
-            summary: '49.2',
-            start: {
-              dateTime: moment().subtract(1, 'days').toISOString(),
-            },
-            end: {
-              dateTime: moment().add(1, 'days').toISOString(),
-            },
-          },
-        ],
-      });
-
-    const authorizeSpy = sinon.spy();
+    const getCurrentEventStub = sinon.stub().returns({
+      summary: '42',
+    });
 
     const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
+      './calendar/nextcloud': () => ({
+        getCurrentEvent: getCurrentEventStub,
+      }),
     });
 
     const desiredObj = await CC(log, CacheController)
@@ -274,69 +193,58 @@ describe('Calendar Controller', () => {
     expect(desiredObj.temp).to.equal(27);
     expect(desiredObj.master).to.equal(100);
     expect(desiredObj.slave).to.equal(0);
-    assert.isTrue(authorizeSpy.called);
+    assert.isTrue(getCurrentEventStub.called);
   });
 
-  it('should throw [invalid service json]', async () => {
+  it('should return desired temperature with prio', async () => {
     restore = mockedEnv({
-      GOOGLE_SERVICE_ACCOUNT_JSON: 'invalid.json',
-      GOOGLE_CALENDAR_ID: 'tempea-mocked',
-      TOKEN_DIR: 'test/secrets',
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
       MAX_TEMP: '27',
       MIN_TEMP: '15',
     });
 
-    const CC = proxyquire('../../controller/calendar.controller', {
-      'google-auth-library': {
-        JWT: function JWT(obj) {
-          fs.readFileSync(obj.keyFile);
-        },
-      },
+    const getCurrentEventStub = sinon.stub().returns({
+      summary: '21;50;50',
     });
 
-    try {
-      await CC(log, CacheController).getDesiredObject();
-    } catch (err) {
-      expect(err.code).to.equal('ENOENT');
-    }
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/nextcloud': () => ({
+        getCurrentEvent: getCurrentEventStub,
+      }),
+    });
+
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
+
+    expect(desiredObj.temp).to.equal(21);
+    expect(desiredObj.master).to.equal(50);
+    expect(desiredObj.slave).to.equal(50);
+    assert.isTrue(getCurrentEventStub.called);
   });
 
-  it('should throw [calendar.event.list]', async () => {
+  it('should return desired temperature without prio', async () => {
     restore = mockedEnv({
-      GOOGLE_SERVICE_ACCOUNT_JSON: 'tempea-mocked.json',
-      GOOGLE_CALENDAR_ID: 'tempea-mocked',
-      TOKEN_DIR: 'test/secrets',
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
       MAX_TEMP: '27',
       MIN_TEMP: '15',
     });
 
-    const authorizeSpy = sinon.spy();
-    const listStub = sinon.stub().callsArgWith(1, new Error(), 0);
-
-    const CC = proxyquire('../../controller/calendar.controller', {
-      googleapis: {
-        google: {
-          calendar() {
-            return {
-              events: {
-                list: listStub,
-              },
-            };
-          },
-        },
-      },
-      'google-auth-library': {
-        JWT: function JWT() {
-          this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
-        },
-      },
+    const getCurrentEventStub = sinon.stub().returns({
+      summary: '21',
     });
 
-    try {
-      await CC(log, CacheController).getDesiredObject();
-    } catch (err) {
-      assert.isDefined(err);
-    }
+    const CC = proxyquire('../../controller/calendar.controller', {
+      './calendar/nextcloud': () => ({
+        getCurrentEvent: getCurrentEventStub,
+      }),
+    });
+
+    const desiredObj = await CC(log, CacheController)
+      .getDesiredObject();
+
+    expect(desiredObj.temp).to.equal(21);
+    expect(desiredObj.master).to.equal(100);
+    expect(desiredObj.slave).to.equal(0);
+    assert.isTrue(getCurrentEventStub.called);
   });
 });

@@ -43,7 +43,14 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Google
+      # Calendar
+      TEMPEA_CALENDAR_PROVIDER: "nextcloud"
+      #  NextCloud
+      NEXTCLOUD_HOST: "https://nextcloud.secret.at/remote.php/dav"
+      NEXTCLOUD_USERNAME: "eiabea"
+      NEXTCLOUD_PASSWORD: "secret"
+      NEXTCLOUD_CALENDAR: "tempea"
+      #  Google
       GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"
       GOOGLE_CALENDAR_ID: "developer@eiabea.com"
       # Modules

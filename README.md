@@ -26,6 +26,8 @@ After some research I stumbled over the great idea to use [Google Calender](http
       - [Setup Master](#setup-master)
       - [Setup Slave](#setup-slave)
     - [Setup Calendar](#setup-calendar)
+      - [Setup Google](#setup-calendar-google)
+      - [Setup NextCloud](#setup-calendar-nextcloud)
     - [Start](#start)
   - [Grafana](#grafana)
   - [Develop](#develop)
@@ -266,7 +268,14 @@ $ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api
 6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
 ```
 environment:
-  # Google
+  # Calendar
+  TEMPEA_CALENDAR_PROVIDER: "google"                  # What type of calendar should be used to set the temperature (google/nextcloud)
+  #  NextCloud
+  NEXTCLOUD_HOST: "https://nextcloud.secret.at/remote.php/dav"
+  NEXTCLOUD_USERNAME: "eiabea"
+  NEXTCLOUD_PASSWORD: "secret"
+  NEXTCLOUD_CALENDAR: "tempea"
+  #  Google
   GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"  # Name of the google service json file
   GOOGLE_CALENDAR_ID: "developer@eiabea.com"          # Email address of your service account
   # Modules
@@ -316,8 +325,9 @@ environment:
   SENSOR_ID: "10-00080278b776"                        # Address of your OneWire sensor noted in the "OneWire"-section
 ```
 
-
 ### Setup calendar
+
+#### Setup calendar Google
 
 1. Login to your [Google Calendar](https://calendar.google.com)
 
@@ -332,6 +342,20 @@ environment:
 </p>
 
 4. Create more events in the same manner in order to set different temperatures on different dates/time. Keep in mind, that all days should be covered by a specific event, otherwise tempea will fallback to the MIN_TEMP for this period.
+
+#### Setup calendar NextCloud
+
+1. Login to your [NextCloud](https://nextcloud.com/)
+
+2. Make sure you have the [NextCloud Calendar App](https://apps.nextcloud.com/apps/calendar) installed on your instance
+
+3. Create a new calendar called _tempea_
+
+4. Create a new event in this calendar with the desired temperature in the summary (e.g.: 21.5)
+
+5. Create more events in the same manner in order to set different temperatures on different dates/time. Keep in mind, that all days should be covered by a specific event, otherwise tempea will fallback to the MIN_TEMP for this period.
+
+6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
 
 ### Start
 

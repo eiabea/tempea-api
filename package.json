@@ -28,6 +28,7 @@
     "chai": "^4.2.0",
     "cors": "^2.8.5",
     "cron": "^1.6.0",
+    "dav": "^1.8.0",
     "ds18b20": "^0.1.0",
     "express": "^4.16.4",
     "express-rate-limit": "^3.3.2",
@@ -37,6 +38,7 @@
     "influxdb-nodejs": "^2.11.0",
     "jsonwebtoken": "^8.4.0",
     "moment": "^2.24.0",
+    "node-ical": "^0.9.2",
     "onoff": "^3.2.7",
     "request": "^2.88.0"
   },
