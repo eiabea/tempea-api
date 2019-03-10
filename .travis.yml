@@ -10,6 +10,7 @@ jobs:
       tags: false
 
   - stage: docker
+    if: NOT type = pull_request AND branch = master
     sudo: required
     services:
     - docker
@@ -25,8 +26,9 @@ jobs:
         docker push eiabea/tempea-api:arm-latest
       fi
 
-  - stage: dockertag
+  - stage: docker
     sudo: required
+    if: NOT type = pull_request AND tag IS present 
     services:
     - docker
     language: bash
