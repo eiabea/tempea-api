@@ -26,8 +26,11 @@ describe('Calendar Controller (NextCloud)', () => {
       MIN_TEMP: '15',
     });
 
-    const start = moment().subtract(1, 'days').format('YYYYMMDDT000000');
-    const end = moment().add(1, 'days').format('YYYYMMDDT235959');
+    // Create a event in the distant past to test the RRule handling
+    const startDate = moment().subtract(10, 'days').format('YYYYMMDD');
+    const endDate = moment().subtract(10, 'days').format('YYYYMMDD');
+    const startTime = moment().subtract(1, 'hour').format('HHmmss');
+    const endTime = moment().add(1, 'hour').format('HHmmss');
 
     const syncCalendarStub = sinon.stub().returns({
       objects: [
@@ -45,8 +48,8 @@ SUMMARY:18.4\\;95\\;5
 CLASS:PUBLIC
 STATUS:CONFIRMED
 RRULE:FREQ=DAILY
-DTSTART;TZID=Europe/Vienna:${start}
-DTEND;TZID=Europe/Vienna:${end}
+DTSTART;TZID=Europe/Vienna:${startDate}T${startTime}
+DTEND;TZID=Europe/Vienna:${endDate}T${endTime}
 END:VEVENT
 BEGIN:VTIMEZONE
 TZID:Europe/Vienna
@@ -211,7 +214,7 @@ END:VCALENDAR`,
     assert.isTrue(syncCalendarStub.called);
   });
 
-  it('should return no event [not in range]', async () => {
+  it('should return no event [not in range time]', async () => {
     restore = mockedEnv({
       TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
       NEXTCLOUD_HOST: 'https://nextcloud.mocked.at/remote.php/dav',
@@ -222,8 +225,86 @@ END:VCALENDAR`,
       MIN_TEMP: '15',
     });
 
-    const start = moment().subtract(2, 'days').format('YYYYMMDDT000000');
-    const end = moment().subtract(1, 'days').format('YYYYMMDDT235959');
+    const startDate = moment().format('YYYYMMDD');
+    const endDate = moment().format('YYYYMMDD');
+    const startTime = moment().subtract(2, 'hour').format('HHmmss');
+    const endTime = moment().subtract(1, 'hour').format('HHmmss');
+
+    const syncCalendarStub = sinon.stub().returns({
+      objects: [
+        {
+          calendarData: `BEGIN:VCALENDAR
+PRODID:-//Nextcloud calendar v1.6.4
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+CREATED:20190307T111622
+DTSTAMP:20190307T111622
+LAST-MODIFIED:20190307T111622
+UID:A94ZKFIOEBR242A7B25YB2
+SUMMARY:18.4\\;95\\;5
+CLASS:PUBLIC
+STATUS:CONFIRMED
+DTSTART;TZID=Europe/Vienna:${startDate}T${startTime}
+DTEND;TZID=Europe/Vienna:${endDate}T${endTime}
+END:VEVENT
+BEGIN:VTIMEZONE
+TZID:Europe/Vienna
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+END:VCALENDAR`,
+        },
+      ],
+    });
+
+    const NC = proxyquire('../../../controller/calendar/nextcloud', {
+      dav: {
+        syncCalendar: syncCalendarStub,
+        createAccount: () => ({
+          calendars: [
+            {
+              displayName: 'tempea',
+            },
+          ],
+        }),
+      },
+    });
+
+    const currentEvent = await NC(log)
+      .getCurrentEvent();
+
+    assert.isNull(currentEvent);
+    assert.isTrue(syncCalendarStub.called);
+  });
+
+  it('should return no event [not in range rrule daily]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
+      NEXTCLOUD_HOST: 'https://nextcloud.mocked.at/remote.php/dav',
+      NEXTCLOUD_USERNAME: 'eiabea',
+      NEXTCLOUD_PASSWORD: 'secret',
+      NEXTCLOUD_CALENDAR: 'tempea',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
+    });
+
+    const startDate = moment().subtract(10, 'days').format('YYYYMMDD');
+    const endDate = moment().subtract(10, 'days').format('YYYYMMDD');
+    const startTime = moment().subtract(2, 'hour').format('HHmmss');
+    const endTime = moment().subtract(1, 'hour').format('HHmmss');
 
     const syncCalendarStub = sinon.stub().returns({
       objects: [
@@ -241,8 +322,85 @@ SUMMARY:18.4\\;95\\;5
 CLASS:PUBLIC
 STATUS:CONFIRMED
 RRULE:FREQ=DAILY
-DTSTART;TZID=Europe/Vienna:${start}
-DTEND;TZID=Europe/Vienna:${end}
+DTSTART;TZID=Europe/Vienna:${startDate}T${startTime}
+DTEND;TZID=Europe/Vienna:${endDate}T${endTime}
+END:VEVENT
+BEGIN:VTIMEZONE
+TZID:Europe/Vienna
+BEGIN:DAYLIGHT
+TZOFFSETFROM:+0100
+TZOFFSETTO:+0200
+TZNAME:CEST
+DTSTART:19700329T020000
+RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU
+END:DAYLIGHT
+BEGIN:STANDARD
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+TZNAME:CET
+DTSTART:19701025T030000
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+END:VCALENDAR`,
+        },
+      ],
+    });
+
+    const NC = proxyquire('../../../controller/calendar/nextcloud', {
+      dav: {
+        syncCalendar: syncCalendarStub,
+        createAccount: () => ({
+          calendars: [
+            {
+              displayName: 'tempea',
+            },
+          ],
+        }),
+      },
+    });
+
+    const currentEvent = await NC(log)
+      .getCurrentEvent();
+
+    assert.isNull(currentEvent);
+    assert.isTrue(syncCalendarStub.called);
+  });
+
+  it('should return no event [not in range rrule yearly]', async () => {
+    restore = mockedEnv({
+      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
+      NEXTCLOUD_HOST: 'https://nextcloud.mocked.at/remote.php/dav',
+      NEXTCLOUD_USERNAME: 'eiabea',
+      NEXTCLOUD_PASSWORD: 'secret',
+      NEXTCLOUD_CALENDAR: 'tempea',
+      MAX_TEMP: '27',
+      MIN_TEMP: '15',
+    });
+
+    const startDate = moment().subtract(10, 'days').format('YYYYMMDD');
+    const endDate = moment().subtract(10, 'days').format('YYYYMMDD');
+    const startTime = moment().subtract(2, 'hour').format('HHmmss');
+    const endTime = moment().subtract(1, 'hour').format('HHmmss');
+
+    const syncCalendarStub = sinon.stub().returns({
+      objects: [
+        {
+          calendarData: `BEGIN:VCALENDAR
+PRODID:-//Nextcloud calendar v1.6.4
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+CREATED:20190307T111622
+DTSTAMP:20190307T111622
+LAST-MODIFIED:20190307T111622
+UID:A94ZKFIOEBR242A7B25YB2
+SUMMARY:18.4\\;95\\;5
+CLASS:PUBLIC
+STATUS:CONFIRMED
+RRULE:FREQ=YEARLY
+DTSTART;TZID=Europe/Vienna:${startDate}T${startTime}
+DTEND;TZID=Europe/Vienna:${endDate}T${endTime}
 END:VEVENT
 BEGIN:VTIMEZONE
 TZID:Europe/Vienna

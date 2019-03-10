@@ -58,24 +58,52 @@ module.exports = (log) => {
     let currentEvent = null;
 
     // TODO refactor
-    /* eslint-disable */
+    // eslint-disable-next-line no-restricted-syntax
     for (const calObj of calArray) {
+      // eslint-disable-next-line no-restricted-syntax
       for (const eventId of Object.keys(calObj)) {
         const { type } = calObj[eventId];
         if (type === 'VEVENT') {
           const { start, end } = calObj[eventId];
+          let momentStart = moment(start);
+          let momentEnd = moment(start);
 
-          const utcStart = moment.utc(start);
-          const utcEnd = moment.utc(end);
+          // check if event is a single event or contains recurrent information
+          if (calObj[eventId].rrule) {
+            // See if date now and one of the rrule dates match
+            const recurrentEvents = calObj[eventId].rrule
+              .between(moment().subtract(2, 'day').toDate(), moment().toDate());
+            const today = moment();
+            const foundForToday = recurrentEvents.find(rE => moment(rE).day() === today.day()
+              && moment(rE).month() === today.month()
+              && moment(rE).year() === today.year());
+            // if one matches check if now is between start and end time of the event
+            if (foundForToday) {
+              // bring start/end time of event to the present
+              const fakedStart = moment();
+              fakedStart.hour(moment(start).hour());
+              fakedStart.minute(moment(start).minute());
+              fakedStart.second(moment(start).second());
+              fakedStart.milliseconds(moment(start).milliseconds());
 
-          if (moment().isBetween(utcStart, utcEnd)) {
+              const fakedEnd = moment();
+              fakedEnd.hour(moment(end).hour());
+              fakedEnd.minute(moment(end).minute());
+              fakedEnd.second(moment(end).second());
+              fakedEnd.milliseconds(moment(end).milliseconds());
+
+              momentStart = fakedStart;
+              momentEnd = fakedEnd;
+            }
+          }
+
+          if (moment().isBetween(momentStart, momentEnd)) {
             currentEvent = calObj[eventId];
             break;
           }
         }
       }
     }
-    /* eslint-enable */
 
     return currentEvent;
   };
