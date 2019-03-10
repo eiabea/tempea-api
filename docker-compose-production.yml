@@ -8,7 +8,7 @@ volumes:
 
 services:
   grafana:
-    image: "grafana/grafana"
+    image: "grafana/grafana:5.4.3"
     restart: unless-stopped
     ports:
       - "3001:3000"
@@ -31,7 +31,7 @@ services:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
 
   influx:
-    image: "arm32v7/influxdb"
+    image: "arm32v7/influxdb:1.7.4"
     restart: unless-stopped
     ports:
       - "8086:8086"
