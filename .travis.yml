@@ -19,11 +19,10 @@ jobs:
     on:
       tags: false
     script:
-    - >
-      docker run --rm --privileged multiarch/qemu-user-static:register --reset
-      docker build -t eiabea/tempea-api:arm-latest .
-      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      docker push eiabea/tempea-api:arm-latest
+    - docker run --rm --privileged multiarch/qemu-user-static:register --reset
+    - docker build -t eiabea/tempea-api:arm-latest .
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker push eiabea/tempea-api:arm-latest
 
   - stage: docker
     sudo: required
