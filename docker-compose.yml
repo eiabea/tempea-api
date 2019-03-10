@@ -8,7 +8,7 @@ volumes:
 
 services:
   grafana:
-    image: "grafana/grafana"
+    image: "grafana/grafana:5.4.3"
     ports:
       - "3001:3000"
       
@@ -28,22 +28,20 @@ services:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
 
   influx:
-    image: "arm32v7/influxdb"
+    image: "arm32v7/influxdb:1.7.4"
     ports:
       - "8086:8086"
     volumes:
       - "influx:/var/lib/influxdb"
 
   tempea:
-    build: "."
+    image: "eiabea/tempea-api:arm-develop"
     privileged: "true"
     command: "npm run start:dev:pretty"
     depends_on:
       - "influx"
     ports:
       - "3000:3000"
-    volumes:
-      - ".:/src"
     environment:
       # Calendar
       TEMPEA_CALENDAR_PROVIDER: "nextcloud"
