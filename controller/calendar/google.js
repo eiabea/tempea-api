@@ -67,7 +67,7 @@ module.exports = (log) => {
     const utcStart = moment.utc(start);
     const utcEnd = moment.utc(end);
 
-    if (!moment().isBetween(utcStart, utcEnd)) {
+    if (!moment.utc().isBetween(utcStart, utcEnd)) {
       log.trace({ event }, 'Event is not in range');
       return null;
     }

@@ -2,7 +2,7 @@ const mockedEnv = require('mocked-env');
 const { assert, expect } = require('chai');
 const sinon = require('sinon');
 const log = require('null-logger');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const proxyquire = require('proxyquire');
 
 describe('Calendar Controller (NextCloud)', () => {
@@ -27,10 +27,10 @@ describe('Calendar Controller (NextCloud)', () => {
     });
 
     // Create a event in the distant past to test the RRule handling
-    const startDate = moment().subtract(10, 'days').format('YYYYMMDD');
-    const endDate = moment().subtract(10, 'days').format('YYYYMMDD');
-    const startTime = moment().subtract(1, 'hour').format('HHmmss');
-    const endTime = moment().add(1, 'hour').format('HHmmss');
+    const startDate = moment().tz('Europe/Vienna').subtract(10, 'days').format('YYYYMMDD');
+    const endDate = moment().tz('Europe/Vienna').subtract(10, 'days').format('YYYYMMDD');
+    const startTime = moment().tz('Europe/Vienna').subtract(1, 'hour').format('HHmmss');
+    const endTime = moment().tz('Europe/Vienna').add(1, 'hour').format('HHmmss');
 
     const syncCalendarStub = sinon.stub().returns({
       objects: [
@@ -225,10 +225,10 @@ END:VCALENDAR`,
       MIN_TEMP: '15',
     });
 
-    const startDate = moment().format('YYYYMMDD');
-    const endDate = moment().format('YYYYMMDD');
-    const startTime = moment().subtract(2, 'hour').format('HHmmss');
-    const endTime = moment().subtract(1, 'hour').format('HHmmss');
+    const startDate = moment().tz('Europe/Vienna').subtract(10, 'days').format('YYYYMMDD');
+    const endDate = moment().tz('Europe/Vienna').subtract(10, 'days').format('YYYYMMDD');
+    const startTime = moment().tz('Europe/Vienna').subtract(2, 'hour').format('HHmmss');
+    const endTime = moment().tz('Europe/Vienna').subtract(1, 'hour').format('HHmmss');
 
     const syncCalendarStub = sinon.stub().returns({
       objects: [
@@ -301,10 +301,10 @@ END:VCALENDAR`,
       MIN_TEMP: '15',
     });
 
-    const startDate = moment().subtract(10, 'days').format('YYYYMMDD');
-    const endDate = moment().subtract(10, 'days').format('YYYYMMDD');
-    const startTime = moment().subtract(2, 'hour').format('HHmmss');
-    const endTime = moment().subtract(1, 'hour').format('HHmmss');
+    const startDate = moment().tz('Europe/Vienna').subtract(10, 'days').format('YYYYMMDD');
+    const endDate = moment().tz('Europe/Vienna').subtract(10, 'days').format('YYYYMMDD');
+    const startTime = moment().tz('Europe/Vienna').subtract(2, 'hour').format('HHmmss');
+    const endTime = moment().tz('Europe/Vienna').subtract(1, 'hour').format('HHmmss');
 
     const syncCalendarStub = sinon.stub().returns({
       objects: [
@@ -378,10 +378,10 @@ END:VCALENDAR`,
       MIN_TEMP: '15',
     });
 
-    const startDate = moment().subtract(10, 'days').format('YYYYMMDD');
-    const endDate = moment().subtract(10, 'days').format('YYYYMMDD');
-    const startTime = moment().subtract(2, 'hour').format('HHmmss');
-    const endTime = moment().subtract(1, 'hour').format('HHmmss');
+    const startDate = moment().tz('Europe/Vienna').subtract(10, 'days').format('YYYYMMDD');
+    const endDate = moment().tz('Europe/Vienna').subtract(10, 'days').format('YYYYMMDD');
+    const startTime = moment().tz('Europe/Vienna').subtract(1, 'hour').format('HHmmss');
+    const endTime = moment().tz('Europe/Vienna').add(1, 'hour').format('HHmmss');
 
     const syncCalendarStub = sinon.stub().returns({
       objects: [
