@@ -13,7 +13,7 @@ module.exports = (log, cache) => {
   const nextcloudController = NextcloudController(log);
 
   const getDesiredObject = async () => {
-    log.trace('getDesiredObject');
+    log.trace('Getting data about desired temperature');
 
     let event;
 
@@ -30,6 +30,8 @@ module.exports = (log, cache) => {
     }
 
     if (!event) {
+      log.warn({ TEMPEA_CALENDAR_PROVIDER, MIN_TEMP },
+        'Received no event from provider, falling back to MIN_TEMP');
       return {
         temp: MIN_TEMP,
         master: 100,
@@ -49,7 +51,7 @@ module.exports = (log, cache) => {
 
         const prioSum = desiredObj.master + desiredObj.slave;
         if (prioSum !== 100) {
-          log.warn({ prioSum }, 'The sum does not equal 100%, falling back to 100%');
+          log.warn({ prioSum }, 'The sum does not equal 100%, falling back to 100% for master');
           desiredObj = {
             temp: parseFloat(prioArray[0]),
             master: 100,
@@ -57,8 +59,11 @@ module.exports = (log, cache) => {
           };
         }
       } else {
+        const temp = parseFloat(event.summary);
+        log.info({ summery: event.summary, temp },
+          'Event summary does not contain a valid prioritization information, using plain temperature');
         desiredObj = {
-          temp: parseFloat(event.summary),
+          temp,
           master: 100,
           slave: 0,
         };
@@ -68,7 +73,7 @@ module.exports = (log, cache) => {
       assert.isNotNaN(desiredObj.master);
       assert.isNotNaN(desiredObj.slave);
     } catch (e) {
-      log.error({ e }, 'Unable to parse, fallback to MIN_TEMP');
+      log.error({ e }, 'Unable to parse, falling back to MIN_TEMP');
       desiredObj = {
         temp: MIN_TEMP,
         master: 100,
@@ -77,6 +82,8 @@ module.exports = (log, cache) => {
     }
 
     if (desiredObj.temp > MAX_TEMP) {
+      log.warn({ MAX_TEMP, temp: desiredObj.temp },
+        'Desired temperature is above MAX_TEMP, falling back to MAX_TEMP');
       desiredObj = {
         temp: MAX_TEMP,
         master: 100,

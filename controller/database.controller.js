@@ -10,7 +10,7 @@ const INFLUX_MQTT_TOPIC = process.env.INFLUX_MQTT_TOPIC || 'esp_temp';
 const INFLUX_URI = `http://${INFLUX_HOST}:${INFLUX_PORT}/${INFLUX_DB}`;
 
 module.exports = async (log, cache) => {
-  log.info('Creating influx client');
+  log.trace('Creating influx client');
   let client;
 
   const initClient = async () => {
@@ -40,8 +40,10 @@ module.exports = async (log, cache) => {
   await initDB();
 
   const writeMeasurement = (currentTemp, desiredTemp, heating, slave) => {
-    log.trace('Writing measurement');
     if (!slave) {
+      log.trace({
+        currentTemp, desiredTemp, heating,
+      }, 'Writing measurement');
       return client.write('temperature')
         .field({
           cur: currentTemp,
@@ -49,6 +51,10 @@ module.exports = async (log, cache) => {
           heat: heating ? 100 : 0,
         });
     }
+
+    log.trace({
+      currentTemp, desiredTemp, heating, slave,
+    }, 'Writing measurement');
 
     return client.write('temperature')
       .field({

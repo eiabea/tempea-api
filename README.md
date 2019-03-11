@@ -268,6 +268,8 @@ $ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api
 6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
 ```
 environment:
+  # Logging
+  TEMPEA_LOG_LEVEL: "30"                              # Verbosity (60=Fatal, 50=Error, 40=Warn, 30=Info, 20=Debug, 10=Trace)
   # Calendar
   TEMPEA_CALENDAR_PROVIDER: "google"                  # What type of calendar should be used to set the temperature (google/nextcloud)
   #  NextCloud

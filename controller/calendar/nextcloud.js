@@ -11,6 +11,13 @@ module.exports = (log) => {
       NEXTCLOUD_HOST, NEXTCLOUD_USERNAME, NEXTCLOUD_PASSWORD, NEXTCLOUD_CALENDAR,
     } = process.env;
 
+    log.trace({
+      NEXTCLOUD_HOST,
+      NEXTCLOUD_USERNAME,
+      NEXTCLOUD_PASSWORD: NEXTCLOUD_PASSWORD ? '****' : null,
+      NEXTCLOUD_CALENDAR,
+    }, 'Getting current event');
+
     log.trace('Creating xhr credentials');
     assert.isString(NEXTCLOUD_USERNAME, 'No nextcloud user defined');
     assert.isString(NEXTCLOUD_PASSWORD, 'No nextcloud password defined');
@@ -103,6 +110,12 @@ module.exports = (log) => {
           }
         }
       }
+    }
+
+    if (currentEvent) {
+      log.trace({ currentEvent }, 'Found event in time range');
+    } else {
+      log.warn('No upcoming events found.');
     }
 
     return currentEvent;

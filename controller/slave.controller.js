@@ -6,12 +6,13 @@ module.exports = (log, cache) => {
     const {
       SLAVE_HOST, SLAVE_PORT, SLAVE_ENDPOINT,
     } = process.env;
+    log.trace({ SLAVE_HOST, SLAVE_PORT, SLAVE_ENDPOINT }, 'Getting data from slave');
     request(`http://${SLAVE_HOST}:${SLAVE_PORT}${SLAVE_ENDPOINT}`, async (error, response, body) => {
       if (error) {
         log.error({ error }, `Error getting data from slave ${SLAVE_HOST}`);
         return reject(error);
       }
-      log.trace({ body }, 'Slavedata');
+      log.trace({ body }, 'Received data from slave');
       try {
         const jsonData = JSON.parse(body);
 
