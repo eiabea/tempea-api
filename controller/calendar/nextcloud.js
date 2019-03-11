@@ -3,7 +3,7 @@ const { assert } = require('chai');
 const dav = require('dav');
 const ical = require('node-ical');
 
-const moment = require('moment');
+const moment = require('moment-timezone');
 
 module.exports = (log) => {
   const getCurrentEvent = async () => {
@@ -43,8 +43,8 @@ module.exports = (log) => {
           children: [{
             type: 'time-range',
             attrs: {
-              start: moment().format('YYYYMMDDT000000'),
-              end: moment().format('YYYYMMDDT235959'),
+              start: moment.utc().format('YYYYMMDDT000000'),
+              end: moment.utc().format('YYYYMMDDT235959'),
             },
           }],
         }],
@@ -58,24 +58,52 @@ module.exports = (log) => {
     let currentEvent = null;
 
     // TODO refactor
-    /* eslint-disable */
+    // eslint-disable-next-line no-restricted-syntax
     for (const calObj of calArray) {
+      // eslint-disable-next-line no-restricted-syntax
       for (const eventId of Object.keys(calObj)) {
         const { type } = calObj[eventId];
         if (type === 'VEVENT') {
           const { start, end } = calObj[eventId];
+          let momentStart = moment(start).tz(start.tz);
+          let momentEnd = moment(end).tz(end.tz);
 
-          const utcStart = moment.utc(start);
-          const utcEnd = moment.utc(end);
+          // check if event is a single event or contains recurrent information
+          if (calObj[eventId].rrule) {
+            // See if date now and one of the rrule dates match
+            const recurrentEvents = calObj[eventId].rrule
+              .between(moment.utc().tz(start.tz).subtract(2, 'day').toDate(), moment.utc().tz(end.tz).toDate());
+            const today = moment.utc().tz(start.tz);
+            const foundForToday = recurrentEvents.find(rE => moment.utc(rE).day() === today.day()
+              && moment.utc(rE).month() === today.month()
+              && moment.utc(rE).year() === today.year());
+            // if one matches check if now is between start and end time of the event
+            if (foundForToday) {
+              // bring start/end time of event to the present
+              const fakedStart = moment.utc().tz(start.tz);
+              fakedStart.hour(momentStart.hour());
+              fakedStart.minute(momentStart.minute());
+              fakedStart.second(momentStart.second());
+              fakedStart.milliseconds(momentStart.milliseconds());
 
-          if (moment().isBetween(utcStart, utcEnd)) {
+              const fakedEnd = moment.utc().tz(end.tz);
+              fakedEnd.hour(momentEnd.hour());
+              fakedEnd.minute(momentEnd.minute());
+              fakedEnd.second(momentEnd.second());
+              fakedEnd.milliseconds(momentEnd.milliseconds());
+
+              momentStart = fakedStart;
+              momentEnd = fakedEnd;
+            }
+          }
+
+          if (moment.utc().tz(start.tz).isBetween(momentStart, momentEnd)) {
             currentEvent = calObj[eventId];
             break;
           }
         }
       }
     }
-    /* eslint-enable */
 
     return currentEvent;
   };
