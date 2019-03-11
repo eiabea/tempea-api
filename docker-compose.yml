@@ -43,6 +43,8 @@ services:
     ports:
       - "3000:3000"
     environment:
+      # Logging
+      TEMPEA_LOG_LEVEL: "10"
       # Calendar
       TEMPEA_CALENDAR_PROVIDER: "nextcloud"
       #  NextCloud

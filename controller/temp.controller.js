@@ -10,11 +10,11 @@ module.exports = (log, cache) => {
   let prevValue = 20.0;
 
   const getCurrentTemp = async () => {
-    log.trace({ func: 'getCurrentTemp' }, 'Getting current temperature');
+    log.trace({ SENSOR_ID }, 'Getting current temperature');
     return new Promise((resolve, reject) => {
       ds18b20.temperature(SENSOR_ID, async (err, value) => {
         if (err) {
-          log.error({ func: 'getCurrentTemp', err }, 'Error current temperature');
+          log.error({ err }, 'Error getting current temperature');
           return reject(err);
         }
 
@@ -22,11 +22,11 @@ module.exports = (log, cache) => {
 
         // ignore the reset value of the sensor
         if (value === 85.0) {
+          log.debug(`Sensor returned reset value 85, using previous value ${prevValue}`);
           returnValue = prevValue;
         }
 
         log.trace({
-          func: 'getCurrentTemp',
           value: returnValue,
         }, 'Successfully got current temperature');
         prevValue = returnValue;

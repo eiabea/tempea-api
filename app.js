@@ -34,8 +34,11 @@ module.exports = (loglevel) => {
   const controller = {};
 
   const initControllers = async () => {
+    log.trace('Initializing general controller');
     controller.cache = Cache(log.child({ controller: 'cache' }));
+    controller.temp = Temp(log.child({ controller: 'temp' }), controller.cache);
     if (IS_MASTER) {
+      log.trace('Initializing master controller');
       controller.calendar = Calendar(log.child({ controller: 'calendar' }), controller.cache);
       controller.database = await Database(log.child({ controller: 'database' }), controller.cache);
       controller.heat = Heat(log.child({ controller: 'heat' }));
@@ -43,9 +46,9 @@ module.exports = (loglevel) => {
       controller.schedule = Schedule(log.child({ controller: 'schedule' }));
     }
     if (SLAVE_ENABLED) {
+      log.trace('Initializing slave controller');
       controller.slave = Slave(log.child({ controller: 'slave' }), controller.cache);
     }
-    controller.temp = Temp(log.child({ controller: 'temp' }), controller.cache);
   };
 
   const initExpress = async () => {
@@ -153,6 +156,7 @@ module.exports = (loglevel) => {
   const getExpressApp = () => app;
 
   const start = async () => {
+    log.debug({ EXPRESS_PORT, IS_MASTER, SLAVE_ENABLED }, 'Starting tempea');
     await initControllers();
     await initExpress();
 
