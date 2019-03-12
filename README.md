@@ -289,7 +289,10 @@ environment:
   INFLUX_PORT: "8086"
   INFLUX_DB: "temp"
   # Hardware
+  #  Temperature
   SENSOR_ID: "10-00080278b776"                        # Address of your OneWire sensor noted in the "OneWire"-section
+  #  Relay
+  RELAY_GPIO_PIN: "17"                                # GPIO pin of the relay (17 would mean physical pin 11)
   # Slave
   SLAVE_ENABLED: "true"                               # Enable/Disable slave feature
   SLAVE_HOST: "192.168.0.7"                           # Host of the slave

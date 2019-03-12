@@ -9,6 +9,7 @@ describe('Relay Controller', () => {
   let restore;
   beforeEach(() => {
     restore = mockedEnv({
+      RELAY_GPIO_PIN: '17',
       OVERSHOOT_TEMP: '1',
     });
   });
@@ -22,7 +23,9 @@ describe('Relay Controller', () => {
 
     const instance = proxyquire.noCallThru().load('../../controller/relay.controller', {
       onoff: {
-        Gpio: function Gpio() {
+        Gpio: function Gpio(pin, direction) {
+          expect(pin).to.eq(17);
+          expect(direction).to.eq('out');
           return {
             read: stub,
           };

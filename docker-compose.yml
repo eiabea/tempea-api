@@ -66,7 +66,10 @@ services:
       INFLUX_MQTT_SERIES: "mqtt_consumer"
       INFLUX_MQTT_TOPIC: "esp_temp"
       # Hardware
+      #  Temperature
       SENSOR_ID: "10-00080278b776"
+      #  Relay
+      RELAY_GPIO_PIN: "17"
       # Slave
       SLAVE_ENABLED: "true"
       SLAVE_HOST: "192.168.0.7"

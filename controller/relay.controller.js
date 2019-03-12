@@ -1,6 +1,8 @@
 const { Gpio } = require('onoff');
 
-const relay = new Gpio(17, 'out');
+const RELAY_GPIO_PIN = parseInt(process.env.RELAY_GPIO_PIN, 10) || 17;
+
+const relay = new Gpio(RELAY_GPIO_PIN, 'out');
 
 module.exports = (log, cache) => {
   const getRelay = async () => {
