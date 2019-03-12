@@ -12,7 +12,6 @@ const chaiHttp = require('chai-http');
 
 chai.use(chaiHttp);
 
-
 describe('Status Route (Master)', () => {
   let restore;
   let app;
@@ -55,8 +54,15 @@ describe('Status Route (Master)', () => {
       },
     });
 
+    const TC = proxyquire('../../../controller/temp.controller', {
+      ds18b20: {
+        temperature: sinon.stub().callsArgWith(1, null, 21),
+      },
+    });
+
     const App = proxyquire.noCallThru().load('../../../app', {
       './controller/relay.controller': RC,
+      './controller/temp.controller': TC,
     });
 
     app = App(60);
