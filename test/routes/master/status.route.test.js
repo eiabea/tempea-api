@@ -5,16 +5,15 @@ const moment = require('moment');
 const proxyquire = require('proxyquire');
 const { request } = require('gaxios');
 const log = require('null-logger');
+const sinon = require('sinon');
 
 const { assert, expect } = chai;
 const chaiHttp = require('chai-http');
 
 chai.use(chaiHttp);
 
-const sinon = require('sinon');
-const mockedRelay = require('../../mock/relay');
 
-describe('Status Route', () => {
+describe('Status Route (Master)', () => {
   let restore;
   let app;
   let expressApp;
@@ -37,9 +36,29 @@ describe('Status Route', () => {
       INFLUX_PORT: '8086',
     });
 
-    delete require.cache[require.resolve('../../../app')];
-    // eslint-disable-next-line global-require
-    const App = require('../../../app');
+    const RC = proxyquire.noCallThru().load('../../../controller/relay.controller', {
+      onoff: {
+        Gpio: function Gpio() {
+          function read(callback) {
+            return callback(null, 0);
+          }
+
+          function write(newState, callback) {
+            return callback(null, newState);
+          }
+
+          return {
+            read,
+            write,
+          };
+        },
+      },
+    });
+
+    const App = proxyquire.noCallThru().load('../../../app', {
+      './controller/relay.controller': RC,
+    });
+
     app = App(60);
     await app.start();
     // ensure that no job gets triggered by cron
@@ -524,17 +543,26 @@ describe('Status Route', () => {
       .throws(new Error('Unable to get mocked temp'));
     controller.calendar = mockedCalendar;
 
-    controller.relay = proxyquire('../../../controller/relay.controller', {
-      '../test/mock/relay': mockedRelay,
-    })(log, controller.cache);
-
-    const stubRead = sinon.stub(mockedRelay, 'read');
+    const stubRead = sinon.stub();
     // First "setRelay" gets called, which first gets the current state
     // Simulate a 1 state
     stubRead.onCall(0).callsArgWith(0, null, 1);
+
     // Temperatures fail, so the relay should be off, simulate write
-    const stubWrite = sinon.stub(mockedRelay, 'write').callsArgWith(1, null);
-    // Now the cache should see the disabled heating
+    const stubWrite = sinon.stub().callsArgWith(1, null);
+
+    const RC = proxyquire.noCallThru().load('../../../controller/relay.controller', {
+      onoff: {
+        Gpio: function Gpio() {
+          return {
+            read: stubRead,
+            write: stubWrite,
+          };
+        },
+      },
+    });
+
+    controller.relay = RC(log, controller.cache);
 
     // Run the job
     await app.forceJob();
@@ -560,9 +588,11 @@ describe('Status Route', () => {
     expect(slave.temp).to.equal(mockedSlaveData.data.temp);
     expect(slave.hum).to.equal(mockedSlaveData.data.hum);
 
+    assert.isTrue(stubDesired.called);
+    assert.isTrue(stubRead.called);
+    assert.isTrue(stubWrite.called);
+
     stubDesired.restore();
-    stubRead.restore();
-    stubWrite.restore();
   });
 
   it('should get status [error in relay write]', async () => {
@@ -615,16 +645,25 @@ describe('Status Route', () => {
       .throws(new Error('Unable to get mocked temp'));
     controller.calendar = mockedCalendar;
 
-    controller.relay = proxyquire('../../../controller/relay.controller', {
-      '../test/mock/relay': mockedRelay,
-    })(log, controller.cache);
-
-    const stubRead = sinon.stub(mockedRelay, 'read');
+    const stubRead = sinon.stub();
     // First "setRelay" gets called, which first gets the current state
     // Simulate a 1 state
     stubRead.onCall(0).callsArgWith(0, null, 1);
     // Temperatures fail, so the relay should be off, simulate write
-    const stubWrite = sinon.stub(mockedRelay, 'write').callsArgWith(1, new Error('Mocked relay error'));
+    const stubWrite = sinon.stub().callsArgWith(1, new Error('Mocked relay error'));
+
+    const RC = proxyquire.noCallThru().load('../../../controller/relay.controller', {
+      onoff: {
+        Gpio: function Gpio() {
+          return {
+            read: stubRead,
+            write: stubWrite,
+          };
+        },
+      },
+    });
+
+    controller.relay = RC(log, controller.cache);
 
     // Run the job
     await app.forceJob();
@@ -649,8 +688,10 @@ describe('Status Route', () => {
     expect(slave.temp).to.equal(mockedSlaveData.data.temp);
     expect(slave.hum).to.equal(mockedSlaveData.data.hum);
 
-    stubRead.restore();
-    stubWrite.restore();
+    assert.isTrue(stubDesired.called);
+    assert.isTrue(stubRead.called);
+    assert.isTrue(stubWrite.called);
+
     stubDesired.restore();
   });
 
@@ -701,17 +742,26 @@ describe('Status Route', () => {
 
     controller.calendar = await CC(log, controller.cache);
 
-    controller.relay = proxyquire('../../../controller/relay.controller', {
-      '../test/mock/relay': mockedRelay,
-    })(log, controller.cache);
-
-    const stubRead = sinon.stub(mockedRelay, 'read');
+    const stubRead = sinon.stub();
     // First "setRelay" gets called, which first gets the current state
     // Simulate a 0 state
     stubRead.onCall(0).callsArgWith(0, null, 0);
-    const stubWrite = sinon.stub(mockedRelay, 'write');
+    const stubWrite = sinon.stub();
     // Write fails
     stubWrite.onCall(0).callsArgWith(1, new Error('Mocked relay error'));
+
+    const RC = proxyquire.noCallThru().load('../../../controller/relay.controller', {
+      onoff: {
+        Gpio: function Gpio() {
+          return {
+            read: stubRead,
+            write: stubWrite,
+          };
+        },
+      },
+    });
+
+    controller.relay = RC(log, controller.cache);
 
     // Run the job
     await app.forceJob();
@@ -735,8 +785,8 @@ describe('Status Route', () => {
     expect(slave.temp).to.equal(mockedSlaveData.data.temp);
     expect(slave.hum).to.equal(mockedSlaveData.data.hum);
 
-    stubRead.restore();
-    stubWrite.restore();
+    assert.isTrue(stubRead.called);
+    assert.isTrue(stubWrite.called);
   });
 
   it('should get status [faulty slave]', async () => {

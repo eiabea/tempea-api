@@ -3,10 +3,11 @@ const chai = require('chai');
 
 const { assert } = chai;
 const chaiHttp = require('chai-http');
+const proxyquire = require('proxyquire');
 
 chai.use(chaiHttp);
 
-describe('Status Route', () => {
+describe('Status Route (Slave)', () => {
   let restore;
   let app;
   let expressApp;
@@ -17,9 +18,29 @@ describe('Status Route', () => {
       EXPRESS_PORT: '3001',
     });
 
-    delete require.cache[require.resolve('../../../app')];
-    // eslint-disable-next-line global-require
-    const App = require('../../../app');
+    const RC = proxyquire.noCallThru().load('../../../controller/relay.controller', {
+      onoff: {
+        Gpio: function Gpio() {
+          function read(callback) {
+            return callback(null, 0);
+          }
+
+          function write(newState, callback) {
+            return callback(null, newState);
+          }
+
+          return {
+            read,
+            write,
+          };
+        },
+      },
+    });
+
+    const App = proxyquire.noCallThru().load('../../../app', {
+      './controller/relay.controller': RC,
+    });
+
     app = App(60);
     await app.start();
     expressApp = app.getExpressApp();
