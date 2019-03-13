@@ -15,6 +15,7 @@ After some research I stumbled over the great idea to use [Google Calender](http
 - [Setup](#setup)
   - [System](#system)
     - [Raspbian](#raspbian)
+      - [Network](#network)
     - [Docker](#docker)
   - [Hardware](#hardware)
     - [Breadboard](#breadboard)
@@ -64,7 +65,13 @@ $ dmesg
 
 7. Remove and reinsert your sd card (to initialize your sd card again)
 
-8. To set a static ip address open up the _etc/network/interfaces_ file on your sd card and paste the following content (may requires root permissions)
+--- 
+
+#### Network
+
+##### Ethernet
+
+  1. To set a static ip address open up the _etc/network/interfaces_ file on your sd card and paste the following content (may requires root permissions)
 ```
 # interfaces(5) file used by ifup(8) and ifdown(8)
 
@@ -80,7 +87,7 @@ iface lo inet loopback
 iface eth0 inet manual
 ```
 
-9. Open up the _etc/dhcpcd.conf_ file and add the following content at the end of the file. Edit all values according to your network (may requires root permissions)
+  2. Open up the _etc/dhcpcd.conf_ file and add the following content at the end of the file. Edit all values according to your network (may requires root permissions)
 ```
 interface eth0
 static ip_address=192.168.0.8/24
@@ -88,23 +95,65 @@ static routers=192.168.0.1
 static domain_name_servers=192.168.0.1 8.8.8.8 4.2.2.1
 ```
 
-10. Create a blank file on the boot partition named ssh to enable ssh
+##### Wifi
+
+  1. To set a static ip address open up the _etc/network/interfaces_ file on your sd card and paste the following content (may requires root permissions)
+```
+# interfaces(5) file used by ifup(8) and ifdown(8)
+
+# Please note that this file is written to be used with dhcpcd
+# For static IP, consult /etc/dhcpcd.conf and 'man dhcpcd.conf'
+
+# Include files from /etc/network/interfaces.d:
+source-directory /etc/network/interfaces.d
+
+auto lo
+iface lo inet loopback
+
+allow-hotplug wlan0
+iface wlan0 inet manual
+    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+```
+
+  2. Open up the _etc/dhcpcd.conf_ file and add the following content at the end of the file. Edit all values according to your network (may requires root permissions)
+```
+interface wlan0
+static ip_address=192.168.0.8/24
+static routers=192.168.0.1
+static domain_name_servers=192.168.0.1 8.8.8.8 4.2.2.1
+```
+
+  3. Open up the _etc/wpa_supplicant/wpa_supplicant.conf_ file and replace the content of the file with the following settings. Edit all values according to your network (may requires root permissions)
+```
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=AT
+
+network={
+    ssid="Your_wifi_ssid"
+    psk="Your_wifi_password"
+}
+```
+
+--- 
+
+8. Create a blank file on the boot partition named ssh to enable ssh
 ```
 $ touch ssh
 ```
 
-11. Unmount and remove your sd card from your PC and insert it into your Raspberry Pi
+9. Unmount and remove your sd card from your PC and insert it into your Raspberry Pi
 
-12. Connect a ethernet cable between your router and the Raspberry Pi
+10. Connect a ethernet cable between your router and the Raspberry Pi
 
-13. Connect the power supply to boot up your Raspberry Pi
+11. Connect the power supply to boot up your Raspberry Pi
 
-14. Login via ssh (username: pi, password: raspberry)
+12. Login via ssh (username: pi, password: raspberry)
 ```
 $ ssh pi@192.168.0.8
 ```
 
-15. Update the system to the latest version
+13. Update the system to the latest version
 ```
 $ sudo apt update && sudo apt upgrade -y
 ```
