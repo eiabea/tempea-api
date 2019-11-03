@@ -46,7 +46,6 @@ services:
     image: "eiabea/tempea-api:arm-latest"
     restart: unless-stopped
     privileged: "true"
-    command: "npm run start"
     depends_on:
       - "influx"
     ports:
