@@ -14,7 +14,7 @@ services:
       - "3001:3000"
       
   mqtt:
-    image: "eclipse-mosquitto:1.5.5"
+    image: "eclipse-mosquitto:1.6.7"
     restart: unless-stopped
     ports:
       - "1883:1883"
@@ -23,7 +23,7 @@ services:
       - "mqtt:/mosquitto/data"
 
   telegraf:
-    image: "telegraf:1.9.2"
+    image: "telegraf:1.12.4"
     restart: unless-stopped
     depends_on:
       - "mqtt"
@@ -31,7 +31,7 @@ services:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
 
   influx:
-    image: "arm32v7/influxdb:1.7.4"
+    image: "arm32v7/influxdb:1.7.8"
     restart: unless-stopped
     ports:
       - "8086:8086"
@@ -76,7 +76,10 @@ services:
       INFLUX_MQTT_SERIES: "mqtt_consumer"
       INFLUX_MQTT_TOPIC: "esp_temp"
       # Hardware
+      #  Temperature
       SENSOR_ID: "10-00080278b776"
+      #  Relay
+      RELAY_GPIO_PIN: "17"
       # Slave
       SLAVE_ENABLED: "true"
       SLAVE_HOST: "192.168.0.7"

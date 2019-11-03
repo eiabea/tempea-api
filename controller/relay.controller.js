@@ -1,8 +1,8 @@
 const { Gpio } = require('onoff');
 
-const { CI } = process.env;
+const RELAY_GPIO_PIN = parseInt(process.env.RELAY_GPIO_PIN, 10) || 17;
 
-const relay = CI ? require('../test/mock/relay') : new Gpio(17, 'out');
+const relay = new Gpio(RELAY_GPIO_PIN, 'out');
 
 module.exports = (log, cache) => {
   const getRelay = async () => {
@@ -22,6 +22,7 @@ module.exports = (log, cache) => {
 
   const setRelay = async (state) => {
     log.trace({ state }, 'Setting relay gpio state');
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       let currentState;
       try {

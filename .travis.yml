@@ -4,7 +4,7 @@ jobs:
     language: node_js
     cache: npm
     node_js:
-      - 10.15.0
+      - 10.16.1
     after_success:
       - npm run codecov
     on:
