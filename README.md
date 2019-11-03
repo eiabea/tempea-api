@@ -30,6 +30,7 @@ After some research I stumbled over the great idea to use [Google Calender](http
       - [Setup Google](#setup-calendar-google)
       - [Setup NextCloud](#setup-calendar-nextcloud)
     - [Start](#start)
+    - [Update](#update)
   - [Grafana](#grafana)
   - [Develop](#develop)
     - [Linux](#linux)
@@ -309,74 +310,79 @@ $ mkdir secrets
 $ nano secrets/tempea-service.json
 ```
 
-5. Download the latest _docker-compose-production.yml_
+5. Download the latest _docker-compose.yml_
 ```
-$ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose-production.yml
-```
-
-6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
-```
-environment:
-  # Logging
-  TEMPEA_LOG_LEVEL: "30"                              # Verbosity (60=Fatal, 50=Error, 40=Warn, 30=Info, 20=Debug, 10=Trace)
-  # Calendar
-  TEMPEA_CALENDAR_PROVIDER: "google"                  # What type of calendar should be used to set the temperature (google/nextcloud)
-  #  NextCloud
-  NEXTCLOUD_HOST: "https://nextcloud.secret.at/remote.php/dav"
-  NEXTCLOUD_USERNAME: "eiabea"
-  NEXTCLOUD_PASSWORD: "secret"
-  NEXTCLOUD_CALENDAR: "tempea"
-  #  Google
-  GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"  # Name of the google service json file
-  GOOGLE_CALENDAR_ID: "developer@eiabea.com"          # Email address of your service account
-  # Modules
-  ROUTING_MODULE_HOST: "0.0.0.0"                      # Host option of the node application
-  ROUTING_MODULE_PORT: "3000"                         # Port definition
-  # Database
-  #  Influx
-  INFLUX_HOST: "influx"
-  INFLUX_PORT: "8086"
-  INFLUX_DB: "temp"
-  # Hardware
-  #  Temperature
-  SENSOR_ID: "10-00080278b776"                        # Address of your OneWire sensor noted in the "OneWire"-section
-  #  Relay
-  RELAY_GPIO_PIN: "17"                                # GPIO pin of the relay (17 would mean physical pin 11)
-  # Slave
-  SLAVE_ENABLED: "true"                               # Enable/Disable slave feature
-  SLAVE_HOST: "192.168.0.7"                           # Host of the slave
-  SLAVE_PORT: "3000"                                  # Port of the slave
-  SLAVE_ENDPOINT: "/v1/status"                        # Endpoint of the slave to get data from
-  # Celius (float)
-  MAX_TEMP: "25"                                      # Maximal temperature accepted
-  MIN_TEMP: "15"                                      # Minimal temperature accepted
-  OVERSHOOT_TEMP: "0.5"                               # How much degrees should be "overheated"
-  # Minutes
-  FETCHING_INTERVAL: "1"                              # How often should the calendar be checked
+$ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose.yml
 ```
 
-7. Download the latest telegraf.conf
+6. Download the latest _tempea.env_
+```
+$ wget -O tempea.env https://raw.githubusercontent.com/eiabea/tempea-api/master/tempea.env
+```
+
+7. Open up the _tempea.env_ file and change the values according to your needs/setup
+```
+# Logging
+TEMPEA_LOG_LEVEL=10 # Verbosity (60=Fatal, 50=Error, 40=Warn, 30=Info, 20=Debug, 10=Trace)
+# Calendar
+TEMPEA_CALENDAR_PROVIDER=nextcloud # What type of calendar should be used  (nextcloud, google)
+#  NextCloud
+NEXTCLOUD_HOST=https://nextcloud.secret.at/remote.php/dav
+NEXTCLOUD_USERNAME=eiabea
+NEXTCLOUD_PASSWORD=secret
+NEXTCLOUD_CALENDAR=tempea
+#  Google
+GOOGLE_SERVICE_ACCOUNT_JSON=tempea-service.json # Name of the google service json file
+GOOGLE_CALENDAR_ID=developer@eiabea.com # Email address of your service account
+# Modules
+ROUTING_MODULE_HOST=0.0.0.0 # Host option of the node application
+ROUTING_MODULE_PORT=3000 # Port definition
+# Database
+#  Influx
+INFLUX_HOST=influx
+INFLUX_PORT=8086
+INFLUX_DB=temp
+INFLUX_MQTT_SERIES=mqtt_consumer
+INFLUX_MQTT_TOPIC=esp_temp
+# Hardware
+#  Temperature
+SENSOR_ID=10-00080278b776 # Address of your OneWire sensor noted in the "OneWire"-section
+#  Relay
+RELAY_GPIO_PIN=17 # GPIO pin of the relay (17 would mean physical pin 11)
+# Slave
+SLAVE_ENABLED=true # Enable/Disable slave feature
+SLAVE_HOST=192.168.0.7 # Host of the slave
+SLAVE_PORT=3000 # Port of the slave
+SLAVE_ENDPOINT=/v1/status # Endpoint of the slave to get data from
+# Celius (float)
+MAX_TEMP=25 # Maximal temperature accepted
+MIN_TEMP=15 # Minimal temperature accepted
+OVERSHOOT_TEMP=0.5 # How much degrees should be "overheated"
+# Minutes
+FETCHING_INTERVAL=1 # How often should the calendar be checked
+```
+
+8. Download the latest telegraf.conf
 ```
 $ wget https://raw.githubusercontent.com/eiabea/tempea-api/master/telegraf.conf
 ```
 
 ### Setup slave
 
-4. Download the latest _docker-compose-production.yml_
+1. Download the latest _tempea.env_
 ```
-$ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose-production.yml
+$ wget -O tempea.env https://raw.githubusercontent.com/eiabea/tempea-api/master/tempea.env
 ```
 
-6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
+2. Open up the _tempea.env_ file and change the environment section of the tempea service according to your needs/setup
 ```
-environment:
-  # Tempea
-  TEMPEA_SLAVE: "true"                                # Run tempea in slave mode
-  # Modules
-  ROUTING_MODULE_HOST: "0.0.0.0"                      # Host option of the node application
-  ROUTING_MODULE_PORT: "3000"                         # Port definition
-  # Hardware
-  SENSOR_ID: "10-00080278b776"                        # Address of your OneWire sensor noted in the "OneWire"-section
+# Tempea
+TEMPEA_SLAVE=true # Run tempea in slave mode
+# Modules
+ROUTING_MODULE_HOST=0.0.0.0 # Host option of the node application
+ROUTING_MODULE_PORT=3000 # Port definition
+# Hardware
+SENSOR_ID=10-00080278b776 # Address of your OneWire sensor noted in the "OneWire"-section
 ```
 
 ### Setup calendar
@@ -409,7 +415,7 @@ environment:
 
 5. Create more events in the same manner in order to set different temperatures on different dates/time. Keep in mind, that all days should be covered by a specific event, otherwise tempea will fallback to the MIN_TEMP for this period.
 
-6. Open up the _docker-compose.yml_ file and change the environment section of the tempea service according to your needs/setup
+6. Open up the _tempea.env_ file and change the values according to your needs/setup
 
 ### Start
 
@@ -440,6 +446,21 @@ tempea_1  | 13:46:38.651Z  INFO tempea: Starting Backend on port 3000
 tempea_1  | 13:46:38.678Z  INFO tempea: Starting cron job (controller=schedule)
 tempea_1  | 13:46:38.885Z  INFO tempea: Backend listening on port 3000
 tempea_1  | 13:47:01.658Z  INFO tempea: Room temperature high enough, disabling heating (controller=heat, currentTemp=19.4, desiredTemp=18, overshoot=0.5)
+```
+
+### Update
+
+In order to prevent data/configuration loss the only file which is needed to be updated for non-major releases is the _docker-compose.yml_
+
+```
+$ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose.yml
+```
+
+Stop, remove and start the containers
+```
+docker-compose stop
+docker-compose rm -f
+docker-compose up -d
 ```
 
 ## Grafana
