@@ -22,6 +22,7 @@ module.exports = (log, cache) => {
 
   const setRelay = async (state) => {
     log.trace({ state }, 'Setting relay gpio state');
+    // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
       let currentState;
       try {
