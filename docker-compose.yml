@@ -13,7 +13,7 @@ services:
       - "3001:3000"
       
   mqtt:
-    image: "eclipse-mosquitto:1.5.5"
+    image: "eclipse-mosquitto:1.6.7"
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -21,14 +21,14 @@ services:
       - "mqtt:/mosquitto/data"
 
   telegraf:
-    image: "telegraf:1.9.2"
+    image: "telegraf:1.12.4"
     depends_on:
       - "mqtt"
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
 
   influx:
-    image: "arm32v7/influxdb:1.7.4"
+    image: "arm32v7/influxdb:1.7.8"
     ports:
       - "8086:8086"
     volumes:

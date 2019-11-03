@@ -1,4 +1,4 @@
-FROM balenalib/rpi-node:10.15.0-stretch
+FROM balenalib/rpi-node:10.16.1-stretch
 LABEL eiabea <developer@eiabea.com>
 
 ENV NODE_PATH=/root/node_modules
@@ -7,9 +7,9 @@ ENV NODE_ENV ${NODE_ENV}
 
 # Using slim image and installing these dependencies manually results in a smaller image
 RUN apt-get update -q && apt-get install --no-install-recommends -q -y \
-    python \
-    make \
-    g++ \
+  python \
+  make \
+  g++ \
   && rm -rf /var/lib/apt/lists/*
 
 COPY ./package.json /root/package.json
