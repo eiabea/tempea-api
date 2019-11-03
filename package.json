@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "precommit": "npm run lint",
+    "prepush": "npm run lint",
     "start": "node index.js | ${NODE_PATH:-node_modules}/.bin/bunyan -o short",
     "start:dev": "${NODE_PATH:-node_modules}/.bin/nodemon index.js",
     "start:dev:pretty": "${NODE_PATH:-node_modules}/.bin/nodemon index.js | ${NODE_PATH:-node_modules}/.bin/bunyan -o short",
