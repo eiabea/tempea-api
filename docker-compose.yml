@@ -46,10 +46,16 @@ services:
     image: "eiabea/tempea-api:arm-latest"
     restart: unless-stopped
     privileged: "true"
-    command: "npm run start:dev:pretty"
+    command: "npm run start"
     depends_on:
       - "influx"
     ports:
       - "3000:3000"
+    volumes:
+      - "./secrets:/src/secrets"
+    command: [ 
+      "wait-for-it.sh", "influx:8086","--timeout=60", "--",
+      "npm", "start"
+    ]
     env_file:
       - tempea.env
