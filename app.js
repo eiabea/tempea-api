@@ -89,7 +89,7 @@ module.exports = (loglevel) => {
       validSlaveData = slaveData;
     }
 
-    return (masterTemp * master / 100) + (validSlaveData.temp * slave / 100);
+    return (masterTemp * (master / 100)) + (validSlaveData.temp * (slave / 100));
   };
 
   const job = async () => {

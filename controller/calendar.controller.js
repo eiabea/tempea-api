@@ -60,7 +60,7 @@ module.exports = (log, cache) => {
         }
       } else {
         const temp = parseFloat(event.summary);
-        log.info({ summery: event.summary, temp },
+        log.info({ summary: event.summary, temp },
           'Event summary does not contain a valid prioritization information, using plain temperature');
         desiredObj = {
           temp,

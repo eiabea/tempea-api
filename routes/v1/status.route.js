@@ -4,7 +4,7 @@ const router = express.Router();
 const RateLimit = require('express-rate-limit');
 
 const rateLimiterStatus = new RateLimit({
-  keyGenerator: req => req.header('x-real-ip') || req.connection.remoteAddress,
+  keyGenerator: (req) => req.header('x-real-ip') || req.connection.remoteAddress,
   windowMs: 5 * 60 * 1000,
   max: 100,
 });

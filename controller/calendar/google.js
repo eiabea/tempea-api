@@ -31,7 +31,7 @@ module.exports = (log) => {
     }
   };
 
-  const listEvents = async auth => new Promise((resolve, reject) => {
+  const listEvents = async (auth) => new Promise((resolve, reject) => {
     const { GOOGLE_CALENDAR_ID } = process.env;
     const timeMin = (new Date()).toISOString();
 
