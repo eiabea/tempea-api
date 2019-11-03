@@ -149,7 +149,7 @@ describe('Status Route (Master)', () => {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
+          this.request = async (opts) => request(opts);
         },
       },
     });
@@ -233,7 +233,7 @@ describe('Status Route (Master)', () => {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
+          this.request = async (opts) => request(opts);
         },
       },
     });
@@ -303,7 +303,7 @@ describe('Status Route (Master)', () => {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
+          this.request = async (opts) => request(opts);
         },
       },
     });
@@ -370,7 +370,7 @@ describe('Status Route (Master)', () => {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
+          this.request = async (opts) => request(opts);
         },
       },
     });
@@ -456,7 +456,7 @@ describe('Status Route (Master)', () => {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
+          this.request = async (opts) => request(opts);
         },
       },
     });
@@ -535,7 +535,7 @@ describe('Status Route (Master)', () => {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
+          this.request = async (opts) => request(opts);
         },
       },
     });
@@ -637,7 +637,7 @@ describe('Status Route (Master)', () => {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
+          this.request = async (opts) => request(opts);
         },
       },
     });
@@ -737,7 +737,7 @@ describe('Status Route (Master)', () => {
       'google-auth-library': {
         JWT: function JWT() {
           this.authorize = authorizeSpy;
-          this.request = async opts => request(opts);
+          this.request = async (opts) => request(opts);
         },
       },
     });

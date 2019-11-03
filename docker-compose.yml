@@ -5,15 +5,21 @@ volumes:
     driver: "local"
   influx:
     driver: "local"
+  grafana:
+    driver: "local"
 
 services:
   grafana:
     image: "grafana/grafana:5.4.3"
+    restart: unless-stopped
     ports:
       - "3001:3000"
+    volumes:
+      - "grafana:/var/lib/grafana"
       
   mqtt:
-    image: "eclipse-mosquitto:1.5.5"
+    image: "eclipse-mosquitto:1.6.7"
+    restart: unless-stopped
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -21,63 +27,29 @@ services:
       - "mqtt:/mosquitto/data"
 
   telegraf:
-    image: "telegraf:1.9.2"
+    image: "telegraf:1.12.4"
+    restart: unless-stopped
     depends_on:
       - "mqtt"
     volumes:
       - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
 
   influx:
-    image: "arm32v7/influxdb:1.7.4"
+    image: "arm32v7/influxdb:1.7.8"
+    restart: unless-stopped
     ports:
       - "8086:8086"
     volumes:
       - "influx:/var/lib/influxdb"
 
   tempea:
-    image: "eiabea/tempea-api:arm-develop"
+    image: "eiabea/tempea-api:arm-latest"
+    restart: unless-stopped
     privileged: "true"
     command: "npm run start:dev:pretty"
     depends_on:
       - "influx"
     ports:
       - "3000:3000"
-    environment:
-      # Logging
-      TEMPEA_LOG_LEVEL: "10"
-      # Calendar
-      TEMPEA_CALENDAR_PROVIDER: "nextcloud"
-      #  NextCloud
-      NEXTCLOUD_HOST: "https://nextcloud.secret.at/remote.php/dav"
-      NEXTCLOUD_USERNAME: "eiabea"
-      NEXTCLOUD_PASSWORD: "secret"
-      NEXTCLOUD_CALENDAR: "tempea"
-      #  Google
-      GOOGLE_SERVICE_ACCOUNT_JSON: "tempea-service.json"
-      GOOGLE_CALENDAR_ID: "developer@eiabea.com"
-      # Modules
-      ROUTING_MODULE_HOST: "0.0.0.0"
-      ROUTING_MODULE_PORT: "3000"
-      # Database
-      #  Influx
-      INFLUX_HOST: "influx"
-      INFLUX_PORT: "8086"
-      INFLUX_DB: "temp"
-      INFLUX_MQTT_SERIES: "mqtt_consumer"
-      INFLUX_MQTT_TOPIC: "esp_temp"
-      # Hardware
-      #  Temperature
-      SENSOR_ID: "10-00080278b776"
-      #  Relay
-      RELAY_GPIO_PIN: "17"
-      # Slave
-      SLAVE_ENABLED: "true"
-      SLAVE_HOST: "192.168.0.7"
-      SLAVE_PORT: "3000"
-      SLAVE_ENDPOINT: "/v1/status"
-      # Celius (float)
-      MAX_TEMP: "25"
-      MIN_TEMP: "15"
-      OVERSHOOT_TEMP: "0.5"
-      # Minutes
-      FETCHING_INTERVAL: "1"
+    env_file:
+      - tempea.env

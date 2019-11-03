@@ -37,7 +37,7 @@ module.exports = (log) => {
 
     assert.isString(NEXTCLOUD_CALENDAR, 'No nextcloud calendar name defined');
 
-    const foundCal = account.calendars.find(cal => cal.displayName === NEXTCLOUD_CALENDAR);
+    const foundCal = account.calendars.find((cal) => cal.displayName === NEXTCLOUD_CALENDAR);
 
     log.trace({ calendar: NEXTCLOUD_CALENDAR }, 'Syncing calendar');
     const syncedCalendar = await dav.syncCalendar(foundCal, {
@@ -60,7 +60,7 @@ module.exports = (log) => {
     });
 
     log.trace({ calendar: NEXTCLOUD_CALENDAR }, 'Parsing calendar event');
-    const calArray = syncedCalendar.objects.map(cal => ical.parseICS(cal.calendarData));
+    const calArray = syncedCalendar.objects.map((cal) => ical.parseICS(cal.calendarData));
 
     let currentEvent = null;
 
@@ -81,7 +81,7 @@ module.exports = (log) => {
             const recurrentEvents = calObj[eventId].rrule
               .between(moment.utc().tz(start.tz).subtract(2, 'day').toDate(), moment.utc().tz(end.tz).toDate());
             const today = moment.utc().tz(start.tz);
-            const foundForToday = recurrentEvents.find(rE => moment.utc(rE).day() === today.day()
+            const foundForToday = recurrentEvents.find((rE) => moment.utc(rE).day() === today.day()
               && moment.utc(rE).month() === today.month()
               && moment.utc(rE).year() === today.year());
             // if one matches check if now is between start and end time of the event
