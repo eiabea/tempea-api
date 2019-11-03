@@ -469,37 +469,4 @@ END:VCALENDAR`,
       assert.isDefined(err);
     }
   });
-
-  it('should throw [dav.createAccount]', async () => {
-    restore = mockedEnv({
-      TEMPEA_CALENDAR_PROVIDER: 'nextcloud',
-      NEXTCLOUD_HOST: 'https://nextcloud.mocked.at/remote.php/dav',
-      NEXTCLOUD_USERNAME: 'eiabea',
-      NEXTCLOUD_PASSWORD: 'secret',
-      NEXTCLOUD_CALENDAR: 'tempea',
-      MAX_TEMP: '27',
-      MIN_TEMP: '15',
-    });
-
-    const syncCalendarStub = sinon.stub().throws('Mocked Error');
-
-    const NC = proxyquire('../../../controller/calendar/nextcloud', {
-      dav: {
-        syncCalendar: syncCalendarStub,
-        createAccount: () => ({
-          calendars: [
-            {
-              displayName: 'tempea',
-            },
-          ],
-        }),
-      },
-    });
-
-    try {
-      await NC(log).getCurrentEvent();
-    } catch (err) {
-      assert.isDefined(err);
-    }
-  });
 });
