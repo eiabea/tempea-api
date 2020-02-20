@@ -46,7 +46,7 @@
   },
   "devDependencies": {
     "chai-http": "^4.3.0",
-    "codecov": "^3.6.1",
+    "codecov": "^3.6.5",
     "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-plugin-chai": "^0.0.1",
