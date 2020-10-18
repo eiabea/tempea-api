@@ -9,7 +9,10 @@ const SLAVE_HOST = 'mocked.tempea.com';
 const SLAVE_PORT = '80';
 const SLAVE_ENDPOINT = '/mocked';
 
-const CacheController = require('../../controller/cache.controller')(log);
+import { CacheController } from '../../controller/cache.controller';
+
+const cacheController = new CacheController(log);
+
 // Preload files
 require('../../controller/slave.controller');
 
@@ -42,7 +45,7 @@ describe('Slave Controller', () => {
 
     const SC = proxyquire('../../controller/slave.controller', {});
 
-    const slaveData = await SC(log, CacheController).getData();
+    const slaveData = await SC(log, cacheController).getData();
 
     expect(slaveData.temp).to.eq(mockedSlaveResponse.data.temp);
     expect(slaveData.hum).to.eq(mockedSlaveResponse.data.hum);
@@ -57,7 +60,7 @@ describe('Slave Controller', () => {
 
     const SC = proxyquire('../../controller/slave.controller', {});
 
-    const slaveController = await SC(log, CacheController);
+    const slaveController = await SC(log, cacheController);
 
     try {
       await slaveController.getData();
@@ -80,7 +83,7 @@ describe('Slave Controller', () => {
 
     const SC = proxyquire('../../controller/slave.controller', {});
 
-    const slaveController = await SC(log, CacheController);
+    const slaveController = await SC(log, cacheController);
 
     try {
       await slaveController.getData();

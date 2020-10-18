@@ -10,9 +10,10 @@
     "start:dev": "${NODE_PATH:-node_modules}/.bin/nodemon index.js",
     "start:dev:pretty": "${NODE_PATH:-node_modules}/.bin/nodemon index.js | ${NODE_PATH:-node_modules}/.bin/bunyan -o short",
     "lint": "${NODE_PATH:-node_modules}/.bin/eslint --fix .",
-    "test": "CI=true ${NODE_PATH:-node_modules}/.bin/nyc ${NODE_PATH:-node_modules}/.bin/_mocha --recursive --color --exit test",
-    "test:dev": "CI=true ${NODE_PATH:-node_modules}/.bin/_mocha --recursive --color --exit test",
-    "codecov": "${NODE_PATH:-node_modules}/.bin/nyc report --reporter=text-lcov > coverage.lcov && ${NODE_PATH:-node_modules}/.bin/codecov"
+    "test": "TS_NODE_FILES=true TS_NODE_TRANSPILE_ONLY=true ${NODE_PATH:-node_modules}/.bin/nyc ${NODE_PATH:-node_modules}/.bin/mocha test ./test/**/*.test.ts ./test/**/**/*.test.ts",
+    "test:dev": "TS_NODE_FILES=true TS_NODE_TRANSPILE_ONLY=true ${NODE_PATH:-node_modules}/.bin/mocha test",
+    "codecov": "${NODE_PATH:-node_modules}/.bin/nyc report --reporter=text-lcov > coverage.lcov && ${NODE_PATH:-node_modules}/.bin/codecov",
+    "build": "./node_modules/.bin/tsc -b tsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -42,9 +43,13 @@
     "moment": "^2.27.0",
     "moment-timezone": "^0.5.31",
     "node-ical": "^0.11.4",
-    "onoff": "^6.0.0"
+    "onoff": "^6.0.0",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.3"
   },
   "devDependencies": {
+    "@types/bunyan": "^1.8.6",
+    "@types/mocha": "^8.0.3",
     "chai-http": "^4.3.0",
     "codecov": "^3.7.2",
     "eslint": "^7.8.1",

@@ -3,7 +3,9 @@ const log = require('null-logger');
 const sinon = require('sinon');
 const proxyquire = require('proxyquire').noPreserveCache();
 
-const CacheController = require('../../controller/cache.controller')(log);
+import { CacheController } from '../../controller/cache.controller';
+
+const cacheController = new CacheController(log);
 
 describe('Temp Controller', () => {
   it('should get current temperature', async () => {
@@ -13,7 +15,7 @@ describe('Temp Controller', () => {
       ds18b20: {
         temperature: stub,
       },
-    })(log, CacheController);
+    })(log, cacheController);
 
     const temp = await instance.getCurrentTemp();
 
@@ -27,7 +29,7 @@ describe('Temp Controller', () => {
       ds18b20: {
         temperature: stub,
       },
-    })(log, CacheController);
+    })(log, cacheController);
 
     const temp = await instance.getCurrentTemp();
 
@@ -43,7 +45,7 @@ describe('Temp Controller', () => {
       ds18b20: {
         temperature: stub,
       },
-    })(log, CacheController);
+    })(log, cacheController);
 
     try {
       await instance.getCurrentTemp();

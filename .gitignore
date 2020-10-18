@@ -156,3 +156,6 @@ crashlytics-build.properties
 
 # Google
 /secrets
+
+# TypeScript
+dist

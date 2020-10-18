@@ -2,10 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
-const bunyan = require('bunyan');
+import * as bunyan from 'bunyan';
+import { CacheController } from './controller/cache.controller';
 
 // Controller
-const Cache = require('./controller/cache.controller');
 const Calendar = require('./controller/calendar.controller');
 const Database = require('./controller/database.controller');
 const Heat = require('./controller/heat.controller');
@@ -17,25 +17,34 @@ const Temp = require('./controller/temp.controller');
 // Routes
 const StatusRoute = require('./routes/v1/status.route');
 
-const EXPRESS_PORT = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
-const IS_MASTER = process.env.TEMPEA_SLAVE !== 'true';
-const SLAVE_ENABLED = process.env.SLAVE_ENABLED === 'true';
+const EXPRESS_PORT: Number = parseInt(process.env.EXPRESS_PORT, 10) || 3000;
+const IS_MASTER: Boolean = process.env.TEMPEA_SLAVE !== 'true';
+const SLAVE_ENABLED: Boolean = process.env.SLAVE_ENABLED === 'true';
 
 module.exports = (loglevel) => {
-  const log = bunyan.createLogger({
+  const log: bunyan = bunyan.createLogger({
     name: 'tempea',
     level: loglevel,
     serializers: bunyan.stdSerializers,
-  });
+  } as bunyan.LoggerOptions);
 
-  let heating = false;
+  let heating: Boolean = false;
   let server;
   let app;
-  const controller = {};
+  const controller = {
+    cache: null,
+    temp: null,
+    calendar: null,
+    database: null,
+    heat: null,
+    relay: null,
+    schedule: null,
+    slave: null,
+  };
 
   const initControllers = async () => {
     log.trace('Initializing general controller');
-    controller.cache = Cache(log.child({ controller: 'cache' }));
+    controller.cache = new CacheController(log.child({ controller: 'cache' }));
     controller.temp = Temp(log.child({ controller: 'temp' }), controller.cache);
     if (IS_MASTER) {
       log.trace('Initializing master controller');

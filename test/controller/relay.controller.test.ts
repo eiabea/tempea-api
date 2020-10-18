@@ -3,7 +3,9 @@ const { assert, expect } = require('chai');
 const log = require('null-logger');
 const sinon = require('sinon');
 const proxyquire = require('proxyquire').noPreserveCache();
-const CacheController = require('../../controller/cache.controller')(log);
+import { CacheController } from '../../controller/cache.controller';
+
+const cacheController = new CacheController(log);
 
 describe('Relay Controller', () => {
   let restore;
@@ -31,7 +33,7 @@ describe('Relay Controller', () => {
           };
         },
       },
-    })(log, CacheController);
+    })(log, cacheController);
 
     const initialState = await instance.getRelay();
 
@@ -57,7 +59,7 @@ describe('Relay Controller', () => {
           };
         },
       },
-    })(log, CacheController);
+    })(log, cacheController);
 
     await instance.setRelay(1);
     const newState = await instance.getRelay();
@@ -84,7 +86,7 @@ describe('Relay Controller', () => {
           };
         },
       },
-    })(log, CacheController);
+    })(log, cacheController);
 
     try {
       await instance.setRelay(1);
@@ -106,7 +108,7 @@ describe('Relay Controller', () => {
           };
         },
       },
-    })(log, CacheController);
+    })(log, cacheController);
 
     try {
       await instance.setRelay(1);
@@ -129,7 +131,7 @@ describe('Relay Controller', () => {
           };
         },
       },
-    })(log, CacheController);
+    })(log, cacheController);
 
     try {
       await instance.getRelay();

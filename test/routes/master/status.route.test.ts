@@ -125,7 +125,7 @@ describe('Status Route (Master)', () => {
             statement_id: 0,
             series: [
               {
-              // default name set by telegraf
+                // default name set by telegraf
                 name: 'mqtt_consumer',
                 columns: [
                   'time',

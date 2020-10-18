@@ -9,7 +9,9 @@ const proxyquire = require('proxyquire');
 const INFLUX_HOST = process.env.INFLUX_HOST || 'influx';
 const INFLUX_PORT = process.env.INFLUX_PORT || 8086;
 
-const CacheController = require('../../controller/cache.controller')(log);
+import { CacheController } from '../../controller/cache.controller';
+
+const cacheController = new CacheController(log);
 
 const DatabaseController = require('../../controller/database.controller');
 
@@ -30,7 +32,7 @@ describe('Database Controller', () => {
       },
     });
 
-    await DBC(log, CacheController);
+    await DBC(log, cacheController);
   });
 
   it('should fallback to default values if no env is set', async () => {
@@ -49,7 +51,7 @@ describe('Database Controller', () => {
       },
     });
 
-    await DBC(log, CacheController);
+    await DBC(log, cacheController);
 
     restore();
   });
@@ -63,7 +65,7 @@ describe('Database Controller', () => {
       hum: 50,
     };
 
-    const instance = await DatabaseController(log, CacheController);
+    const instance = await DatabaseController(log, cacheController);
 
     await instance.writeMeasurement(currentTemp, desiredTemp, heating, slaveData);
   });
@@ -77,7 +79,7 @@ describe('Database Controller', () => {
       hum: 50,
     };
 
-    const instance = await DatabaseController(log, CacheController);
+    const instance = await DatabaseController(log, cacheController);
 
     await instance.writeMeasurement(currentTemp, desiredTemp, heating, slaveData);
   });
@@ -87,7 +89,7 @@ describe('Database Controller', () => {
     const desiredTemp = 21;
     const heating = false;
 
-    const instance = await DatabaseController(log, CacheController);
+    const instance = await DatabaseController(log, cacheController);
 
     await instance.writeMeasurement(currentTemp, desiredTemp, heating);
   });
@@ -97,7 +99,7 @@ describe('Database Controller', () => {
     const desiredTemp = 21;
     const heating = true;
 
-    const instance = await DatabaseController(log, CacheController);
+    const instance = await DatabaseController(log, cacheController);
 
     await instance.writeMeasurement(currentTemp, desiredTemp, heating);
   });
@@ -128,7 +130,7 @@ describe('Database Controller', () => {
           },
         ],
       });
-    const instance = await DatabaseController(log, CacheController);
+    const instance = await DatabaseController(log, cacheController);
 
     const latestEntry = await instance.getLatestMqttEntry();
     expect(latestEntry.updated).to.eq(1550586338221);
@@ -141,7 +143,7 @@ describe('Database Controller', () => {
       .reply(200, {
         results: [],
       });
-    const instance = await DatabaseController(log, CacheController);
+    const instance = await DatabaseController(log, cacheController);
 
     try {
       await instance.getLatestMqttEntry();
