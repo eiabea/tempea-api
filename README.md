@@ -531,15 +531,15 @@ $ cd tempea-api
 
 7. Start tempea in development mode
 ```
-$ docker-compose up
+$ docker-compose -f docker-compose.yml -f docker-compose-dev.yml up
 ```
 
 ## Testing
 
-1. Make sure you have at least [NodeJS](https://nodejs.org/en/) v10.14.0 installed
+1. Make sure you have at least [NodeJS](https://nodejs.org/en/) v12.18.3 installed
 ```
 $ node -v
-v10.14.0
+v12.18.3
 ```
 
 2. Clone the project on your machine

@@ -85,7 +85,7 @@ describe('Slave Controller', () => {
     try {
       await slaveController.getData();
     } catch (err) {
-      expect(err).to.be.instanceof(SyntaxError);
+      expect(err).to.be.instanceof(Error);
     }
   });
 });

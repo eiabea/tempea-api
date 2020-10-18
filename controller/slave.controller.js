@@ -1,32 +1,31 @@
 const request = require('request');
+const axios = require('axios');
 const { assert } = require('chai');
 
 module.exports = (log, cache) => {
-  const getData = async () => new Promise((resolve, reject) => {
+  const getData = async () => {
+
     const {
       SLAVE_HOST, SLAVE_PORT, SLAVE_ENDPOINT,
     } = process.env;
+
     log.trace({ SLAVE_HOST, SLAVE_PORT, SLAVE_ENDPOINT }, 'Getting data from slave');
-    request(`http://${SLAVE_HOST}:${SLAVE_PORT}${SLAVE_ENDPOINT}`, async (error, response, body) => {
-      if (error) {
-        log.error({ error }, `Error getting data from slave ${SLAVE_HOST}`);
-        return reject(error);
-      }
-      log.trace({ body }, 'Received data from slave');
-      try {
-        const jsonData = JSON.parse(body);
+    try {
+      const response = await axios.get(`http://${SLAVE_HOST}:${SLAVE_PORT}${SLAVE_ENDPOINT}`);
 
-        assert.isTrue(jsonData.success);
-        assert.isDefined(jsonData.data);
-        assert.isNumber(jsonData.data.temp);
+      const { data } = response;
 
-        await cache.updateSlaveData(jsonData.data);
-        return resolve(jsonData.data);
-      } catch (err) {
-        return reject(err);
-      }
-    });
-  });
+      assert.isTrue(data.success);
+      assert.isDefined(data.data);
+      assert.isNumber(data.data.temp);
+
+      await cache.updateSlaveData(data.data);
+      return data.data;
+    } catch (error) {
+      log.error({ error }, `Error getting data from slave ${SLAVE_HOST}`);
+      throw error;
+    }
+  }
 
   return {
     getData,

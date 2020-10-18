@@ -1,0 +1,17 @@
+version: "3"
+
+services:
+  tempea:
+    build: .
+    restart: unless-stopped
+    privileged: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./:/src"
+    command: [ 
+      "wait-for-it.sh", "influx:8086","--timeout=60", "--",
+      "npm", "run", "start:dev:pretty"
+    ]
+    env_file:
+      - tempea.env
