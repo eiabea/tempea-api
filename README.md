@@ -456,8 +456,9 @@ In order to prevent data/configuration loss the only file which is needed to be 
 $ wget -O docker-compose.yml https://raw.githubusercontent.com/eiabea/tempea-api/master/docker-compose.yml
 ```
 
-Stop, remove and start the containers
+Pull, stop, remove and start the containers
 ```
+docker-compose pull
 docker-compose stop
 docker-compose rm -f
 docker-compose up -d
