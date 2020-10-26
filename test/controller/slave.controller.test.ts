@@ -1,22 +1,18 @@
-const mockedEnv = require('mocked-env');
+import mockedEnv from 'mocked-env';
 
-const { expect } = require('chai');
-const log = require('null-logger');
-const nock = require('nock');
-const proxyquire = require('proxyquire');
+import { expect } from 'chai';
+import * as log from 'null-logger';
+import * as nock from 'nock';
 
 const SLAVE_HOST = 'mocked.tempea.com';
 const SLAVE_PORT = '80';
 const SLAVE_ENDPOINT = '/mocked';
 
-import { CacheController } from '../../controller/cache.controller';
+import { SlaveController, CacheController } from '../../controller';
 
 const cacheController = new CacheController(log);
 
-// Preload files
-require('../../controller/slave.controller');
-
-describe('Slave Controller', () => {
+describe.only('Slave Controller', () => {
   const mockedSlaveResponse = {
     success: true,
     data: {
@@ -43,9 +39,9 @@ describe('Slave Controller', () => {
       .get(SLAVE_ENDPOINT)
       .reply(200, mockedSlaveResponse);
 
-    const SC = proxyquire('../../controller/slave.controller', {});
+    const instance = new SlaveController(log, cacheController);
 
-    const slaveData = await SC(log, cacheController).getData();
+    const slaveData = await instance.getData();
 
     expect(slaveData.temp).to.eq(mockedSlaveResponse.data.temp);
     expect(slaveData.hum).to.eq(mockedSlaveResponse.data.hum);
@@ -58,12 +54,10 @@ describe('Slave Controller', () => {
       SLAVE_ENDPOINT: '/mocked',
     });
 
-    const SC = proxyquire('../../controller/slave.controller', {});
-
-    const slaveController = await SC(log, cacheController);
+    const instance = new SlaveController(log, cacheController);
 
     try {
-      await slaveController.getData();
+      await instance.getData();
     } catch (err) {
       expect(err).to.be.instanceof(Error);
       expect(err.code).to.equal('ECONNREFUSED');
@@ -81,12 +75,10 @@ describe('Slave Controller', () => {
       .get(`${SLAVE_ENDPOINT}_invalid_json`)
       .reply(200, '{"success":false');
 
-    const SC = proxyquire('../../controller/slave.controller', {});
-
-    const slaveController = await SC(log, cacheController);
+    const instance = new SlaveController(log, cacheController);
 
     try {
-      await slaveController.getData();
+      await instance.getData();
     } catch (err) {
       expect(err).to.be.instanceof(Error);
     }
