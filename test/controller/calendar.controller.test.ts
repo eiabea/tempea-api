@@ -4,7 +4,10 @@ const log = require('null-logger');
 const sinon = require('sinon');
 const proxyquire = require('proxyquire');
 
-const CacheController = require('../../controller/cache.controller')(log);
+import { CacheController } from '../../controller/cache.controller';
+
+const cacheController = new CacheController(log);
+
 // Preload files
 require('../../controller/calendar.controller');
 
@@ -27,7 +30,7 @@ describe('Calendar Controller', () => {
 
     const CC = proxyquire('../../controller/calendar.controller', {});
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(15);
@@ -49,7 +52,7 @@ describe('Calendar Controller', () => {
       }),
     });
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(15);
@@ -72,7 +75,7 @@ describe('Calendar Controller', () => {
       }),
     });
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(15);
@@ -100,7 +103,7 @@ describe('Calendar Controller', () => {
       }),
     });
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(21);
@@ -129,7 +132,7 @@ describe('Calendar Controller', () => {
       }),
     });
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(21);
@@ -158,7 +161,7 @@ describe('Calendar Controller', () => {
       }),
     });
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(15);
@@ -187,7 +190,7 @@ describe('Calendar Controller', () => {
       }),
     });
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(27);
@@ -213,7 +216,7 @@ describe('Calendar Controller', () => {
       }),
     });
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(21);
@@ -239,7 +242,7 @@ describe('Calendar Controller', () => {
       }),
     });
 
-    const desiredObj = await CC(log, CacheController)
+    const desiredObj = await CC(log, cacheController)
       .getDesiredObject();
 
     expect(desiredObj.temp).to.equal(21);

@@ -1,15 +1,26 @@
 {
+  "extension": [
+    ".ts",
+    ".tsx"
+  ],
   "exclude": [
-    "**/*.apidoc.js",
+    "typings",
     "coverage",
-    "apidoc",
-    "test",
-    "**/*test.js",
-    "index.js"
+    "doc",
+    "dist",
+    "interfaces",
+    "types",
+    "index.ts",
+    "**/*test.ts",
+    ".eslintrc.js"
   ],
   "reporter": [
+    "lcov",
     "text",
     "html"
   ],
-    "all": true
+  "require": [
+    "ts-node/register"
+  ],
+  "all": true
 }
