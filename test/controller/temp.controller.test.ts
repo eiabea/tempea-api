@@ -1,21 +1,20 @@
-const { assert, expect } = require('chai');
-const log = require('null-logger');
-const sinon = require('sinon');
-const proxyquire = require('proxyquire').noPreserveCache();
+import { assert, expect } from "chai";
+import * as log from 'null-logger';
 
-import { CacheController } from '../../controller/cache.controller';
+import { CacheController, TempController } from '../../controller';
+
+import { ImportMock } from 'ts-mock-imports';
+import * as ds18b20 from 'ds18b20';
 
 const cacheController = new CacheController(log);
 
 describe('Temp Controller', () => {
+  beforeEach(ImportMock.restore)
   it('should get current temperature', async () => {
-    const stub = sinon.stub().callsArgWith(1, null, 21);
+    const stub = ImportMock.mockFunction(ds18b20, 'temperature');
+    stub.callsArgWith(1, null, 21)
 
-    const instance = proxyquire('../../controller/temp.controller', {
-      ds18b20: {
-        temperature: stub,
-      },
-    })(log, cacheController);
+    const instance = new TempController(log, cacheController);
 
     const temp = await instance.getCurrentTemp();
 
@@ -23,13 +22,10 @@ describe('Temp Controller', () => {
   });
 
   it('should get previous temperature', async () => {
-    const stub = sinon.stub().callsArgWith(1, null, 85);
+    const stub = ImportMock.mockFunction(ds18b20, 'temperature');
+    stub.callsArgWith(1, null, 85);
 
-    const instance = proxyquire('../../controller/temp.controller', {
-      ds18b20: {
-        temperature: stub,
-      },
-    })(log, cacheController);
+    const instance = new TempController(log, cacheController);
 
     const temp = await instance.getCurrentTemp();
 
@@ -39,13 +35,10 @@ describe('Temp Controller', () => {
   });
 
   it('should fail to get temperature', async () => {
-    const stub = sinon.stub().callsArgWith(1, new Error('Mocked temp error'));
+    const stub = ImportMock.mockFunction(ds18b20, 'temperature');
+    stub.callsArgWith(1, new Error('Mocked temp error'));
 
-    const instance = proxyquire('../../controller/temp.controller', {
-      ds18b20: {
-        temperature: stub,
-      },
-    })(log, cacheController);
+    const instance = new TempController(log, cacheController);
 
     try {
       await instance.getCurrentTemp();

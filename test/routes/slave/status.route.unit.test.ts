@@ -1,4 +1,5 @@
 import { CacheController } from '../../../controller/cache.controller';
+import { TempController } from '../../../controller/temp.controller';
 const mockedEnv = require('mocked-env');
 const express = require('express');
 const chai = require('chai');
@@ -32,10 +33,8 @@ describe('Status Route Unit', () => {
     const cacheController = new CacheController(log);
     // eslint-disable-next-line global-require
     const StatusRoute = require('../../../routes/v1/status.route');
-    // eslint-disable-next-line global-require
-    const TempController = require('../../../controller/temp.controller');
 
-    const tempController = TempController(log, cacheController);
+    const tempController = new TempController(log, cacheController);
 
     const stub = sinon.stub(tempController, 'getCurrentTemp')
       .rejects(new Error('Mocked error'));

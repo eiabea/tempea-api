@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 import * as bunyan from 'bunyan';
 import { CacheController } from './controller/cache.controller';
+import { TempController } from './controller/temp.controller';
 
 // Controller
 const Calendar = require('./controller/calendar.controller');
@@ -12,7 +13,6 @@ const Heat = require('./controller/heat.controller');
 const Relay = require('./controller/relay.controller');
 const Schedule = require('./controller/schedule.controller');
 const Slave = require('./controller/slave.controller');
-const Temp = require('./controller/temp.controller');
 
 // Routes
 const StatusRoute = require('./routes/v1/status.route');
@@ -45,7 +45,7 @@ module.exports = (loglevel) => {
   const initControllers = async () => {
     log.trace('Initializing general controller');
     controller.cache = new CacheController(log.child({ controller: 'cache' }));
-    controller.temp = Temp(log.child({ controller: 'temp' }), controller.cache);
+    controller.temp = new TempController(log.child({ controller: 'temp' }), controller.cache);
     if (IS_MASTER) {
       log.trace('Initializing master controller');
       controller.calendar = Calendar(log.child({ controller: 'calendar' }), controller.cache);
