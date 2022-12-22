@@ -38,7 +38,7 @@
     "googleapis": "^59.0.0",
     "helmet": "^4.1.0",
     "influxdb-nodejs": "^3.1.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "moment": "^2.27.0",
     "moment-timezone": "^0.5.31",
     "node-ical": "^0.11.4",
